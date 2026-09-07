@@ -20,12 +20,12 @@ Rectangle {
         anchors.centerIn: parent
         text: root.keyText
         font.family: Style.font.family
-        font.pixelSize: Style.font.caption
+        font.pixelSize: (root.keyText.length >= 6 && root.keyText.indexOf("\n") === -1) ? Style.font.caption - 1.5 : Style.font.caption
         font.bold: true
         color: root.isActive ? Color.background : Color.foreground
-        wrapMode: Text.Wrap
+        wrapMode: root.keyText.indexOf("\n") !== -1 ? Text.Wrap : Text.NoWrap
         horizontalAlignment: Text.AlignHCenter
         lineHeight: 0.95
-        width: parent.width - Style.space(4)
+        width: parent.width - Style.space(2)
     }
 }
