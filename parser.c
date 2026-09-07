@@ -34,7 +34,7 @@ void humanize_key_code(const char *raw, char *out) {
     if (strcmp(raw, "&trans") == 0) { strcpy(out, "▽"); return; }
     if (strcmp(raw, "&bootloader") == 0) { strcpy(out, "Boot"); return; }
     if (strcmp(raw, "&sys_reset") == 0) { strcpy(out, "Reset"); return; }
-    if (strcmp(raw, "&layer_td") == 0) { strcpy(out, "Lower"); return; }
+    if (strcmp(raw, "&layer_td") == 0) { strcpy(out, "Layer"); return; }
     if (strncmp(raw, "&magic", 6) == 0) { strcpy(out, "Magic"); return; }
     if (strncmp(raw, "bt_", 3) == 0) { sprintf(out, "BT %s", raw + 3); return; }
     if (strncmp(raw, "&bt ", 4) == 0) { sprintf(out, "%s", raw + 4); return; }
@@ -69,8 +69,8 @@ void humanize_key_code(const char *raw, char *out) {
     if (strcmp(key, "RCTRL") == 0) { strcpy(out, "Ctrl"); return; }
     if (strcmp(key, "LALT") == 0) { strcpy(out, "Alt"); return; }
     if (strcmp(key, "RALT") == 0) { strcpy(out, "Alt"); return; }
-    if (strcmp(key, "LGUI") == 0) { strcpy(out, "Super"); return; }
-    if (strcmp(key, "RGUI") == 0) { strcpy(out, "Super"); return; }
+    if (strcmp(key, "LGUI") == 0) { strcpy(out, "System"); return; }
+    if (strcmp(key, "RGUI") == 0) { strcpy(out, "System"); return; }
     if (strcmp(key, "BSPC") == 0) { strcpy(out, "Bksp"); return; }
     if (strcmp(key, "DEL") == 0) { strcpy(out, "Del"); return; }
     if (strcmp(key, "RET") == 0) { strcpy(out, "Enter"); return; }
