@@ -52,7 +52,7 @@ void humanize_key_code(const char *raw, char *out) {
     }
 
     // Common abbreviations
-    if (strcmp(key, "EQUAL") == 0) { strcpy(out, "="); return; }
+    if (strcmp(key, "EQUAL") == 0) { strcpy(out, "+\n="); return; }
     if (strcmp(key, "MINUS") == 0) { strcpy(out, "-"); return; }
     if (strcmp(key, "BSLH") == 0) { strcpy(out, "\\"); return; }
     if (strcmp(key, "FSLH") == 0) { strcpy(out, "/"); return; }
@@ -146,8 +146,14 @@ void escape_json_string(const char *source, char *destination) {
     while (*source) {
         if (*source == '"' || *source == '\\') { 
             *destination++ = '\\'; 
+            *destination++ = *source++;
+        } else if (*source == '\n') {
+            *destination++ = '\\';
+            *destination++ = 'n';
+            source++;
+        } else {
+            *destination++ = *source++;
         }
-        *destination++ = *source++;
     }
     *destination = '\0';
 }
