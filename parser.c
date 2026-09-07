@@ -69,14 +69,14 @@ void humanize_key_code(const char *raw, char *out) {
     if (strcmp(key, "RBKT") == 0)  { strcpy(out, "}\n]"); return; }
     if (strcmp(key, "LSHFT") == 0) { strcpy(out, "Shift"); return; }
     if (strcmp(key, "RSHFT") == 0) { strcpy(out, "Shift"); return; }
-    if (strcmp(key, "LCTRL") == 0) { strcpy(out, "Ctrl"); return; }
-    if (strcmp(key, "RCTRL") == 0) { strcpy(out, "Ctrl"); return; }
+    if (strcmp(key, "LCTRL") == 0) { strcpy(out, "Control"); return; }
+    if (strcmp(key, "RCTRL") == 0) { strcpy(out, "Control"); return; }
     if (strcmp(key, "LALT") == 0) { strcpy(out, "Alt"); return; }
     if (strcmp(key, "RALT") == 0) { strcpy(out, "Alt"); return; }
     if (strcmp(key, "LGUI") == 0) { strcpy(out, "System"); return; }
     if (strcmp(key, "RGUI") == 0) { strcpy(out, "System"); return; }
     if (strcmp(key, "BSPC") == 0) { strcpy(out, "Bksp"); return; }
-    if (strcmp(key, "DEL") == 0) { strcpy(out, "Del"); return; }
+    if (strcmp(key, "DEL") == 0) { strcpy(out, "Delete"); return; }
     if (strcmp(key, "RET") == 0) { strcpy(out, "Enter"); return; }
     if (strcmp(key, "SPACE") == 0) { strcpy(out, "Space"); return; }
     if (strcmp(key, "TAB") == 0) { strcpy(out, "Tab"); return; }
