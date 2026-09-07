@@ -45,10 +45,14 @@ void humanize_key_code(const char *raw, char *out) {
         key += 4;
     }
 
-    // Numbers: N1 -> 1
+    // Numbers: N1 -> !\n1, N2 -> @\n2, etc.
     if (key[0] == 'N' && isdigit((unsigned char)key[1]) && key[2] == '\0') {
-        sprintf(out, "%c", key[1]);
-        return;
+        const char *symbols = ")!@#$%^&*(";
+        int d = key[1] - '0';
+        if (d >= 0 && d <= 9) {
+            sprintf(out, "%c\n%d", symbols[d], d);
+            return;
+        }
     }
 
     // Common abbreviations
