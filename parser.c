@@ -53,16 +53,16 @@ void humanize_key_code(const char *raw, char *out) {
 
     // Common abbreviations
     if (strcmp(key, "EQUAL") == 0) { strcpy(out, "+\n="); return; }
-    if (strcmp(key, "MINUS") == 0) { strcpy(out, "-"); return; }
-    if (strcmp(key, "BSLH") == 0) { strcpy(out, "\\"); return; }
-    if (strcmp(key, "FSLH") == 0) { strcpy(out, "/"); return; }
-    if (strcmp(key, "SEMI") == 0) { strcpy(out, ";"); return; }
-    if (strcmp(key, "SQT") == 0) { strcpy(out, "'"); return; }
-    if (strcmp(key, "GRAVE") == 0) { strcpy(out, "`"); return; }
-    if (strcmp(key, "COMMA") == 0) { strcpy(out, ","); return; }
-    if (strcmp(key, "DOT") == 0) { strcpy(out, "."); return; }
-    if (strcmp(key, "LBKT") == 0) { strcpy(out, "["); return; }
-    if (strcmp(key, "RBKT") == 0) { strcpy(out, "]"); return; }
+    if (strcmp(key, "MINUS") == 0) { strcpy(out, "_\n-"); return; }
+    if (strcmp(key, "BSLH") == 0)  { strcpy(out, "|\n\\"); return; }
+    if (strcmp(key, "FSLH") == 0)  { strcpy(out, "?\n/"); return; }
+    if (strcmp(key, "SEMI") == 0)  { strcpy(out, ":\n;"); return; }
+    if (strcmp(key, "SQT") == 0)   { strcpy(out, "\"\n'"); return; }
+    if (strcmp(key, "GRAVE") == 0) { strcpy(out, "~\n`"); return; }
+    if (strcmp(key, "COMMA") == 0) { strcpy(out, "<\n,"); return; }
+    if (strcmp(key, "DOT") == 0)   { strcpy(out, ">\n."); return; }
+    if (strcmp(key, "LBKT") == 0)  { strcpy(out, "{\n["); return; }
+    if (strcmp(key, "RBKT") == 0)  { strcpy(out, "}\n]"); return; }
     if (strcmp(key, "LSHFT") == 0) { strcpy(out, "Shift"); return; }
     if (strcmp(key, "RSHFT") == 0) { strcpy(out, "Shift"); return; }
     if (strcmp(key, "LCTRL") == 0) { strcpy(out, "Ctrl"); return; }
