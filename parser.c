@@ -12,7 +12,8 @@
 int get_zmk_behavior_arity(const char *behavior) {
     if (strcmp(behavior, "&none") == 0 || strcmp(behavior, "&trans") == 0 || 
         strcmp(behavior, "&sys_reset") == 0 || strcmp(behavior, "&bootloader") == 0 ||
-        strcmp(behavior, "&studio_unlock") == 0 || strcmp(behavior, "&layer_td") == 0) {
+        strcmp(behavior, "&studio_unlock") == 0 || strcmp(behavior, "&layer_td") == 0 ||
+        strncmp(behavior, "&bt_", 4) == 0 || strncmp(behavior, "bt_", 3) == 0) {
         return 0;
     }
     
@@ -30,22 +31,64 @@ int get_zmk_behavior_arity(const char *behavior) {
 }
 
 void humanize_key_code(const char *raw, char *out) {
-    if (strcmp(raw, "&none") == 0) { strcpy(out, ""); return; }
-    if (strcmp(raw, "&trans") == 0) { strcpy(out, "▽"); return; }
+    // 1. Empty / Trans actions (Give explicit action names)
+    if (strcmp(raw, "&none") == 0 || strcmp(raw, "none") == 0) { strcpy(out, "None"); return; }
+    if (strcmp(raw, "&trans") == 0 || strcmp(raw, "trans") == 0) { strcpy(out, "Trans"); return; }
+
+    // 2. Hardware / Firmware actions
     if (strcmp(raw, "&bootloader") == 0) { strcpy(out, "Boot"); return; }
     if (strcmp(raw, "&sys_reset") == 0) { strcpy(out, "Reset"); return; }
     if (strcmp(raw, "&layer_td") == 0) { strcpy(out, "Layer"); return; }
     if (strncmp(raw, "&magic", 6) == 0) { strcpy(out, "Magic"); return; }
-    if (strncmp(raw, "bt_", 3) == 0) { sprintf(out, "BT %s", raw + 3); return; }
+
+    // 3. Bluetooth profiles (&bt_0, &bt_1, etc.)
+    if (strncmp(raw, "&bt_", 4) == 0) {
+        int profile = atoi(raw + 4) + 1;
+        sprintf(out, "BT %d", profile);
+        return;
+    }
+    if (strncmp(raw, "bt_", 3) == 0) {
+        int profile = atoi(raw + 3) + 1;
+        sprintf(out, "BT %d", profile);
+        return;
+    }
+    if (strcmp(raw, "&bt BT_CLR") == 0 || strcmp(raw, "BT_CLR") == 0) { strcpy(out, "BT Clr"); return; }
+    if (strcmp(raw, "&bt BT_CLR_ALL") == 0 || strcmp(raw, "BT_CLR_ALL") == 0) { strcpy(out, "BT Clr All"); return; }
     if (strncmp(raw, "&bt ", 4) == 0) { sprintf(out, "%s", raw + 4); return; }
-    if (strncmp(raw, "rgb_ug ", 7) == 0) { sprintf(out, "%s", raw + 7); return; }
+
+    // 4. Output selection (&out OUT_USB, &out OUT_BLE)
+    if (strcmp(raw, "&out OUT_USB") == 0) { strcpy(out, "USB"); return; }
+    if (strcmp(raw, "&out OUT_BLE") == 0) { strcpy(out, "BLE"); return; }
+    if (strncmp(raw, "&out ", 5) == 0) { sprintf(out, "%s", raw + 5); return; }
+
+    // 5. Layer switching (&to FACTORY_TEST, &to DEFAULT)
+    if (strcmp(raw, "&to FACTORY_TEST") == 0) { strcpy(out, "Test"); return; }
+    if (strcmp(raw, "&to DEFAULT") == 0) { strcpy(out, "Base"); return; }
+    if (strncmp(raw, "&to ", 4) == 0) { sprintf(out, "%s", raw + 4); return; }
+
+    // 6. RGB Underglow
+    if (strncmp(raw, "&rgb_ug ", 8) == 0 || strncmp(raw, "rgb_ug ", 7) == 0) {
+        const char *rgb = raw + (raw[0] == '&' ? 8 : 7);
+        if (strcmp(rgb, "RGB_SPI") == 0) { strcpy(out, "RGB Spd+"); return; }
+        if (strcmp(rgb, "RGB_SPD") == 0) { strcpy(out, "RGB Spd-"); return; }
+        if (strcmp(rgb, "RGB_SAI") == 0) { strcpy(out, "RGB Sat+"); return; }
+        if (strcmp(rgb, "RGB_SAD") == 0) { strcpy(out, "RGB Sat-"); return; }
+        if (strcmp(rgb, "RGB_HUI") == 0) { strcpy(out, "RGB Hue+"); return; }
+        if (strcmp(rgb, "RGB_HUD") == 0) { strcpy(out, "RGB Hue-"); return; }
+        if (strcmp(rgb, "RGB_BRI") == 0) { strcpy(out, "RGB Bri+"); return; }
+        if (strcmp(rgb, "RGB_BRD") == 0) { strcpy(out, "RGB Bri-"); return; }
+        if (strcmp(rgb, "RGB_TOG") == 0) { strcpy(out, "RGB Tog"); return; }
+        if (strcmp(rgb, "RGB_EFF") == 0) { strcpy(out, "RGB Eff"); return; }
+        sprintf(out, "RGB %s", rgb);
+        return;
+    }
 
     const char *key = raw;
     if (strncmp(key, "&kp ", 4) == 0) {
         key += 4;
     }
 
-    // Numbers: N1 -> !\n1, N2 -> @\n2, etc.
+    // 7. Numbers with dual legends: N1 -> !\n1, N2 -> @\n2, etc.
     if (key[0] == 'N' && isdigit((unsigned char)key[1]) && key[2] == '\0') {
         const char *symbols = ")!@#$%^&*(";
         int d = key[1] - '0';
@@ -55,7 +98,40 @@ void humanize_key_code(const char *raw, char *out) {
         }
     }
 
-    // Common abbreviations
+    // 8. Keypad symbols and numbers
+    if (strcmp(key, "KP_NUM") == 0) { strcpy(out, "NumLk"); return; }
+    if (strcmp(key, "KP_EQUAL") == 0) { strcpy(out, "="); return; }
+    if (strcmp(key, "KP_DIVIDE") == 0) { strcpy(out, "/"); return; }
+    if (strcmp(key, "KP_MULTIPLY") == 0) { strcpy(out, "*"); return; }
+    if (strcmp(key, "KP_MINUS") == 0) { strcpy(out, "-"); return; }
+    if (strcmp(key, "KP_PLUS") == 0) { strcpy(out, "+"); return; }
+    if (strcmp(key, "KP_ENTER") == 0) { strcpy(out, "Enter"); return; }
+    if (strcmp(key, "KP_DOT") == 0) { strcpy(out, "."); return; }
+    if (strncmp(key, "KP_N", 4) == 0 && isdigit((unsigned char)key[4])) {
+        sprintf(out, "%c", key[4]);
+        return;
+    }
+
+    // 9. Media and system control
+    if (strcmp(key, "C_BRI_DN") == 0) { strcpy(out, "Bri -"); return; }
+    if (strcmp(key, "C_BRI_UP") == 0) { strcpy(out, "Bri +"); return; }
+    if (strcmp(key, "C_PREV") == 0) { strcpy(out, "Prev"); return; }
+    if (strcmp(key, "C_NEXT") == 0) { strcpy(out, "Next"); return; }
+    if (strcmp(key, "C_PP") == 0) { strcpy(out, "Play"); return; }
+    if (strcmp(key, "C_MUTE") == 0) { strcpy(out, "Mute"); return; }
+    if (strcmp(key, "C_VOL_DN") == 0) { strcpy(out, "Vol -"); return; }
+    if (strcmp(key, "C_VOL_UP") == 0) { strcpy(out, "Vol +"); return; }
+    if (strcmp(key, "PAUSE_BREAK") == 0) { strcpy(out, "Pause"); return; }
+    if (strcmp(key, "PSCRN") == 0) { strcpy(out, "PrtSc"); return; }
+    if (strcmp(key, "SLCK") == 0) { strcpy(out, "ScrLk"); return; }
+    if (strcmp(key, "CAPS") == 0) { strcpy(out, "Caps"); return; }
+    if (strcmp(key, "INS") == 0) { strcpy(out, "Ins"); return; }
+    if (strcmp(key, "K_CMENU") == 0) { strcpy(out, "Menu"); return; }
+    if (strcmp(key, "LPAR") == 0) { strcpy(out, "("); return; }
+    if (strcmp(key, "RPAR") == 0) { strcpy(out, ")"); return; }
+    if (strcmp(key, "PRCNT") == 0) { strcpy(out, "%"); return; }
+
+    // 10. Stacked Dual Legends for symbols
     if (strcmp(key, "EQUAL") == 0) { strcpy(out, "+\n="); return; }
     if (strcmp(key, "MINUS") == 0) { strcpy(out, "_\n-"); return; }
     if (strcmp(key, "BSLH") == 0)  { strcpy(out, "|\n\\"); return; }
@@ -67,6 +143,8 @@ void humanize_key_code(const char *raw, char *out) {
     if (strcmp(key, "DOT") == 0)   { strcpy(out, ">\n."); return; }
     if (strcmp(key, "LBKT") == 0)  { strcpy(out, "{\n["); return; }
     if (strcmp(key, "RBKT") == 0)  { strcpy(out, "}\n]"); return; }
+
+    // 11. Modifiers & standard keys
     if (strcmp(key, "LSHFT") == 0) { strcpy(out, "Shift"); return; }
     if (strcmp(key, "RSHFT") == 0) { strcpy(out, "Shift"); return; }
     if (strcmp(key, "LCTRL") == 0) { strcpy(out, "Control"); return; }
