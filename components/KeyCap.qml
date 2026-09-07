@@ -8,9 +8,9 @@ Rectangle {
     property string keyText: ""
     property bool isActive: false
     
-    width: Style.space(34)
-    height: Style.space(34)
-    radius: Style.cornerRadius
+    width: Style.space(36)
+    height: Style.space(36)
+    radius: Style.space(7)
     
     color: isActive ? Color.accent : Style.normalFill
     border.color: isActive ? Color.accent : Color.muted
@@ -25,6 +25,7 @@ Rectangle {
         color: root.isActive ? Color.background : Color.foreground
         wrapMode: Text.Wrap
         horizontalAlignment: Text.AlignHCenter
+        lineHeight: 0.95
         width: parent.width - Style.space(4)
     }
 }
