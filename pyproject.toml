@@ -1,9 +1,7 @@
 [project]
 name = "omarchy-moergo-glove80"
 version = "0.1.0"
-description = "Add your description here"
+description = "MoErgo Glove80 layer visualizer and battery status for Omarchy shell"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = [
-    "numpy>=2.5.3",
-]
+dependencies = []

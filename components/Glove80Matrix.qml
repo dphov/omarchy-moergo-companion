@@ -9,6 +9,8 @@ Item {
     property real unitSize: Style.space(42)
     property real keyWidth: Style.space(36)
     property real keyHeight: Style.space(36)
+    signal layerSwitchRequested(string layerName)
+
 
     implicitWidth: 20.0 * unitSize
     implicitHeight: 8.8 * unitSize
@@ -107,6 +109,7 @@ Item {
             readonly property var currentKey: (root.keys && root.keys.length > index) ? root.keys[index] : null
             keyText: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.text || "") : (currentKey ? String(currentKey) : "")
             isTrans: (typeof currentKey === "object" && currentKey !== null) ? !!currentKey.trans : false
+            onClicked: if (targetLayer !== "") root.layerSwitchRequested(targetLayer)
         }
     }
 }

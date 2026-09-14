@@ -9,14 +9,22 @@ Rectangle {
     property string keyText: ""
     property bool isActive: false
     property bool isTrans: false
+    readonly property bool isLayerKey: keyText === "Layer" || keyText === "Base" || keyText === "Lower" || keyText === "Magic" || keyText === "Test"
+    readonly property string targetLayer: {
+        if (keyText === "Layer") return "Lower";
+        if (isLayerKey) return keyText;
+        return "";
+    }
+
+    signal clicked()
 
     width: Style.space(36)
     height: Style.space(36)
     radius: Style.space(7)
 
     color: isActive ? Color.accent : (isTrans ? "transparent" : Style.normalFill)
-    border.color: isActive ? Color.accent : Color.muted
-    border.width: isTrans ? 0 : 1
+    border.color: (mouse.containsMouse && isLayerKey) ? Color.accent : (isActive ? Color.accent : Color.muted)
+    border.width: isTrans && !(mouse.containsMouse && isLayerKey) ? 0 : 1
 
     Shape {
         anchors.fill: parent
@@ -56,5 +64,19 @@ Rectangle {
         horizontalAlignment: Text.AlignHCenter
         lineHeight: 1.0
         width: parent.width - Style.space(2)
+    }
+
+    MouseArea {
+        id: mouse
+        anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: root.isLayerKey ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onClicked: root.clicked()
+    }
+
+    PanelToolTip {
+        visible: mouse.containsMouse && root.isLayerKey
+        text: "Switch to " + root.targetLayer + " layer"
+        fontFamily: Style.font.family
     }
 }
