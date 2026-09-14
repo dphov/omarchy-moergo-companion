@@ -240,6 +240,47 @@ void escape_json_string(const char *source, char *destination) {
     *destination = '\0';
 }
 
+void humanize_layer_name(const char *raw, char *out) {
+    if (strcmp(raw, "default_layer") == 0 || strcmp(raw, "default") == 0) {
+        strcpy(out, "Base");
+        return;
+    }
+    if (strcmp(raw, "lower_layer") == 0 || strcmp(raw, "lower") == 0) {
+        strcpy(out, "Lower");
+        return;
+    }
+    if (strcmp(raw, "magic_layer") == 0 || strcmp(raw, "magic") == 0) {
+        strcpy(out, "Magic");
+        return;
+    }
+    if (strcmp(raw, "factory_test_layer") == 0 || strcmp(raw, "factory_test") == 0) {
+        strcpy(out, "Test");
+        return;
+    }
+
+    char buf[LAYER_NAME_MAX];
+    strncpy(buf, raw, sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
+
+    int len = strlen(buf);
+    if (len > 6 && strcmp(buf + len - 6, "_layer") == 0) {
+        buf[len - 6] = '\0';
+    }
+
+    int out_idx = 0;
+    bool cap_next = true;
+    for (int i = 0; buf[i] && out_idx < LAYER_NAME_MAX - 1; i++) {
+        if (buf[i] == '_') {
+            out[out_idx++] = ' ';
+            cap_next = true;
+        } else {
+            out[out_idx++] = cap_next ? toupper((unsigned char)buf[i]) : buf[i];
+            cap_next = false;
+        }
+    }
+    out[out_idx] = '\0';
+}
+
 void extract_layer_name(char *layer_start, char *source_start, char *out_name) {
     strcpy(out_name, "Layer");
     char *brace = layer_start;
@@ -262,8 +303,10 @@ void extract_layer_name(char *layer_start, char *source_start, char *out_name) {
         
         int len = name_end - name_start + 1;
         if (len > 0 && len < LAYER_NAME_MAX - 1) {
-            strncpy(out_name, name_start, len);
-            out_name[len] = '\0';
+            char raw_name[LAYER_NAME_MAX];
+            strncpy(raw_name, name_start, len);
+            raw_name[len] = '\0';
+            humanize_layer_name(raw_name, out_name);
         }
     }
 }
