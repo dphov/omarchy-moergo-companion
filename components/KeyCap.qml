@@ -65,7 +65,7 @@ Rectangle {
         }
         wrapMode: root.keyText.indexOf("\n") !== -1 ? Text.Wrap : Text.NoWrap
         horizontalAlignment: Text.AlignHCenter
-        lineHeight: 0.90
-        width: parent.width - Style.space(4)
+        lineHeight: 1.0
+        width: parent.width - Style.space(2)
     }
 }
