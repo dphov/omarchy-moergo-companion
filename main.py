@@ -1,5 +1,5 @@
 def main():
-    print("Hello from omarchy-moergo-glove80!")
+    print("Hello from omarchy-moergo-companion!")
 
 
 if __name__ == "__main__":

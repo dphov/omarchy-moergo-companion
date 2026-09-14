@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-PLUGIN_ID="dphov.moergomarchy"
+PLUGIN_ID="dphov.omarchy-moergo-companion"
 TARGET_DIR="$HOME/.config/omarchy/plugins/$PLUGIN_ID"
 
 echo "Compiling C parser..."

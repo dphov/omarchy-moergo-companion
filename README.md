@@ -1,4 +1,4 @@
-# Moergomarchy (`dphov.moergomarchy`)
+# Omarchy Moergo Companion (`dphov.omarchy-moergo-companion`)
 
 MoErgo Glove80 visualizer and hardware status plugin for [Omarchy shell](https://github.com/omarchy).
 
@@ -53,7 +53,7 @@ MoErgo Glove80 visualizer and hardware status plugin for [Omarchy shell](https:/
 ### From the Omarchy marketplace
 
 ```bash
-omarchy plugin add https://github.com/dphov/omarchy-moergo-glove80.git --enable
+omarchy plugin add https://github.com/dphov/omarchy-moergo-companion.git --enable
 omarchy-restart-shell
 ```
 
@@ -69,9 +69,9 @@ The native C parser (`parser`) is built automatically by `watcher.sh` on first l
 ## Removal
 
 ```bash
-omarchy plugin disable dphov.moergomarchy
-omarchy plugin remove dphov.moergomarchy
+omarchy plugin disable dphov.omarchy-moergo-companion
+omarchy plugin remove dphov.omarchy-moergo-companion
 omarchy-restart-shell
 ```
 
-Or, if installed manually, delete `~/.config/omarchy/plugins/dphov.moergomarchy/` and restart the shell.
+Or, if installed manually, delete `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/` and restart the shell.

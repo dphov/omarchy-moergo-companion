@@ -8,8 +8,8 @@ import "./components" as Components
 
 Panel {
     id: root
-    moduleName: "dphov.moergomarchy"
-    ipcTarget: "dphov.moergomarchy"
+    moduleName: "dphov.omarchy-moergo-companion"
+    ipcTarget: "dphov.omarchy-moergo-companion"
 
     visible: root.isConnected && root.statusText !== ""
     implicitWidth: visible ? button.implicitWidth : 0

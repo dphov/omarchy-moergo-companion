@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "id": "dphov.moergomarchy",
-  "name": "Moergomarchy",
+  "id": "dphov.omarchy-moergo-companion",
+  "name": "Omarchy Moergo Companion",
   "description": "MoErgo Glove80 layer visualizer, live USB/Bluetooth hardware monitor, and device dashboard",
   "version": "1.0.0",
   "author": "dphov",
