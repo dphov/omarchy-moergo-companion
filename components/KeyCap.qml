@@ -1,7 +1,7 @@
 import QtQuick
+import QtQuick.Shapes
 import qs.Commons
 import qs.Ui
-
 Rectangle {
     id: root
     
@@ -10,7 +10,7 @@ Rectangle {
     property bool isTrans: false
 
     readonly property bool isEmpty: keyText === ""
-    readonly property bool isLayer: !isTrans && (keyText === "Layer" || keyText === "Base" || keyText === "Lower" || keyText === "Magic" || keyText === "Test")
+    readonly property bool isLayer: keyText === "Layer" || keyText === "Base" || keyText === "Lower" || keyText === "Magic" || keyText === "Test"
 
     width: Style.space(36)
     height: Style.space(36)
@@ -21,10 +21,34 @@ Rectangle {
         if (isActive) return Color.accent;
         if (isLayer) return Color.accent;
         if (isEmpty) return Qt.rgba(Color.muted.r, Color.muted.g, Color.muted.b, 0.25);
-        if (isTrans) return Qt.rgba(Color.muted.r, Color.muted.g, Color.muted.b, 0.45);
         return Color.muted;
     }
-    border.width: isLayer ? 1.5 : 1
+    border.width: isTrans ? 0 : (isLayer ? 1.5 : 1)
+
+    Shape {
+        anchors.fill: parent
+        visible: root.isTrans && !root.isActive
+        layer.enabled: true
+
+        ShapePath {
+            strokeColor: Color.muted
+            strokeWidth: 1
+            strokeStyle: ShapePath.DashLine
+            dashPattern: [2, 2]
+            fillColor: "transparent"
+
+            startX: root.radius
+            startY: 0.5
+            PathLine { x: root.width - root.radius; y: 0.5 }
+            PathArc { x: root.width - 0.5; y: root.radius; radiusX: root.radius - 0.5; radiusY: root.radius - 0.5 }
+            PathLine { x: root.width - 0.5; y: root.height - root.radius }
+            PathArc { x: root.width - root.radius; y: root.height - 0.5; radiusX: root.radius - 0.5; radiusY: root.radius - 0.5 }
+            PathLine { x: root.radius; y: root.height - 0.5 }
+            PathArc { x: 0.5; y: root.height - root.radius; radiusX: root.radius - 0.5; radiusY: root.radius - 0.5 }
+            PathLine { x: 0.5; y: root.radius }
+            PathArc { x: root.radius; y: 0.5; radiusX: root.radius - 0.5; radiusY: root.radius - 0.5 }
+        }
+    }
 
     Text {
         anchors.centerIn: parent
@@ -37,7 +61,6 @@ Rectangle {
         color: {
             if (root.isActive) return Color.background;
             if (root.isLayer) return Color.accent;
-            if (root.isTrans) return Qt.rgba(Color.foreground.r, Color.foreground.g, Color.foreground.b, 0.65);
             return Color.foreground;
         }
         wrapMode: root.keyText.indexOf("\n") !== -1 ? Text.Wrap : Text.NoWrap
