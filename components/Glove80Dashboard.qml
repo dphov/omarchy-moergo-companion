@@ -1,5 +1,8 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
+import Quickshell
+import Quickshell.Io
 import qs.Commons
 import qs.Ui
 
@@ -13,8 +16,25 @@ Item {
     property var batteryLevel: null
     property bool usbLeft: false
     property bool usbRight: false
+    property string keymapFile: ""
+    property string keymapError: ""
 
     signal actionRequested(string action)
+    signal keymapPathSubmitted(string path)
+
+    function applyPickedPath(path) {
+        if (!path || path === "") return;
+        keymapInput.text = String(path).trim();
+        root.keymapPathSubmitted(keymapInput.text);
+    }
+
+    Process {
+        id: filePickerProc
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: root.applyPickedPath(text)
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -50,7 +70,7 @@ Item {
                             text: "Device Name"
                             font.family: Style.font.family
                             font.pixelSize: Style.font.bodySmall
-                            color: Color.muted
+                            color: Color.foreground
                         }
                         Item { Layout.fillWidth: true }
                         Text {
@@ -68,7 +88,7 @@ Item {
                             text: "Bluetooth MAC Address"
                             font.family: Style.font.family
                             font.pixelSize: Style.font.bodySmall
-                            color: Color.muted
+                            color: Color.foreground
                         }
                         Item { Layout.fillWidth: true }
                         Text {
@@ -85,7 +105,7 @@ Item {
                             text: "Hardware Connection"
                             font.family: Style.font.family
                             font.pixelSize: Style.font.bodySmall
-                            color: Color.muted
+                            color: Color.foreground
                         }
                         Item { Layout.fillWidth: true }
                         Text {
@@ -99,7 +119,7 @@ Item {
                             font.bold: true
                             font.family: Style.font.family
                             font.pixelSize: Style.font.bodySmall
-                            color: root.isConnected ? Color.accent : Color.muted
+                            color: root.isConnected ? Color.accent : Color.foreground
                         }
                     }
 
@@ -109,7 +129,7 @@ Item {
                             text: "Bluetooth Pairing"
                             font.family: Style.font.family
                             font.pixelSize: Style.font.bodySmall
-                            color: Color.muted
+                            color: Color.foreground
                         }
                         Item { Layout.fillWidth: true }
                         Text {
@@ -126,7 +146,7 @@ Item {
                             text: "Battery Level"
                             font.family: Style.font.family
                             font.pixelSize: Style.font.bodySmall
-                            color: Color.muted
+                            color: Color.foreground
                         }
                         Item { Layout.fillWidth: true }
                         Text {
@@ -222,6 +242,105 @@ Item {
                     tooltipText: "Typing practice for Glove80"
                     bordered: true
                     onClicked: Qt.openUrlExternally("https://moosylog.github.io/moosytype/")
+                }
+            }
+        }
+
+        // Section 4: Layout Source
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: Style.space(6)
+
+            PanelSectionHeader {
+                text: "LAYOUT SOURCE"
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: sourceColumn.implicitHeight + Style.space(20)
+                color: Style.normalFill
+                radius: Style.cornerRadius
+                border.color: Color.muted
+                border.width: 1
+
+                ColumnLayout {
+                    id: sourceColumn
+                    anchors.fill: parent
+                    anchors.margins: Style.space(12)
+                    spacing: Style.space(10)
+
+                    Text {
+                        text: "Path to keymap file (.keymap or .json)"
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.bodySmall
+                        font.bold: true
+                        color: Color.foreground
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Style.space(8)
+
+                        Controls.TextField {
+                            id: keymapInput
+                            Layout.fillWidth: true
+                            text: root.keymapFile
+                            font.family: Style.font.family
+                            font.pixelSize: Style.font.bodySmall
+                            color: Color.foreground
+                            background: Rectangle {
+                                color: Color.background
+                                radius: Style.cornerRadius
+                                border.color: Color.foreground
+                                border.width: 1
+                            }
+                        }
+
+                        Button {
+                            text: "Cancel"
+                            bordered: true
+                            onClicked: keymapInput.text = root.keymapFile
+                        }
+
+                        Button {
+                            text: "Select..."
+                            bordered: true
+                            onClicked: {
+                                filePickerProc.command = ["zenity", "--file-selection", "--file-filter=Keymap files | *.keymap *.json"];
+                                filePickerProc.running = true;
+                            }
+                        }
+
+                        Button {
+                            text: "Apply"
+                            bordered: true
+                            onClicked: {
+                                root.keymapError = "";
+                                root.keymapPathSubmitted(keymapInput.text);
+                            }
+                        }
+                    }
+
+                    Text {
+                        text: "Supports ZMK .keymap files and Glove80 layout editor .json exports. The watcher will restart automatically."
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.caption
+                        color: Color.foreground
+                        opacity: 0.85
+                        wrapMode: Text.Wrap
+                        Layout.fillWidth: true
+                    }
+
+                    Text {
+                        text: root.keymapError
+                        visible: root.keymapError !== ""
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.caption
+                        font.bold: true
+                        color: Color.accent
+                        wrapMode: Text.Wrap
+                        Layout.fillWidth: true
+                    }
                 }
             }
         }

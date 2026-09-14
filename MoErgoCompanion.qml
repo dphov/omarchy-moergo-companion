@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
@@ -18,9 +19,9 @@ Panel {
     // State
     property var parsedLayout: null
     property int currentLayerIndex: 0
-    property string dataSource: "~/.dotfiles/zmk"
     property string keymapFile: Quickshell.env("HOME") + "/.dotfiles/zmk/config/glove80.keymap"
     property string jsonFile: "/tmp/glove80_layout.json"
+    property string lastKeymapError: ""
 
     // Hardware battery & connection state
     property string statusText: "Loading…"
@@ -37,7 +38,14 @@ Panel {
         return decodeURIComponent(resolved.replace(/^file:\/\//, ""))
     }
     readonly property string watcherScript: {
-        var resolved = String(Qt.resolvedUrl("watcher.sh"))
+        var resolved = String(Qt.resolvedUrl("bin/moergo-watcher"))
+        return decodeURIComponent(resolved.replace(/^file:\/\//, ""))
+    }
+    onParsedLayoutChanged: {
+        root.currentLayerIndex = 0;
+    }
+    readonly property string settingsScript: {
+        var resolved = String(Qt.resolvedUrl("bin/moergo-companion-settings"))
         return decodeURIComponent(resolved.replace(/^file:\/\//, ""))
     }
 
@@ -80,10 +88,61 @@ Panel {
             onStreamFinished: root.refreshStatus()
         }
     }
+    Process {
+        id: settingsProc
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: {
+                try {
+                    root.applySettings(JSON.parse(text));
+                } catch (e) {
+                    console.error("Failed to parse settings:", e);
+                }
+            }
+        }
+    }
+    Process {
+        id: saveSettingsProc
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: {
+                try {
+                    root.applySettings(JSON.parse(text));
+                } catch (e) {
+                    console.error("Failed to save settings:", e);
+                }
+            }
+        }
+    }
 
     function runDashboardAction(act) {
         actionProc.command = [root.helperScript, act];
         actionProc.running = true;
+    }
+
+    function applySettings(settings) {
+        if (!settings) return;
+        if (settings.success === false) {
+            root.lastKeymapError = settings.error || "Invalid keymap file";
+            return;
+        }
+        root.lastKeymapError = "";
+        if (settings.keymapFile && settings.keymapFile !== "") {
+            root.keymapFile = settings.keymapFile;
+            root.restartWatcher();
+        }
+    }
+
+    function restartWatcher() {
+        watcherProcess.running = false;
+        watcherProcess.command = [root.watcherScript, root.keymapFile, root.jsonFile];
+        watcherProcess.running = true;
+    }
+
+    function saveKeymapFile(path) {
+        if (!path || path === "") return;
+        saveSettingsProc.command = [root.settingsScript, "--set", "keymapFile", path];
+        saveSettingsProc.running = true;
     }
 
 
@@ -133,26 +192,28 @@ Panel {
         triggeredOnStart: true
         onTriggered: root.refreshStatus()
     }
-    // Native Quickshell file reader and watcher
-    FileView {
-        id: layoutFileView
-        path: root.jsonFile
-        watchChanges: true
-        printErrors: true
-        onLoaded: {
-            try {
-                root.parsedLayout = JSON.parse(text());
-            } catch (e) {
-                console.error("Failed to parse keymap JSON:", e);
-            }
-        }
+
+    Component.onCompleted: {
+        settingsProc.command = [root.settingsScript, "--load"];
+        settingsProc.running = true;
     }
 
-    // Background watcher process
+    // Background watcher process: parses keymap and streams JSON back
     Process {
         id: watcherProcess
         command: [root.watcherScript, root.keymapFile, root.jsonFile]
         running: true
+        stdout: SplitParser {
+            onRead: function(line) {
+                line = String(line).trim();
+                if (line.indexOf("{") !== 0) return;
+                try {
+                    root.parsedLayout = JSON.parse(line);
+                } catch (e) {
+                    console.error("Failed to parse keymap JSON:", e);
+                }
+            }
+        }
     }
 
     WidgetButton {
@@ -228,15 +289,17 @@ Panel {
                     }
                     Text { 
                         text: "Source: " + root.keymapFile
-                        color: Color.muted
+                        color: Color.foreground
                         font.family: Style.font.family
-                        font.pixelSize: Style.font.caption 
+                        font.pixelSize: Style.font.caption
+                        elide: Text.ElideMiddle
+                        Layout.maximumWidth: Style.space(360)
                     }
                 }
                 Item { Layout.fillWidth: true }
                 Text {
                     text: root.statusTooltip
-                    color: Color.muted
+                    color: Color.foreground
                     font.family: Style.font.family
                     font.pixelSize: Style.font.caption
                 }
@@ -245,32 +308,22 @@ Panel {
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
-                color: Color.muted
-                opacity: 0.3
+                color: Color.foreground
+                opacity: 0.35
             }
 
             // Layer Tabs
-            RowLayout {
+            Components.MoErgoCompanionLayerTabs {
+                id: layerTabs
                 Layout.fillWidth: true
-                spacing: Style.space(6)
-                Repeater {
-                    model: root.parsedLayout ? root.parsedLayout.layers : []
-                    delegate: Button {
-                        text: modelData.name
-                        selected: !root.showDashboard && root.currentLayerIndex === index
-                        onClicked: {
-                            root.showDashboard = false;
-                            root.currentLayerIndex = index;
-                        }
-                    }
+                layers: root.parsedLayout ? root.parsedLayout.layers : []
+                currentIndex: root.currentLayerIndex
+                showDashboard: root.showDashboard
+                onLayerClicked: function(idx) {
+                    root.showDashboard = false;
+                    root.currentLayerIndex = idx;
                 }
-                Item { Layout.fillWidth: true }
-                Button {
-                    text: "Dashboard"
-                    selected: root.showDashboard
-                    bordered: true
-                    onClicked: root.showDashboard = !root.showDashboard
-                }
+                onDashboardClicked: root.showDashboard = !root.showDashboard
             }
 
             // Visualizer Canvas
@@ -279,6 +332,7 @@ Panel {
                 Layout.fillHeight: true
 
                 Components.Glove80Matrix {
+                    id: matrix
                     anchors.centerIn: parent
                     visible: !root.showDashboard && root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers.length > 0
                     keys: (root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers[root.currentLayerIndex]) ? root.parsedLayout.layers[root.currentLayerIndex].keys : []
@@ -304,16 +358,21 @@ Panel {
                     batteryLevel: root.battery
                     usbLeft: root.usbLeft
                     usbRight: root.usbRight
+                    keymapFile: root.keymapFile
+                    keymapError: root.lastKeymapError
                     onActionRequested: function(act) {
                         root.runDashboardAction(act);
+                    }
+                    onKeymapPathSubmitted: function(path) {
+                        root.saveKeymapFile(path);
                     }
                 }
 
                 Text {
                     anchors.centerIn: parent
                     visible: !root.showDashboard && (!root.parsedLayout || !root.parsedLayout.layers || root.parsedLayout.layers.length === 0)
-                    text: "Downloading & Parsing Keymap..."
-                    color: Color.muted
+                    text: "No valid keymap layers found."
+                    color: Color.foreground
                     font.family: Style.font.family
                     font.pixelSize: Style.font.body
                 }

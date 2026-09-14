@@ -9,7 +9,7 @@
   "icon": "keyboard-outline",
   "kinds": ["bar-widget"],
   "entryPoints": {
-    "barWidget": "Glove80.qml"
+    "barWidget": "MoErgoCompanion.qml"
   },
   "barWidget": {
     "displayName": "Glove80",

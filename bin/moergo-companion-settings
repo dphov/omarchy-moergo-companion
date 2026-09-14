@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+"""Simple JSON settings store for the Glove80 plugin."""
+
+import json
+import os
+import sys
+
+# Allow running from both source tree and installed plugin directory.
+_plugin_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _plugin_dir not in sys.path:
+    sys.path.insert(0, _plugin_dir)
+
+SETTINGS_FILE = os.path.join(
+    os.path.expanduser("~/.config/omarchy"),
+    "glove80-plugin-settings.json",
+)
+
+
+def _load() -> dict:
+    if not os.path.exists(SETTINGS_FILE):
+        return {}
+    try:
+        with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _save(settings: dict) -> None:
+    os.makedirs(os.path.dirname(SETTINGS_FILE), exist_ok=True)
+    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+        json.dump(settings, f, indent=2)
+
+
+def _validate_keymap(path: str) -> tuple[bool, str]:
+    from keymap_parser.parser import parse_keymap
+
+    expanded = os.path.expanduser(path)
+    if not os.path.exists(expanded):
+        return False, f"File not found: {path}"
+    if not os.path.isfile(expanded):
+        return False, f"Not a file: {path}"
+    try:
+        layers = parse_keymap(expanded)
+        if not layers or all(len(layer.keys) == 0 for layer in layers):
+            return False, "No valid keymap layers found in file"
+        return True, ""
+    except Exception as exc:
+        return False, f"Failed to parse keymap: {exc}"
+
+
+def main() -> None:
+    if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
+        print(f"Usage: {sys.argv[0]} [--get KEY | --set KEY VALUE | --load]", file=sys.stderr)
+        sys.exit(1)
+
+    cmd = sys.argv[1]
+    settings = _load()
+
+    if cmd == "--load":
+        print(json.dumps(settings))
+    elif cmd == "--get":
+        key = sys.argv[2]
+        print(settings.get(key, ""))
+    elif cmd == "--set":
+        key = sys.argv[2]
+        value = sys.argv[3]
+        if key.endswith("File") or key.endswith("Path"):
+            value = os.path.expanduser(value)
+        ok, error = _validate_keymap(value)
+        if not ok:
+            print(json.dumps({"success": False, "error": error, "key": key, "value": value}))
+            sys.exit(1)
+        settings[key] = value
+        _save(settings)
+        print(json.dumps({"success": True, **settings}))
+    else:
+        print(f"Unknown command: {cmd}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
