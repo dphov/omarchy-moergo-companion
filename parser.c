@@ -44,16 +44,16 @@ void humanize_key_code(const char *raw, char *out) {
     // 3. Bluetooth profiles (&bt_0, &bt_1, etc.)
     if (strncmp(raw, "&bt_", 4) == 0) {
         int profile = atoi(raw + 4) + 1;
-        sprintf(out, "BT %d", profile);
+        sprintf(out, "BT\n%d", profile);
         return;
     }
     if (strncmp(raw, "bt_", 3) == 0) {
         int profile = atoi(raw + 3) + 1;
-        sprintf(out, "BT %d", profile);
+        sprintf(out, "BT\n%d", profile);
         return;
     }
-    if (strcmp(raw, "&bt BT_CLR") == 0 || strcmp(raw, "BT_CLR") == 0) { strcpy(out, "BT Clr"); return; }
-    if (strcmp(raw, "&bt BT_CLR_ALL") == 0 || strcmp(raw, "BT_CLR_ALL") == 0) { strcpy(out, "BT Clr All"); return; }
+    if (strcmp(raw, "&bt BT_CLR") == 0 || strcmp(raw, "BT_CLR") == 0) { strcpy(out, "BT\nClr"); return; }
+    if (strcmp(raw, "&bt BT_CLR_ALL") == 0 || strcmp(raw, "BT_CLR_ALL") == 0) { strcpy(out, "Clr\nAll"); return; }
     if (strncmp(raw, "&bt ", 4) == 0) { sprintf(out, "%s", raw + 4); return; }
 
     // 4. Output selection (&out OUT_USB, &out OUT_BLE)
@@ -69,17 +69,17 @@ void humanize_key_code(const char *raw, char *out) {
     // 6. RGB Underglow
     if (strncmp(raw, "&rgb_ug ", 8) == 0 || strncmp(raw, "rgb_ug ", 7) == 0) {
         const char *rgb = raw + (raw[0] == '&' ? 8 : 7);
-        if (strcmp(rgb, "RGB_SPI") == 0) { strcpy(out, "RGB Spd+"); return; }
-        if (strcmp(rgb, "RGB_SPD") == 0) { strcpy(out, "RGB Spd-"); return; }
-        if (strcmp(rgb, "RGB_SAI") == 0) { strcpy(out, "RGB Sat+"); return; }
-        if (strcmp(rgb, "RGB_SAD") == 0) { strcpy(out, "RGB Sat-"); return; }
-        if (strcmp(rgb, "RGB_HUI") == 0) { strcpy(out, "RGB Hue+"); return; }
-        if (strcmp(rgb, "RGB_HUD") == 0) { strcpy(out, "RGB Hue-"); return; }
-        if (strcmp(rgb, "RGB_BRI") == 0) { strcpy(out, "RGB Bri+"); return; }
-        if (strcmp(rgb, "RGB_BRD") == 0) { strcpy(out, "RGB Bri-"); return; }
-        if (strcmp(rgb, "RGB_TOG") == 0) { strcpy(out, "RGB Tog"); return; }
-        if (strcmp(rgb, "RGB_EFF") == 0) { strcpy(out, "RGB Eff"); return; }
-        sprintf(out, "RGB %s", rgb);
+        if (strcmp(rgb, "RGB_SPI") == 0) { strcpy(out, "RGB\nSpd+"); return; }
+        if (strcmp(rgb, "RGB_SPD") == 0) { strcpy(out, "RGB\nSpd-"); return; }
+        if (strcmp(rgb, "RGB_SAI") == 0) { strcpy(out, "RGB\nSat+"); return; }
+        if (strcmp(rgb, "RGB_SAD") == 0) { strcpy(out, "RGB\nSat-"); return; }
+        if (strcmp(rgb, "RGB_HUI") == 0) { strcpy(out, "RGB\nHue+"); return; }
+        if (strcmp(rgb, "RGB_HUD") == 0) { strcpy(out, "RGB\nHue-"); return; }
+        if (strcmp(rgb, "RGB_BRI") == 0) { strcpy(out, "RGB\nBri+"); return; }
+        if (strcmp(rgb, "RGB_BRD") == 0) { strcpy(out, "RGB\nBri-"); return; }
+        if (strcmp(rgb, "RGB_TOG") == 0) { strcpy(out, "RGB\nTog"); return; }
+        if (strcmp(rgb, "RGB_EFF") == 0) { strcpy(out, "RGB\nEff"); return; }
+        sprintf(out, "RGB\n%s", rgb);
         return;
     }
 

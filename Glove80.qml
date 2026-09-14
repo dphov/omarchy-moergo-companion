@@ -139,10 +139,40 @@ Panel {
         open: root.opened
         contentWidth: Style.space(900)
         contentHeight: Style.space(560)
+        focusTarget: keyCatcher
 
-        ColumnLayout {
+        PanelKeyCatcher {
+            id: keyCatcher
             anchors.fill: parent
-            anchors.margins: Style.space(16)
+
+            onCloseRequested: root.close()
+            onTabRequested: function(dir) {
+                if (!root.parsedLayout || !root.parsedLayout.layers) return;
+                var total = root.parsedLayout.layers.length;
+                if (total <= 0) return;
+                root.currentLayerIndex = (root.currentLayerIndex + dir + total) % total;
+            }
+            onMoveRequested: function(dx, dy) {
+                if (dx !== 0 && root.parsedLayout && root.parsedLayout.layers) {
+                    var total = root.parsedLayout.layers.length;
+                    if (total > 0) {
+                        root.currentLayerIndex = (root.currentLayerIndex + dx + total) % total;
+                    }
+                }
+            }
+            onTextKey: function(t) {
+                var num = parseInt(t, 10);
+                if (!isNaN(num) && num >= 1 && root.parsedLayout && root.parsedLayout.layers) {
+                    var target = num - 1;
+                    if (target < root.parsedLayout.layers.length) {
+                        root.currentLayerIndex = target;
+                    }
+                }
+            }
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: Style.space(16)
             spacing: Style.space(12)
 
             RowLayout {
@@ -220,4 +250,5 @@ Panel {
             }
         }
     }
+}
 }
