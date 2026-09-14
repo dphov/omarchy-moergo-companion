@@ -1,6 +1,8 @@
 import QtQuick
+import QtQuick.Shapes
 import qs.Commons
 import qs.Ui
+
 Rectangle {
     id: root
     
@@ -14,7 +16,32 @@ Rectangle {
 
     color: isActive ? Color.accent : (isTrans ? "transparent" : Style.normalFill)
     border.color: isActive ? Color.accent : Color.muted
-    border.width: 1
+    border.width: isTrans ? 0 : 1
+
+    Shape {
+        anchors.fill: parent
+        visible: root.isTrans && !root.isActive
+        layer.enabled: true
+
+        ShapePath {
+            strokeColor: Color.muted
+            strokeWidth: 1
+            strokeStyle: ShapePath.DashLine
+            dashPattern: [2, 2]
+            fillColor: "transparent"
+
+            startX: root.radius
+            startY: 0.5
+            PathLine { x: root.width - root.radius; y: 0.5 }
+            PathArc { x: root.width - 0.5; y: root.radius; radiusX: root.radius - 0.5; radiusY: root.radius - 0.5 }
+            PathLine { x: root.width - 0.5; y: root.height - root.radius }
+            PathArc { x: root.width - root.radius; y: root.height - 0.5; radiusX: root.radius - 0.5; radiusY: root.radius - 0.5 }
+            PathLine { x: root.radius; y: root.height - 0.5 }
+            PathArc { x: 0.5; y: root.height - root.radius; radiusX: root.radius - 0.5; radiusY: root.radius - 0.5 }
+            PathLine { x: 0.5; y: root.radius }
+            PathArc { x: root.radius; y: 0.5; radiusX: root.radius - 0.5; radiusY: root.radius - 0.5 }
+        }
+    }
 
     Text {
         anchors.centerIn: parent
