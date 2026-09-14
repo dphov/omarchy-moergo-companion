@@ -238,9 +238,10 @@ Panel {
                     visible: root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers.length > 0
                     keys: (root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers[root.currentLayerIndex]) ? root.parsedLayout.layers[root.currentLayerIndex].keys : []
                     onLayerSwitchRequested: function(targetName) {
-                        if (!root.parsedLayout || !root.parsedLayout.layers) return;
+                        if (!targetName || !root.parsedLayout || !root.parsedLayout.layers) return;
+                        var target = String(targetName).toLowerCase().trim();
                         for (var i = 0; i < root.parsedLayout.layers.length; i++) {
-                            if (root.parsedLayout.layers[i].name.toLowerCase() === targetName.toLowerCase()) {
+                            if (root.parsedLayout.layers[i].name.toLowerCase().trim() === target) {
                                 root.currentLayerIndex = i;
                                 break;
                             }

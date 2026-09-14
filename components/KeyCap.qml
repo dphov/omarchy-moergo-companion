@@ -9,14 +9,22 @@ Rectangle {
     property string keyText: ""
     property bool isActive: false
     property bool isTrans: false
-    readonly property bool isLayerKey: keyText === "Layer" || keyText === "Base" || keyText === "Lower" || keyText === "Magic" || keyText === "Test"
+    readonly property string normalizedKeyText: keyText.replace(/\s+/g, " ").trim()
+    readonly property bool isLayerKey: {
+        var k = normalizedKeyText.toLowerCase();
+        return k === "layer" || k === "base" || k === "lower" || k === "magic" || k === "test";
+    }
     readonly property string targetLayer: {
-        if (keyText === "Layer") return "Lower";
-        if (isLayerKey) return keyText;
+        var k = normalizedKeyText.toLowerCase();
+        if (k === "layer") return "Lower";
+        if (k === "base") return "Base";
+        if (k === "lower") return "Lower";
+        if (k === "magic") return "Magic";
+        if (k === "test") return "Test";
         return "";
     }
 
-    signal clicked()
+    signal layerClicked(string targetLayer)
 
     width: Style.space(36)
     height: Style.space(36)
@@ -71,7 +79,11 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: root.isLayerKey ? Qt.PointingHandCursor : Qt.ArrowCursor
-        onClicked: root.clicked()
+        onClicked: {
+            if (root.targetLayer !== "") {
+                root.layerClicked(root.targetLayer);
+            }
+        }
     }
 
     PanelToolTip {

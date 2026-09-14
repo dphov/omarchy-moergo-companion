@@ -109,7 +109,9 @@ Item {
             readonly property var currentKey: (root.keys && root.keys.length > index) ? root.keys[index] : null
             keyText: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.text || "") : (currentKey ? String(currentKey) : "")
             isTrans: (typeof currentKey === "object" && currentKey !== null) ? !!currentKey.trans : false
-            onClicked: if (targetLayer !== "") root.layerSwitchRequested(targetLayer)
+            onLayerClicked: function(targetLayer) {
+                root.layerSwitchRequested(targetLayer);
+            }
         }
     }
 }
