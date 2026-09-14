@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-Glove80 Hardware Status Monitor for Omarchy.
+Glove80 Hardware Status Monitor & Cockpit Controller for Omarchy.
 
-Detects:
-- USB Left half (16c0:27db or 'Glove80 Left')
-- USB Right half (16c0:27d9 or 'Glove80 Right')
-- Bluetooth connection and battery percentage via UPower and bluetoothctl
+Features:
+- Real-time USB detection for Left (16c0:27db) and Right (16c0:27d9) halves
+- Bluetooth device discovery & telemetry via BlueZ / UPower / bluetoothctl
+- Cockpit actions: --connect, --disconnect, --trust, --untrust, --forget
+- Desktop low-battery notifications with hysteresis
 """
 
 import glob
@@ -14,6 +15,11 @@ import os
 import re
 import subprocess
 import sys
+
+NOTIFY_STATE_FILE = "/tmp/glove80_battery_notified.json"
+LOW_PCT = 20
+CRITICAL_PCT = 10
+RECOVERY_MARGIN = 5
 
 
 def check_usb():
@@ -30,14 +36,12 @@ def check_usb():
             with open(pf, "r", encoding="utf-8", errors="ignore") as pf_file:
                 pid = pf_file.read().strip().lower()
 
-            # Check vendor MoErgo (16c0)
             if vid == "16c0":
                 if pid == "27db":
                     left = True
                 elif pid == "27d9":
                     right = True
 
-            # Product string fallback
             prod_path = f.replace("idVendor", "product")
             if os.path.exists(prod_path):
                 with open(prod_path, "r", encoding="utf-8", errors="ignore") as prod_file:
@@ -52,55 +56,187 @@ def check_usb():
     return left, right
 
 
-def check_bluetooth_battery():
-    """Queries battery levels and connection status for Glove80 via UPower & bluetoothctl."""
-    left_pct = None
-    right_pct = None
+def get_device_info():
+    """Queries detailed BlueZ metadata for the paired Glove80."""
+    mac = None
+    name = "Glove80"
     connected = False
+    paired = False
+    trusted = False
+    battery = None
 
-    # 1. Try UPower first
     try:
-        out = subprocess.check_output(["upower", "-e"], text=True, timeout=1)
-        for line in out.splitlines():
-            line = line.strip()
-            if "keyboard" in line or "Glove80" in line or "bluez" in line:
-                dev_info = subprocess.check_output(["upower", "-i", line], text=True, timeout=1)
-                if "Glove80" in dev_info:
-                    connected = True
-                    m = re.search(r"percentage:\s*([0-9]+)%", dev_info)
-                    if m:
-                        pct = int(m.group(1))
-                        if left_pct is None:
-                            left_pct = pct
-                        elif right_pct is None:
-                            right_pct = pct
-    except Exception:
-        pass
-
-    # 2. Fallback / supplementary query via bluetoothctl
-    try:
-        out = subprocess.check_output(["bluetoothctl", "devices", "Connected"], text=True, timeout=1)
+        out = subprocess.check_output(["bluetoothctl", "devices"], text=True, timeout=2)
         for line in out.splitlines():
             if "Glove80" in line:
-                connected = True
                 parts = line.split()
                 if len(parts) >= 2:
                     mac = parts[1]
-                    info = subprocess.check_output(["bluetoothctl", "info", mac], text=True, timeout=1)
-                    m = re.search(r"Battery Percentage:.*\((\d+)\)", info)
-                    if m and left_pct is None:
-                        left_pct = int(m.group(1))
+                    break
     except Exception:
         pass
 
-    return connected, left_pct, right_pct
+    if mac:
+        try:
+            info = subprocess.check_output(["bluetoothctl", "info", mac], text=True, timeout=2)
+            for line in info.splitlines():
+                line = line.strip()
+                if line.startswith("Name:"):
+                    name = line.split(":", 1)[1].strip()
+                elif line.startswith("Connected:"):
+                    connected = line.split(":", 1)[1].strip().lower() == "yes"
+                elif line.startswith("Paired:"):
+                    paired = line.split(":", 1)[1].strip().lower() == "yes"
+                elif line.startswith("Trusted:"):
+                    trusted = line.split(":", 1)[1].strip().lower() == "yes"
+                elif "Battery Percentage:" in line:
+                    m = re.search(r"\((\d+)\)", line)
+                    if m:
+                        battery = int(m.group(1))
+        except Exception:
+            pass
+
+    # Supplementary check via UPower if battery was not in bluetoothctl
+    if battery is None:
+        try:
+            out = subprocess.check_output(["upower", "-e"], text=True, timeout=1)
+            for line in out.splitlines():
+                line = line.strip()
+                if "keyboard" in line or "Glove80" in line:
+                    dev_info = subprocess.check_output(["upower", "-i", line], text=True, timeout=1)
+                    if "Glove80" in dev_info:
+                        m = re.search(r"percentage:\s*([0-9]+)%", dev_info)
+                        if m:
+                            battery = int(m.group(1))
+                            connected = True
+                            break
+        except Exception:
+            pass
+
+    return {
+        "address": mac or "",
+        "name": name,
+        "connected": connected,
+        "paired": paired,
+        "trusted": trusted,
+        "battery": battery,
+    }
+
+
+def check_low_battery_notifications(battery: int | None, charging: bool):
+    """Sends desktop notifications when battery reaches low or critical levels."""
+    if battery is None or charging:
+        # If charging, reset notified states
+        if os.path.exists(NOTIFY_STATE_FILE):
+            try:
+                os.remove(NOTIFY_STATE_FILE)
+            except OSError:
+                pass
+        return
+
+    state = {"low": False, "critical": False}
+    if os.path.exists(NOTIFY_STATE_FILE):
+        try:
+            with open(NOTIFY_STATE_FILE, "r", encoding="utf-8") as f:
+                state = json.load(f)
+        except Exception:
+            state = {"low": False, "critical": False}
+
+    # Re-arm if battery has recovered
+    if battery >= LOW_PCT + RECOVERY_MARGIN:
+        state["low"] = False
+    if battery >= CRITICAL_PCT + RECOVERY_MARGIN:
+        state["critical"] = False
+
+    if battery <= CRITICAL_PCT and not state.get("critical", False):
+        try:
+            subprocess.run(
+                [
+                    "notify-send",
+                    "-u",
+                    "critical",
+                    "-i",
+                    "battery-caution-symbolic",
+                    "Glove80 battery critical",
+                    f"{battery}% — charge now.",
+                ],
+                check=False,
+                timeout=2,
+            )
+            state["critical"] = True
+            state["low"] = True
+        except Exception:
+            pass
+    elif battery <= LOW_PCT and not state.get("low", False):
+        try:
+            subprocess.run(
+                [
+                    "notify-send",
+                    "-u",
+                    "normal",
+                    "-i",
+                    "battery-low-symbolic",
+                    "Glove80 battery low",
+                    f"{battery}% remaining.",
+                ],
+                check=False,
+                timeout=2,
+            )
+            state["low"] = True
+        except Exception:
+            pass
+
+    try:
+        with open(NOTIFY_STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(state, f)
+    except OSError:
+        pass
+
+
+def execute_action(action: str) -> dict:
+    """Executes cockpit control actions via bluetoothctl."""
+    dev = get_device_info()
+    mac = dev.get("address")
+    if not mac:
+        return {"success": False, "error": "No paired Glove80 device found"}
+
+    cmd = None
+    if action == "--connect":
+        cmd = ["bluetoothctl", "connect", mac]
+    elif action == "--disconnect":
+        cmd = ["bluetoothctl", "disconnect", mac]
+    elif action == "--trust":
+        cmd = ["bluetoothctl", "trust", mac]
+    elif action == "--untrust":
+        cmd = ["bluetoothctl", "untrust", mac]
+    elif action == "--forget":
+        cmd = ["bluetoothctl", "remove", mac]
+    else:
+        return {"success": False, "error": f"Unknown action: {action}"}
+
+    try:
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+        return {
+            "success": res.returncode == 0,
+            "output": res.stdout.strip(),
+            "error": res.stderr.strip() if res.returncode != 0 else "",
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 def get_status():
     usb_l, usb_r = check_usb()
-    bt_conn, bt_left_pct, bt_right_pct = check_bluetooth_battery()
+    dev = get_device_info()
+    bt_conn = dev["connected"]
+    pct = dev["battery"]
 
+    is_charging = usb_l or usb_r
     connected = usb_l or usb_r or bt_conn
+
+    # Trigger battery notification check
+    check_low_battery_notifications(pct, is_charging)
+
     if not connected:
         return {
             "connected": False,
@@ -110,10 +246,8 @@ def get_status():
             "charging": False,
             "usbLeft": False,
             "usbRight": False,
+            "device": dev,
         }
-
-    pct = bt_left_pct
-    is_charging = usb_l or usb_r
 
     if is_charging:
         if pct is not None:
@@ -151,9 +285,18 @@ def get_status():
         "charging": is_charging,
         "usbLeft": usb_l,
         "usbRight": usb_r,
+        "device": dev,
     }
 
+
 def main():
+    if len(sys.argv) > 1 and sys.argv[1].startswith("--"):
+        arg = sys.argv[1]
+        if arg in ("--connect", "--disconnect", "--trust", "--untrust", "--forget"):
+            result = execute_action(arg)
+            print(json.dumps(result))
+            sys.exit(0 if result.get("success") else 1)
+
     status = get_status()
     print(json.dumps(status))
 

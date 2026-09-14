@@ -29,7 +29,8 @@ Panel {
     property var battery: null
     property bool usbLeft: false
     property bool usbRight: false
-
+    property var deviceData: null
+    property bool showCockpit: false
     readonly property string helperScript: {
         var resolved = String(Qt.resolvedUrl("bin/glove80-status"))
         return decodeURIComponent(resolved.replace(/^file:\/\//, ""))
@@ -55,6 +56,7 @@ Panel {
             root.charging = !!data.charging;
             root.usbLeft = !!data.usbLeft;
             root.usbRight = !!data.usbRight;
+            root.deviceData = data.device || null;
         } catch (e) {
             console.error("Failed to parse Glove80 status:", e);
         }
@@ -68,6 +70,19 @@ Panel {
             onStreamFinished: root.updateStatus(text)
         }
     }
+    Process {
+        id: actionProc
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: root.refreshStatus()
+        }
+    }
+
+    function runCockpitAction(act) {
+        actionProc.command = [root.helperScript, act];
+        actionProc.running = true;
+    }
+
 
     // Real-time USB hotplug monitor via udevadm
     Process {
@@ -161,10 +176,15 @@ Panel {
                 }
             }
             onTextKey: function(t) {
+                if (t === "c" || t === "C") {
+                    root.showCockpit = !root.showCockpit;
+                    return;
+                }
                 var num = parseInt(t, 10);
                 if (!isNaN(num) && num >= 1 && root.parsedLayout && root.parsedLayout.layers) {
                     var target = num - 1;
                     if (target < root.parsedLayout.layers.length) {
+                        root.showCockpit = false;
                         root.currentLayerIndex = target;
                     }
                 }
@@ -217,11 +237,20 @@ Panel {
                     model: root.parsedLayout ? root.parsedLayout.layers : []
                     delegate: Button {
                         text: modelData.name
-                        selected: root.currentLayerIndex === index
-                        onClicked: root.currentLayerIndex = index
+                        selected: !root.showCockpit && root.currentLayerIndex === index
+                        onClicked: {
+                            root.showCockpit = false;
+                            root.currentLayerIndex = index;
+                        }
                     }
                 }
                 Item { Layout.fillWidth: true }
+                Button {
+                    text: "Cockpit"
+                    selected: root.showCockpit
+                    bordered: true
+                    onClicked: root.showCockpit = !root.showCockpit
+                }
             }
 
             // Visualizer Canvas
@@ -231,13 +260,14 @@ Panel {
 
                 Components.Glove80Matrix {
                     anchors.centerIn: parent
-                    visible: root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers.length > 0
+                    visible: !root.showCockpit && root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers.length > 0
                     keys: (root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers[root.currentLayerIndex]) ? root.parsedLayout.layers[root.currentLayerIndex].keys : []
                     onLayerSwitchRequested: function(targetName) {
                         if (!targetName || !root.parsedLayout || !root.parsedLayout.layers) return;
                         var target = String(targetName).toLowerCase().trim();
                         for (var i = 0; i < root.parsedLayout.layers.length; i++) {
                             if (root.parsedLayout.layers[i].name.toLowerCase().trim() === target) {
+                                root.showCockpit = false;
                                 root.currentLayerIndex = i;
                                 break;
                             }
@@ -245,9 +275,23 @@ Panel {
                     }
                 }
 
+                Components.Glove80Cockpit {
+                    anchors.fill: parent
+                    visible: root.showCockpit
+                    device: root.deviceData
+                    isConnected: root.isConnected
+                    isCharging: root.charging
+                    batteryLevel: root.battery
+                    usbLeft: root.usbLeft
+                    usbRight: root.usbRight
+                    onActionRequested: function(act) {
+                        root.runCockpitAction(act);
+                    }
+                }
+
                 Text {
                     anchors.centerIn: parent
-                    visible: !root.parsedLayout || !root.parsedLayout.layers || root.parsedLayout.layers.length === 0
+                    visible: !root.showCockpit && (!root.parsedLayout || !root.parsedLayout.layers || root.parsedLayout.layers.length === 0)
                     text: "Downloading & Parsing Keymap..."
                     color: Color.muted
                     font.family: Style.font.family
