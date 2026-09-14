@@ -12,8 +12,8 @@ Item {
     signal layerSwitchRequested(string layerName)
 
 
-    implicitWidth: 20.0 * unitSize
-    implicitHeight: 8.8 * unitSize
+    implicitWidth: 19.6 * unitSize
+    implicitHeight: 8.72 * unitSize
 
     readonly property var keyDefs: [
         { "x": 0.50, "y": 1.00, "r": 0.0 },

@@ -225,13 +225,9 @@ Panel {
             }
 
             // Visualizer Canvas
-            Rectangle {
+            Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: Style.normalFill
-                radius: Style.cornerRadius
-                border.color: Color.muted
-                border.width: 1
 
                 Components.Glove80Matrix {
                     anchors.centerIn: parent
