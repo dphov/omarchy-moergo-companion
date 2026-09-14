@@ -98,9 +98,26 @@ Panel {
         }
     }
 
+    // Real-time Bluetooth connection & property change monitor via gdbus
+    Process {
+        id: bluezMonitor
+        command: ["gdbus", "monitor", "--system", "-d", "org.bluez"]
+        running: true
+        stdout: SplitParser {
+            onRead: function(line) {
+                if (line.indexOf("PropertiesChanged") !== -1 ||
+                    line.indexOf("InterfacesAdded") !== -1 ||
+                    line.indexOf("InterfacesRemoved") !== -1 ||
+                    line.indexOf("Connected") !== -1) {
+                    hotplugDebounceTimer.restart();
+                }
+            }
+        }
+    }
+
     Timer {
         id: hotplugDebounceTimer
-        interval: 600
+        interval: 250
         repeat: false
         onTriggered: root.refreshStatus()
     }
