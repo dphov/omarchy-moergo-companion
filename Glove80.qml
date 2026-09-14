@@ -11,8 +11,9 @@ Panel {
     moduleName: "dphov.moergomarchy"
     ipcTarget: "dphov.moergomarchy"
 
-    implicitWidth: button.implicitWidth
-    implicitHeight: button.implicitHeight
+    visible: root.isConnected && root.statusText !== ""
+    implicitWidth: visible ? button.implicitWidth : 0
+    implicitHeight: visible ? button.implicitHeight : 0
 
     // State
     property var parsedLayout: null
@@ -57,8 +58,10 @@ Panel {
             root.usbLeft = !!data.usbLeft;
             root.usbRight = !!data.usbRight;
             root.deviceData = data.device || null;
+            if (!root.isConnected && root.opened) {
+                root.close();
+            }
         } catch (e) {
-            console.error("Failed to parse Glove80 status:", e);
         }
     }
 
