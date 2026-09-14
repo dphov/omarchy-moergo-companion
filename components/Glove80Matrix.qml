@@ -108,6 +108,8 @@ Item {
             height: root.keyHeight
             readonly property var currentKey: (root.keys && root.keys.length > index) ? root.keys[index] : null
             keyText: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.text || "") : (currentKey ? String(currentKey) : "")
+            keyTitle: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.title || "") : ""
+            keyDesc: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.desc || "") : ""
             isTrans: (typeof currentKey === "object" && currentKey !== null) ? !!currentKey.trans : false
             onLayerClicked: function(targetLayer) {
                 root.layerSwitchRequested(targetLayer);

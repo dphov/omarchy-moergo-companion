@@ -281,6 +281,193 @@ void humanize_layer_name(const char *raw, char *out) {
     out[out_idx] = '\0';
 }
 
+void describe_key_code(const char *raw, const char *humanized, char *out_title, char *out_desc) {
+    out_title[0] = '\0';
+    out_desc[0] = '\0';
+
+    if (raw == NULL || raw[0] == '\0') return;
+
+    // 1. Output selection
+    if (strcmp(raw, "&out OUT_USB") == 0 || strcmp(raw, "out OUT_USB") == 0) {
+        strcpy(out_title, "Output Selection USB");
+        strcpy(out_desc, "Allows selecting whether keyboard output is sent to the USB or bluetooth connection when both are connected.");
+        return;
+    }
+    if (strcmp(raw, "&out OUT_BLE") == 0 || strcmp(raw, "out OUT_BLE") == 0) {
+        strcpy(out_title, "Output Selection BLE");
+        strcpy(out_desc, "Allows selecting whether keyboard output is sent to the USB or bluetooth connection when both are connected.");
+        return;
+    }
+
+    // 2. Bluetooth profiles
+    if (strncmp(raw, "&bt_", 4) == 0 || strncmp(raw, "bt_", 3) == 0) {
+        int profile = atoi(raw + (raw[0] == '&' ? 4 : 3)) + 1;
+        sprintf(out_title, "Bluetooth Profile %d", profile);
+        sprintf(out_desc, "Switches active Bluetooth connection to profile %d.", profile);
+        return;
+    }
+    if (strcmp(raw, "&bt BT_CLR") == 0 || strcmp(raw, "BT_CLR") == 0) {
+        strcpy(out_title, "Bluetooth Clear Profile");
+        strcpy(out_desc, "Clears the pairing record for the currently selected Bluetooth profile.");
+        return;
+    }
+    if (strcmp(raw, "&bt BT_CLR_ALL") == 0 || strcmp(raw, "BT_CLR_ALL") == 0) {
+        strcpy(out_title, "Bluetooth Clear All Profiles");
+        strcpy(out_desc, "Clears all saved Bluetooth pairing records on the keyboard.");
+        return;
+    }
+
+    // 3. Firmware / Hardware actions
+    if (strcmp(raw, "&bootloader") == 0) {
+        strcpy(out_title, "Bootloader Mode");
+        strcpy(out_desc, "Reboots keyboard into UF2 mass-storage bootloader mode for firmware flashing.");
+        return;
+    }
+    if (strcmp(raw, "&sys_reset") == 0) {
+        strcpy(out_title, "System Reset");
+        strcpy(out_desc, "Performs a hardware reset on the keyboard controller.");
+        return;
+    }
+    if (strncmp(raw, "&magic", 6) == 0) {
+        strcpy(out_title, "Magic Layer");
+        strcpy(out_desc, "Momentary switch to Glove80 hardware configuration and pairing layer.");
+        return;
+    }
+    if (strcmp(raw, "&layer_td") == 0) {
+        strcpy(out_title, "Layer Tap-Dance");
+        strcpy(out_desc, "Tap to toggle layer, hold to temporarily access the Lower layer.");
+        return;
+    }
+    if (strcmp(raw, "&to FACTORY_TEST") == 0) {
+        strcpy(out_title, "To Layer: Test");
+        strcpy(out_desc, "Switches keyboard layer to the factory test layer.");
+        return;
+    }
+    if (strcmp(raw, "&to DEFAULT") == 0) {
+        strcpy(out_title, "To Layer: Base");
+        strcpy(out_desc, "Switches keyboard layer back to the default Base layer.");
+        return;
+    }
+
+    // 4. RGB Underglow
+    if (strncmp(raw, "&rgb_ug ", 8) == 0 || strncmp(raw, "rgb_ug ", 7) == 0) {
+        const char *rgb = raw + (raw[0] == '&' ? 8 : 7);
+        if (strcmp(rgb, "RGB_TOG") == 0) {
+            strcpy(out_title, "RGB Underglow Toggle");
+            strcpy(out_desc, "Toggles underglow RGB lighting on or off.");
+            return;
+        }
+        if (strcmp(rgb, "RGB_EFF") == 0) {
+            strcpy(out_title, "RGB Underglow Effect");
+            strcpy(out_desc, "Cycles through underglow RGB animation effects.");
+            return;
+        }
+        if (strcmp(rgb, "RGB_BRI") == 0) {
+            strcpy(out_title, "RGB Brightness Up");
+            strcpy(out_desc, "Increases underglow RGB brightness.");
+            return;
+        }
+        if (strcmp(rgb, "RGB_BRD") == 0) {
+            strcpy(out_title, "RGB Brightness Down");
+            strcpy(out_desc, "Decreases underglow RGB brightness.");
+            return;
+        }
+        if (strcmp(rgb, "RGB_HUI") == 0) {
+            strcpy(out_title, "RGB Hue Up");
+            strcpy(out_desc, "Increases underglow RGB color hue.");
+            return;
+        }
+        if (strcmp(rgb, "RGB_HUD") == 0) {
+            strcpy(out_title, "RGB Hue Down");
+            strcpy(out_desc, "Decreases underglow RGB color hue.");
+            return;
+        }
+        if (strcmp(rgb, "RGB_SAI") == 0) {
+            strcpy(out_title, "RGB Saturation Up");
+            strcpy(out_desc, "Increases underglow RGB color saturation.");
+            return;
+        }
+        if (strcmp(rgb, "RGB_SAD") == 0) {
+            strcpy(out_title, "RGB Saturation Down");
+            strcpy(out_desc, "Decreases underglow RGB color saturation.");
+            return;
+        }
+        if (strcmp(rgb, "RGB_SPI") == 0) {
+            strcpy(out_title, "RGB Speed Up");
+            strcpy(out_desc, "Increases animation speed of underglow RGB effects.");
+            return;
+        }
+        if (strcmp(rgb, "RGB_SPD") == 0) {
+            strcpy(out_title, "RGB Speed Down");
+            strcpy(out_desc, "Decreases animation speed of underglow RGB effects.");
+            return;
+        }
+        sprintf(out_title, "RGB Underglow %s", rgb);
+        return;
+    }
+
+    const char *key = raw;
+    if (strncmp(key, "&kp ", 4) == 0) key += 4;
+
+    // 5. Media keys
+    if (strcmp(key, "C_BRI_UP") == 0) { strcpy(out_title, "Brightness Up"); strcpy(out_desc, "Increases display brightness."); return; }
+    if (strcmp(key, "C_BRI_DN") == 0) { strcpy(out_title, "Brightness Down"); strcpy(out_desc, "Decreases display brightness."); return; }
+    if (strcmp(key, "C_VOL_UP") == 0) { strcpy(out_title, "Volume Up"); strcpy(out_desc, "Increases audio output volume."); return; }
+    if (strcmp(key, "C_VOL_DN") == 0) { strcpy(out_title, "Volume Down"); strcpy(out_desc, "Decreases audio output volume."); return; }
+    if (strcmp(key, "C_MUTE") == 0)   { strcpy(out_title, "Mute Audio"); strcpy(out_desc, "Mutes or unmutes audio output."); return; }
+    if (strcmp(key, "C_PP") == 0)     { strcpy(out_title, "Play / Pause"); strcpy(out_desc, "Toggles media playback."); return; }
+    if (strcmp(key, "C_NEXT") == 0)   { strcpy(out_title, "Next Track"); strcpy(out_desc, "Skips to the next media track."); return; }
+    if (strcmp(key, "C_PREV") == 0)   { strcpy(out_title, "Previous Track"); strcpy(out_desc, "Skips to the previous media track."); return; }
+    if (strcmp(key, "PSCRN") == 0)    { strcpy(out_title, "Print Screen"); strcpy(out_desc, "Captures screenshot of the screen."); return; }
+    if (strcmp(key, "PAUSE_BREAK") == 0) { strcpy(out_title, "Pause / Break"); strcpy(out_desc, "Sends standard Pause/Break scancode."); return; }
+    if (strcmp(key, "SLCK") == 0)     { strcpy(out_title, "Scroll Lock"); strcpy(out_desc, "Toggles scroll lock."); return; }
+    if (strcmp(key, "CAPS") == 0)     { strcpy(out_title, "Caps Lock"); strcpy(out_desc, "Toggles uppercase lock."); return; }
+    if (strcmp(key, "INS") == 0)      { strcpy(out_title, "Insert"); strcpy(out_desc, "Toggles insert or overwrite mode."); return; }
+    if (strcmp(key, "K_CMENU") == 0)  { strcpy(out_title, "Context Menu"); strcpy(out_desc, "Opens application context menu."); return; }
+
+    // 6. Navigation and edit keys
+    if (strcmp(key, "BSPC") == 0)     { strcpy(out_title, "Backspace"); strcpy(out_desc, "Deletes character before the cursor."); return; }
+    if (strcmp(key, "DEL") == 0)      { strcpy(out_title, "Delete"); strcpy(out_desc, "Deletes character after the cursor."); return; }
+    if (strcmp(key, "RET") == 0)      { strcpy(out_title, "Enter / Return"); strcpy(out_desc, "Sends Return / Enter key."); return; }
+    if (strcmp(key, "SPACE") == 0)    { strcpy(out_title, "Space"); strcpy(out_desc, "Inserts a space character."); return; }
+    if (strcmp(key, "TAB") == 0)      { strcpy(out_title, "Tab"); strcpy(out_desc, "Advances focus or inserts tab space."); return; }
+    if (strcmp(key, "ESC") == 0)      { strcpy(out_title, "Escape"); strcpy(out_desc, "Sends Escape key."); return; }
+    if (strcmp(key, "PG_UP") == 0)    { strcpy(out_title, "Page Up"); strcpy(out_desc, "Scrolls up one page."); return; }
+    if (strcmp(key, "PG_DN") == 0)    { strcpy(out_title, "Page Down"); strcpy(out_desc, "Scrolls down one page."); return; }
+    if (strcmp(key, "HOME") == 0)     { strcpy(out_title, "Home"); strcpy(out_desc, "Moves cursor to the start of the line."); return; }
+    if (strcmp(key, "END") == 0)      { strcpy(out_title, "End"); strcpy(out_desc, "Moves cursor to the end of the line."); return; }
+    if (strcmp(key, "LEFT") == 0)     { strcpy(out_title, "Left Arrow"); strcpy(out_desc, "Moves cursor left."); return; }
+    if (strcmp(key, "RIGHT") == 0)    { strcpy(out_title, "Right Arrow"); strcpy(out_desc, "Moves cursor right."); return; }
+    if (strcmp(key, "UP") == 0)       { strcpy(out_title, "Up Arrow"); strcpy(out_desc, "Moves cursor up."); return; }
+    if (strcmp(key, "DOWN") == 0)     { strcpy(out_title, "Down Arrow"); strcpy(out_desc, "Moves cursor down."); return; }
+
+    // 7. Modifiers
+    if (strcmp(key, "LSHFT") == 0 || strcmp(key, "RSHFT") == 0) { strcpy(out_title, "Shift Modifier"); strcpy(out_desc, "Shift key modifier."); return; }
+    if (strcmp(key, "LCTRL") == 0 || strcmp(key, "RCTRL") == 0) { strcpy(out_title, "Control Modifier"); strcpy(out_desc, "Control key modifier."); return; }
+    if (strcmp(key, "LALT") == 0 || strcmp(key, "RALT") == 0)   { strcpy(out_title, "Alt Modifier"); strcpy(out_desc, "Alt / Option key modifier."); return; }
+    if (strcmp(key, "LGUI") == 0 || strcmp(key, "RGUI") == 0)   { strcpy(out_title, "GUI / Super"); strcpy(out_desc, "Command / Windows / Super key."); return; }
+
+    // 8. Keypad
+    if (strcmp(key, "KP_NUM") == 0)   { strcpy(out_title, "Num Lock"); strcpy(out_desc, "Toggles numeric keypad lock."); return; }
+    if (strcmp(key, "KP_ENTER") == 0) { strcpy(out_title, "Keypad Enter"); strcpy(out_desc, "Sends keypad Enter key."); return; }
+    if (strncmp(key, "KP_N", 4) == 0 && isdigit((unsigned char)key[4])) {
+        sprintf(out_title, "Keypad %c", key[4]);
+        sprintf(out_desc, "Types keypad number %c.", key[4]);
+        return;
+    }
+
+    // Default title from clean humanized legend (replacing \n with space)
+    if (humanized && humanized[0] != '\0') {
+        char clean[KEY_STR_MAX];
+        strncpy(clean, humanized, KEY_STR_MAX - 1);
+        clean[KEY_STR_MAX - 1] = '\0';
+        for (int i = 0; clean[i]; i++) {
+            if (clean[i] == '\n') clean[i] = ' ';
+        }
+        sprintf(out_title, "Key: %s", clean);
+    }
+}
+
 void extract_layer_name(char *layer_start, char *source_start, char *out_name) {
     strcpy(out_name, "Layer");
     char *brace = layer_start;
@@ -316,6 +503,8 @@ void extract_layer_name(char *layer_start, char *source_start, char *out_name) {
 
 typedef struct {
     char text[KEY_STR_MAX];
+    char title[KEY_STR_MAX];
+    char desc[256];
     bool is_trans;
 } ParsedKey;
 
@@ -356,6 +545,7 @@ void parse_layer_bindings(char *bindings_string, ParsedLayer *layer) {
         pk->is_trans = (strcmp(tokens[behavior_idx], "&trans") == 0 || strcmp(tokens[behavior_idx], "trans") == 0);
 
         humanize_key_code(key_string, pk->text);
+        describe_key_code(key_string, pk->text, pk->title, pk->desc);
         layer->key_count++;
     }
 }
@@ -406,6 +596,10 @@ int main(int argc, char **argv) {
                     if (k < g_layers[prev].key_count && !g_layers[prev].keys[k].is_trans && g_layers[prev].keys[k].text[0] != '\0') {
                         strncpy(g_layers[l].keys[k].text, g_layers[prev].keys[k].text, KEY_STR_MAX - 1);
                         g_layers[l].keys[k].text[KEY_STR_MAX - 1] = '\0';
+                        strncpy(g_layers[l].keys[k].title, g_layers[prev].keys[k].title, KEY_STR_MAX - 1);
+                        g_layers[l].keys[k].title[KEY_STR_MAX - 1] = '\0';
+                        strncpy(g_layers[l].keys[k].desc, g_layers[prev].keys[k].desc, sizeof(g_layers[l].keys[k].desc) - 1);
+                        g_layers[l].keys[k].desc[sizeof(g_layers[l].keys[k].desc) - 1] = '\0';
                         break;
                     }
                 }
@@ -421,8 +615,13 @@ int main(int argc, char **argv) {
         for (int k = 0; k < g_layers[l].key_count; k++) {
             if (k > 0) printf(",\n");
             char escaped_key[ESCAPED_KEY_MAX];
+            char escaped_title[ESCAPED_KEY_MAX];
+            char escaped_desc[512];
             escape_json_string(g_layers[l].keys[k].text, escaped_key);
-            printf("        {\"text\": \"%s\", \"trans\": %s}", escaped_key, g_layers[l].keys[k].is_trans ? "true" : "false");
+            escape_json_string(g_layers[l].keys[k].title, escaped_title);
+            escape_json_string(g_layers[l].keys[k].desc, escaped_desc);
+            printf("        {\"text\": \"%s\", \"title\": \"%s\", \"desc\": \"%s\", \"trans\": %s}",
+                   escaped_key, escaped_title, escaped_desc, g_layers[l].keys[k].is_trans ? "true" : "false");
         }
         printf("\n      ]\n    }");
     }
