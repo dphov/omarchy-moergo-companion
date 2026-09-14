@@ -11,6 +11,12 @@ fi
 KEYMAP_FILE="$1"
 OUTPUT_JSON="$2"
 PARSER_BIN="$(dirname "$0")/parser"
+PARSER_SRC="$(dirname "$0")/parser.c"
+
+# Auto-compile parser if not already built
+if [[ ! -x "$PARSER_BIN" && -f "$PARSER_SRC" ]]; then
+  gcc -O2 "$PARSER_SRC" -o "$PARSER_BIN" 2>/dev/null || clang -O2 "$PARSER_SRC" -o "$PARSER_BIN" 2>/dev/null || true
+fi
 REPO_URL="https://github.com/moergo-sc/glove80-zmk-config.git"
 REPO_DIR="$(dirname "$(dirname "$KEYMAP_FILE")")"
 

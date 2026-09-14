@@ -39,9 +39,39 @@ MoErgo Glove80 visualizer and hardware status plugin for [Omarchy shell](https:/
 └── install.sh               # Builds C parser and installs plugin
 ```
 
+## Dependencies
+
+- Omarchy shell with bar-widget support
+- `gcc` or `clang` (to compile the native C keymap parser on first run)
+- `python3` with standard library (used by `bin/glove80-status` for USB/BlueZ telemetry)
+- `inotifywait` from `inotify-tools` (keymap file watcher)
+- `upower`, `bluez` / `bluetoothctl`, `udevadm` (hardware status and battery monitoring)
+- A local Glove80 ZMK keymap at `~/.dotfiles/zmk/config/glove80.keymap` (or edit `Glove80.qml` to point elsewhere)
+
 ## Installation
+
+### From the Omarchy marketplace
+
+```bash
+omarchy plugin add https://github.com/dphov/omarchy-moergo-glove80.git --enable
+omarchy-restart-shell
+```
+
+### From source
 
 ```bash
 ./install.sh
 omarchy-restart-shell
 ```
+
+The native C parser (`parser`) is built automatically by `watcher.sh` on first launch if it is not already present.
+
+## Removal
+
+```bash
+omarchy plugin disable dphov.moergomarchy
+omarchy plugin remove dphov.moergomarchy
+omarchy-restart-shell
+```
+
+Or, if installed manually, delete `~/.config/omarchy/plugins/dphov.moergomarchy/` and restart the shell.
