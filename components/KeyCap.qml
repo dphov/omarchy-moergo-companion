@@ -27,7 +27,7 @@ Rectangle {
             strokeColor: Color.muted
             strokeWidth: 1
             strokeStyle: ShapePath.DashLine
-            dashPattern: [2, 2]
+            dashPattern: [5, 2]
             fillColor: "transparent"
 
             startX: root.radius
