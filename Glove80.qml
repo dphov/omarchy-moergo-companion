@@ -30,7 +30,7 @@ Panel {
     property bool usbLeft: false
     property bool usbRight: false
     property var deviceData: null
-    property bool showCockpit: false
+    property bool showDashboard: false
     readonly property string helperScript: {
         var resolved = String(Qt.resolvedUrl("bin/glove80-status"))
         return decodeURIComponent(resolved.replace(/^file:\/\//, ""))
@@ -78,7 +78,7 @@ Panel {
         }
     }
 
-    function runCockpitAction(act) {
+    function runDashboardAction(act) {
         actionProc.command = [root.helperScript, act];
         actionProc.running = true;
     }
@@ -193,15 +193,15 @@ Panel {
                 }
             }
             onTextKey: function(t) {
-                if (t === "c" || t === "C") {
-                    root.showCockpit = !root.showCockpit;
+                if (t === "d" || t === "D" || t === "c" || t === "C") {
+                    root.showDashboard = !root.showDashboard;
                     return;
                 }
                 var num = parseInt(t, 10);
                 if (!isNaN(num) && num >= 1 && root.parsedLayout && root.parsedLayout.layers) {
                     var target = num - 1;
                     if (target < root.parsedLayout.layers.length) {
-                        root.showCockpit = false;
+                        root.showDashboard = false;
                         root.currentLayerIndex = target;
                     }
                 }
@@ -254,19 +254,19 @@ Panel {
                     model: root.parsedLayout ? root.parsedLayout.layers : []
                     delegate: Button {
                         text: modelData.name
-                        selected: !root.showCockpit && root.currentLayerIndex === index
+                        selected: !root.showDashboard && root.currentLayerIndex === index
                         onClicked: {
-                            root.showCockpit = false;
+                            root.showDashboard = false;
                             root.currentLayerIndex = index;
                         }
                     }
                 }
                 Item { Layout.fillWidth: true }
                 Button {
-                    text: "Cockpit"
-                    selected: root.showCockpit
+                    text: "Dashboard"
+                    selected: root.showDashboard
                     bordered: true
-                    onClicked: root.showCockpit = !root.showCockpit
+                    onClicked: root.showDashboard = !root.showDashboard
                 }
             }
 
@@ -277,14 +277,14 @@ Panel {
 
                 Components.Glove80Matrix {
                     anchors.centerIn: parent
-                    visible: !root.showCockpit && root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers.length > 0
+                    visible: !root.showDashboard && root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers.length > 0
                     keys: (root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers[root.currentLayerIndex]) ? root.parsedLayout.layers[root.currentLayerIndex].keys : []
                     onLayerSwitchRequested: function(targetName) {
                         if (!targetName || !root.parsedLayout || !root.parsedLayout.layers) return;
                         var target = String(targetName).toLowerCase().trim();
                         for (var i = 0; i < root.parsedLayout.layers.length; i++) {
                             if (root.parsedLayout.layers[i].name.toLowerCase().trim() === target) {
-                                root.showCockpit = false;
+                                root.showDashboard = false;
                                 root.currentLayerIndex = i;
                                 break;
                             }
@@ -292,9 +292,9 @@ Panel {
                     }
                 }
 
-                Components.Glove80Cockpit {
+                Components.Glove80Dashboard {
                     anchors.fill: parent
-                    visible: root.showCockpit
+                    visible: root.showDashboard
                     device: root.deviceData
                     isConnected: root.isConnected
                     isCharging: root.charging
@@ -302,13 +302,13 @@ Panel {
                     usbLeft: root.usbLeft
                     usbRight: root.usbRight
                     onActionRequested: function(act) {
-                        root.runCockpitAction(act);
+                        root.runDashboardAction(act);
                     }
                 }
 
                 Text {
                     anchors.centerIn: parent
-                    visible: !root.showCockpit && (!root.parsedLayout || !root.parsedLayout.layers || root.parsedLayout.layers.length === 0)
+                    visible: !root.showDashboard && (!root.parsedLayout || !root.parsedLayout.layers || root.parsedLayout.layers.length === 0)
                     text: "Downloading & Parsing Keymap..."
                     color: Color.muted
                     font.family: Style.font.family

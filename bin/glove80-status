@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Glove80 Hardware Status Monitor & Cockpit Controller for Omarchy.
+Glove80 Hardware Status Monitor & Dashboard Controller for Omarchy.
 
 Features:
 - Real-time USB detection for Left (16c0:27db) and Right (16c0:27d9) halves
 - Bluetooth device discovery & telemetry via BlueZ / UPower / bluetoothctl
-- Cockpit actions: --connect, --disconnect, --trust, --untrust, --forget
+- Dashboard actions: --connect, --disconnect, --trust, --untrust, --forget
 - Desktop low-battery notifications with hysteresis
 """
 
@@ -194,7 +194,7 @@ def check_low_battery_notifications(battery: int | None, charging: bool):
 
 
 def execute_action(action: str) -> dict:
-    """Executes cockpit control actions via bluetoothctl."""
+    """Executes dashboard control actions via bluetoothctl."""
     dev = get_device_info()
     mac = dev.get("address")
     if not mac:
