@@ -31,8 +31,8 @@ int get_zmk_behavior_arity(const char *behavior) {
 }
 
 void humanize_key_code(const char *raw, char *out) {
-    // 1. Empty / Trans actions (Give explicit action names)
-    if (strcmp(raw, "&none") == 0 || strcmp(raw, "none") == 0) { strcpy(out, "None"); return; }
+    // 1. Empty / Trans actions (Keep None empty, label Trans)
+    if (strcmp(raw, "&none") == 0 || strcmp(raw, "none") == 0) { strcpy(out, ""); return; }
     if (strcmp(raw, "&trans") == 0 || strcmp(raw, "trans") == 0) { strcpy(out, "Trans"); return; }
 
     // 2. Hardware / Firmware actions
