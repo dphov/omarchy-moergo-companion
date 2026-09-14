@@ -1,5 +1,7 @@
 #!/bin/bash
 set -euo pipefail
+trap 'kill $(jobs -p) 2>/dev/null || true; exit 0' EXIT TERM INT
+
 
 if [[ -z "${1-}" || -z "${2-}" ]]; then
   echo "Usage: $0 <path_to_keymap> <output_json>"

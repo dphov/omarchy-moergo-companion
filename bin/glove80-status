@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+"""
+Glove80 Hardware Status Monitor for Omarchy.
+
+Detects:
+- USB Left half (16c0:27db or 'Glove80 Left')
+- USB Right half (16c0:27d9 or 'Glove80 Right')
+- Bluetooth connection and battery percentage via UPower and bluetoothctl
+"""
+
+import glob
+import json
+import os
+import re
+import subprocess
+import sys
+
+
+def check_usb():
+    """Detects whether Left and Right halves are plugged into USB."""
+    left = False
+    right = False
+
+    for f in glob.glob("/sys/bus/usb/devices/*/idVendor"):
+        try:
+            with open(f, "r", encoding="utf-8", errors="ignore") as vf:
+                vid = vf.read().strip().lower()
+
+            pf = f.replace("idVendor", "idProduct")
+            with open(pf, "r", encoding="utf-8", errors="ignore") as pf_file:
+                pid = pf_file.read().strip().lower()
+
+            # Check vendor MoErgo (16c0)
+            if vid == "16c0":
+                if pid == "27db":
+                    left = True
+                elif pid == "27d9":
+                    right = True
+
+            # Product string fallback
+            prod_path = f.replace("idVendor", "product")
+            if os.path.exists(prod_path):
+                with open(prod_path, "r", encoding="utf-8", errors="ignore") as prod_file:
+                    pname = prod_file.read().strip().lower()
+                    if "glove80 left" in pname:
+                        left = True
+                    elif "glove80 right" in pname:
+                        right = True
+        except OSError:
+            pass
+
+    return left, right
+
+
+def check_bluetooth_battery():
+    """Queries battery levels and connection status for Glove80 via UPower & bluetoothctl."""
+    left_pct = None
+    right_pct = None
+    connected = False
+
+    # 1. Try UPower first
+    try:
+        out = subprocess.check_output(["upower", "-e"], text=True, timeout=1)
+        for line in out.splitlines():
+            line = line.strip()
+            if "keyboard" in line or "Glove80" in line or "bluez" in line:
+                dev_info = subprocess.check_output(["upower", "-i", line], text=True, timeout=1)
+                if "Glove80" in dev_info:
+                    connected = True
+                    m = re.search(r"percentage:\s*([0-9]+)%", dev_info)
+                    if m:
+                        pct = int(m.group(1))
+                        if left_pct is None:
+                            left_pct = pct
+                        elif right_pct is None:
+                            right_pct = pct
+    except Exception:
+        pass
+
+    # 2. Fallback / supplementary query via bluetoothctl
+    try:
+        out = subprocess.check_output(["bluetoothctl", "devices", "Connected"], text=True, timeout=1)
+        for line in out.splitlines():
+            if "Glove80" in line:
+                connected = True
+                parts = line.split()
+                if len(parts) >= 2:
+                    mac = parts[1]
+                    info = subprocess.check_output(["bluetoothctl", "info", mac], text=True, timeout=1)
+                    m = re.search(r"Battery Percentage:.*\((\d+)\)", info)
+                    if m and left_pct is None:
+                        left_pct = int(m.group(1))
+    except Exception:
+        pass
+
+    return connected, left_pct, right_pct
+
+
+def get_status():
+    usb_l, usb_r = check_usb()
+    bt_conn, bt_left_pct, bt_right_pct = check_bluetooth_battery()
+
+    connected = usb_l or usb_r or bt_conn
+    if not connected:
+        return {
+            "connected": False,
+            "text": "Disconnected",
+            "tooltip": "MoErgo Glove80: Disconnected",
+            "battery": None,
+            "charging": False,
+            "usbLeft": False,
+            "usbRight": False,
+        }
+
+    pct = bt_left_pct
+    is_charging = usb_l or usb_r
+
+    if is_charging:
+        if pct is not None:
+            text = f"⚡ {pct}%"
+        else:
+            text = "⚡ USB"
+    else:
+        if pct is not None:
+            text = f"{pct}%"
+        elif bt_conn:
+            text = "Connected"
+        else:
+            text = "Disconnected"
+
+    # Tooltip with connection details
+    if usb_l and usb_r:
+        conn_mode = "Both halves connected via USB"
+    elif usb_l:
+        conn_mode = "Left: USB (charging), Right: wireless"
+    elif usb_r:
+        conn_mode = "Left: wireless, Right: USB (charging)"
+    else:
+        conn_mode = "Bluetooth"
+
+    if pct is not None:
+        tooltip = f"MoErgo Glove80: {pct}% ({conn_mode})"
+    else:
+        tooltip = f"MoErgo Glove80: {conn_mode}"
+
+    return {
+        "connected": True,
+        "text": text,
+        "tooltip": tooltip,
+        "battery": pct,
+        "charging": is_charging,
+        "usbLeft": usb_l,
+        "usbRight": usb_r,
+    }
+
+def main():
+    status = get_status()
+    print(json.dumps(status))
+
+
+if __name__ == "__main__":
+    main()

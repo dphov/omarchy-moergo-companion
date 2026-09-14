@@ -21,11 +21,83 @@ Panel {
     property string keymapFile: Quickshell.env("HOME") + "/.dotfiles/zmk/config/glove80.keymap"
     property string jsonFile: "/tmp/glove80_layout.json"
 
-    // Placeholder variables for UPower
-    property int batteryLeft: 92
-    property int batteryRight: 88
-    property bool isConnected: true
+    // Hardware battery & connection state
+    property string statusText: "Loading…"
+    property string statusTooltip: "MoErgo Glove80"
+    property bool isConnected: false
+    property bool charging: false
+    property var battery: null
+    property bool usbLeft: false
+    property bool usbRight: false
 
+    readonly property string helperScript: {
+        var resolved = String(Qt.resolvedUrl("bin/glove80-status"))
+        return decodeURIComponent(resolved.replace(/^file:\/\//, ""))
+    }
+    readonly property string watcherScript: {
+        var resolved = String(Qt.resolvedUrl("watcher.sh"))
+        return decodeURIComponent(resolved.replace(/^file:\/\//, ""))
+    }
+
+    function refreshStatus() {
+        if (!statusProc.running) {
+            statusProc.running = true;
+        }
+    }
+
+    function updateStatus(raw) {
+        try {
+            var data = JSON.parse(raw);
+            root.isConnected = !!data.connected;
+            root.statusText = data.text || (root.isConnected ? "Connected" : "Disconnected");
+            root.statusTooltip = data.tooltip || "MoErgo Glove80";
+            root.battery = (data.battery !== undefined) ? data.battery : null;
+            root.charging = !!data.charging;
+            root.usbLeft = !!data.usbLeft;
+            root.usbRight = !!data.usbRight;
+        } catch (e) {
+            console.error("Failed to parse Glove80 status:", e);
+        }
+    }
+
+    Process {
+        id: statusProc
+        command: [root.helperScript]
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: root.updateStatus(text)
+        }
+    }
+
+    // Real-time USB hotplug monitor via udevadm
+    Process {
+        id: udevMonitor
+        command: ["udevadm", "monitor", "-u", "-s", "usb"]
+        running: true
+        stdout: SplitParser {
+            onRead: function(line) {
+                if (line.indexOf("add") !== -1 || line.indexOf("remove") !== -1) {
+                    hotplugDebounceTimer.restart();
+                }
+            }
+        }
+    }
+
+    Timer {
+        id: hotplugDebounceTimer
+        interval: 600
+        repeat: false
+        onTriggered: root.refreshStatus()
+    }
+
+    // Periodic polling every 30 seconds
+    Timer {
+        interval: 30000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: root.refreshStatus()
+    }
     // Native Quickshell file reader and watcher
     FileView {
         id: layoutFileView
@@ -44,7 +116,7 @@ Panel {
     // Background watcher process
     Process {
         id: watcherProcess
-        command: ["bash", "-c", "cd ~/.config/omarchy/plugins/dphov.moergomarchy && ./watcher.sh '" + root.keymapFile + "' '" + root.jsonFile + "'"]
+        command: [root.watcherScript, root.keymapFile, root.jsonFile]
         running: true
     }
 
@@ -52,10 +124,10 @@ Panel {
         id: button
         anchors.fill: parent
         bar: root.bar
-        text: root.isConnected ? root.batteryLeft + "% | " + root.batteryRight + "%" : "Disconnected"
+        text: root.statusText
         fontSize: Style.font.caption
         horizontalMargin: Style.space(6)
-        tooltipText: "MoErgo Glove80"
+        tooltipText: root.statusTooltip + " — Click to view layout"
         onPressed: root.toggle()
     }
 
@@ -92,6 +164,12 @@ Panel {
                     }
                 }
                 Item { Layout.fillWidth: true }
+                Text {
+                    text: root.statusTooltip
+                    color: Color.muted
+                    font.family: Style.font.family
+                    font.pixelSize: Style.font.caption
+                }
             }
 
             Rectangle {
