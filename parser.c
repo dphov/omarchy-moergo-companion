@@ -31,9 +31,9 @@ int get_zmk_behavior_arity(const char *behavior) {
 }
 
 void humanize_key_code(const char *raw, char *out) {
-    // 1. Empty / Trans actions (Keep None empty, label Trans)
+    // 1. Empty / Trans actions (Keep None and unresolved Trans empty)
     if (strcmp(raw, "&none") == 0 || strcmp(raw, "none") == 0) { strcpy(out, ""); return; }
-    if (strcmp(raw, "&trans") == 0 || strcmp(raw, "trans") == 0) { strcpy(out, "Trans"); return; }
+    if (strcmp(raw, "&trans") == 0 || strcmp(raw, "trans") == 0) { strcpy(out, ""); return; }
 
     // 2. Hardware / Firmware actions
     if (strcmp(raw, "&bootloader") == 0) { strcpy(out, "Boot"); return; }
@@ -311,7 +311,24 @@ void extract_layer_name(char *layer_start, char *source_start, char *out_name) {
     }
 }
 
-void parse_and_print_bindings(char *bindings_string) {
+#define MAX_LAYERS 32
+#define MAX_KEYS_PER_LAYER 128
+
+typedef struct {
+    char text[KEY_STR_MAX];
+    bool is_trans;
+} ParsedKey;
+
+typedef struct {
+    char name[LAYER_NAME_MAX];
+    ParsedKey keys[MAX_KEYS_PER_LAYER];
+    int key_count;
+} ParsedLayer;
+
+static ParsedLayer g_layers[MAX_LAYERS];
+static int g_layer_count = 0;
+
+void parse_layer_bindings(char *bindings_string, ParsedLayer *layer) {
     char *tokens[MAX_TOKENS];
     int token_count = 0;
     
@@ -321,12 +338,13 @@ void parse_and_print_bindings(char *bindings_string) {
         token = strtok(NULL, " \t\r\n");
     }
 
-    bool is_first_key = true;
-    for (int i = 0; i < token_count; i++) {
-        int required_args = get_zmk_behavior_arity(tokens[i]);
+    layer->key_count = 0;
+    for (int i = 0; i < token_count && layer->key_count < MAX_KEYS_PER_LAYER; i++) {
+        int behavior_idx = i;
+        int required_args = get_zmk_behavior_arity(tokens[behavior_idx]);
         char key_string[KEY_STR_MAX] = {0};
         
-        strncpy(key_string, tokens[i], KEY_STR_MAX - 1);
+        strncpy(key_string, tokens[behavior_idx], KEY_STR_MAX - 1);
         
         for (int j = 0; j < required_args && (i + 1) < token_count; j++) {
             i++;
@@ -334,17 +352,11 @@ void parse_and_print_bindings(char *bindings_string) {
             strncat(key_string, tokens[i], KEY_STR_MAX - strlen(key_string) - 1);
         }
 
-        char humanized[KEY_STR_MAX];
-        humanize_key_code(key_string, humanized);
+        ParsedKey *pk = &layer->keys[layer->key_count];
+        pk->is_trans = (strcmp(tokens[behavior_idx], "&trans") == 0 || strcmp(tokens[behavior_idx], "trans") == 0);
 
-        char escaped_key[ESCAPED_KEY_MAX];
-        escape_json_string(humanized, escaped_key);
-
-        if (!is_first_key) {
-            printf(",\n");
-        }
-        printf("        \"%s\"", escaped_key);
-        is_first_key = false;
+        humanize_key_code(key_string, pk->text);
+        layer->key_count++;
     }
 }
 
@@ -362,42 +374,60 @@ int main(int argc, char **argv) {
 
     strip_c_comments(source_code);
 
-    printf("{\n  \"layers\": [\n");
-
     char *layer_start = strstr(source_code, "keymap {");
     if (!layer_start) {
         layer_start = source_code;
     }
 
-    int parsed_layer_count = 0;
-
-    while ((layer_start = strstr(layer_start, "bindings = <")) != NULL) {
-        if (parsed_layer_count > 0) {
-            printf(",\n");
-        }
-        
-        char layer_name[LAYER_NAME_MAX];
-        extract_layer_name(layer_start, source_code, layer_name);
-
-        printf("    {\n      \"name\": \"%s\",\n      \"keys\": [\n", layer_name);
+    g_layer_count = 0;
+    while ((layer_start = strstr(layer_start, "bindings = <")) != NULL && g_layer_count < MAX_LAYERS) {
+        ParsedLayer *layer = &g_layers[g_layer_count];
+        extract_layer_name(layer_start, source_code, layer->name);
 
         char *bindings_end = strchr(layer_start, '>');
         if (bindings_end) {
             *bindings_end = '\0';
             char *bindings_content = layer_start + 12;
             
-            parse_and_print_bindings(bindings_content);
+            parse_layer_bindings(bindings_content, layer);
             
             *bindings_end = '>';
             layer_start = bindings_end;
         }
 
-        printf("\n      ]\n    }");
-        parsed_layer_count++;
+        g_layer_count++;
     }
 
+    // Resolve transparent fall-through keys
+    for (int l = 0; l < g_layer_count; l++) {
+        for (int k = 0; k < g_layers[l].key_count; k++) {
+            if (g_layers[l].keys[k].is_trans) {
+                for (int prev = l - 1; prev >= 0; prev--) {
+                    if (k < g_layers[prev].key_count && !g_layers[prev].keys[k].is_trans && g_layers[prev].keys[k].text[0] != '\0') {
+                        strncpy(g_layers[l].keys[k].text, g_layers[prev].keys[k].text, KEY_STR_MAX - 1);
+                        g_layers[l].keys[k].text[KEY_STR_MAX - 1] = '\0';
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // Output JSON
+    printf("{\n  \"layers\": [\n");
+    for (int l = 0; l < g_layer_count; l++) {
+        if (l > 0) printf(",\n");
+        printf("    {\n      \"name\": \"%s\",\n      \"keys\": [\n", g_layers[l].name);
+        for (int k = 0; k < g_layers[l].key_count; k++) {
+            if (k > 0) printf(",\n");
+            char escaped_key[ESCAPED_KEY_MAX];
+            escape_json_string(g_layers[l].keys[k].text, escaped_key);
+            printf("        {\"text\": \"%s\", \"trans\": %s}", escaped_key, g_layers[l].keys[k].is_trans ? "true" : "false");
+        }
+        printf("\n      ]\n    }");
+    }
     printf("\n  ]\n}\n");
-    
+
     free(source_code);
     return EXIT_SUCCESS;
 }

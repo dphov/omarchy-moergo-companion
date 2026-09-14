@@ -104,7 +104,9 @@ Item {
             rotation: modelData.r
             width: root.keyWidth
             height: root.keyHeight
-            keyText: (root.keys && root.keys.length > index) ? root.keys[index] : ""
+            readonly property var currentKey: (root.keys && root.keys.length > index) ? root.keys[index] : null
+            keyText: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.text || "") : (currentKey ? String(currentKey) : "")
+            isTrans: (typeof currentKey === "object" && currentKey !== null) ? !!currentKey.trans : false
         }
     }
 }
