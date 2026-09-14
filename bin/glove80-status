@@ -4,7 +4,8 @@ Glove80 Hardware Status Monitor & Dashboard Controller for Omarchy.
 
 Features:
 - Real-time USB detection for Left (16c0:27db) and Right (16c0:27d9) halves
-- Bluetooth device discovery & telemetry via BlueZ / UPower / bluetoothctl
+- Djunho-style BlueZ GATT 0x2A19 enumeration for split battery levels
+- Bluetooth device discovery & telemetry via BlueZ ObjectManager
 - Dashboard actions: --connect, --disconnect, --trust, --untrust, --forget
 - Desktop low-battery notifications with hysteresis
 """
@@ -57,47 +58,74 @@ def check_usb():
 
 
 def get_device_info():
-    """Queries detailed BlueZ metadata for the paired Glove80."""
+    """Queries BlueZ D-Bus ObjectManager for connected ZMK/Glove80 devices and GATT battery levels."""
     mac = None
     name = "Glove80"
+    dev_path = None
     connected = False
     paired = False
     trusted = False
-    battery = None
+    gatt_battery_levels = []
 
     try:
-        out = subprocess.check_output(["bluetoothctl", "devices"], text=True, timeout=2)
-        for line in out.splitlines():
-            if "Glove80" in line:
-                parts = line.split()
-                if len(parts) >= 2:
-                    mac = parts[1]
+        out = subprocess.check_output(
+            ["busctl", "call", "-j", "org.bluez", "/", "org.freedesktop.DBus.ObjectManager", "GetManagedObjects"],
+            text=True,
+            timeout=2,
+        )
+        data = json.loads(out)["data"][0]
+
+        # 1. Find device path (matching Glove80 or generic ZMK)
+        for path, ifaces in data.items():
+            if "org.bluez.Device1" in ifaces:
+                dev = ifaces["org.bluez.Device1"]
+                d_name = str(dev.get("Name", {}).get("data", "") or dev.get("Alias", {}).get("data", ""))
+                modalias = str(dev.get("Modalias", {}).get("data", ""))
+                if (
+                    "glove80" in d_name.lower()
+                    or "zmk" in d_name.lower()
+                    or "v16c0p27db" in modalias.lower()
+                    or "v1d50p615e" in modalias.lower()
+                ):
+                    dev_path = path
+                    name = d_name or "Glove80"
+                    mac = str(dev.get("Address", {}).get("data", ""))
+                    connected = bool(dev.get("Connected", {}).get("data", False))
+                    paired = bool(dev.get("Paired", {}).get("data", False))
+                    trusted = bool(dev.get("Trusted", {}).get("data", False))
                     break
+
+        # 2. Extract GATT battery levels (0x2A19) for this device (djunho approach)
+        if dev_path:
+            char_items = []
+            for path, ifaces in data.items():
+                if path.startswith(dev_path) and "org.bluez.GattCharacteristic1" in ifaces:
+                    char_iface = ifaces["org.bluez.GattCharacteristic1"]
+                    uuid = str(char_iface.get("UUID", {}).get("data", ""))
+                    if uuid.lower().startswith("00002a19"):
+                        val = char_iface.get("Value", {}).get("data", [])
+                        level = val[0] if val else None
+                        if level is None:
+                            try:
+                                r_out = subprocess.check_output(
+                                    ["busctl", "call", "-j", "org.bluez", path, "org.bluez.GattCharacteristic1", "ReadValue", "a{sv}", "0"],
+                                    text=True,
+                                    timeout=1,
+                                )
+                                r_val = json.loads(r_out)["data"][0]
+                                if r_val:
+                                    level = r_val[0]
+                            except Exception:
+                                pass
+                        if level is not None:
+                            char_items.append((path, level))
+            char_items.sort(key=lambda x: x[0])
+            gatt_battery_levels = [lvl for _, lvl in char_items]
     except Exception:
         pass
 
-    if mac:
-        try:
-            info = subprocess.check_output(["bluetoothctl", "info", mac], text=True, timeout=2)
-            for line in info.splitlines():
-                line = line.strip()
-                if line.startswith("Name:"):
-                    name = line.split(":", 1)[1].strip()
-                elif line.startswith("Connected:"):
-                    connected = line.split(":", 1)[1].strip().lower() == "yes"
-                elif line.startswith("Paired:"):
-                    paired = line.split(":", 1)[1].strip().lower() == "yes"
-                elif line.startswith("Trusted:"):
-                    trusted = line.split(":", 1)[1].strip().lower() == "yes"
-                elif "Battery Percentage:" in line:
-                    m = re.search(r"\((\d+)\)", line)
-                    if m:
-                        battery = int(m.group(1))
-        except Exception:
-            pass
-
-    # Supplementary check via UPower if battery was not in bluetoothctl
-    if battery is None:
+    # Fallback to UPower if no GATT levels were read
+    if not gatt_battery_levels:
         try:
             out = subprocess.check_output(["upower", "-e"], text=True, timeout=1)
             for line in out.splitlines():
@@ -107,11 +135,13 @@ def get_device_info():
                     if "Glove80" in dev_info:
                         m = re.search(r"percentage:\s*([0-9]+)%", dev_info)
                         if m:
-                            battery = int(m.group(1))
+                            gatt_battery_levels.append(int(m.group(1)))
                             connected = True
                             break
         except Exception:
             pass
+
+    battery = gatt_battery_levels[0] if gatt_battery_levels else None
 
     return {
         "address": mac or "",
@@ -120,13 +150,13 @@ def get_device_info():
         "paired": paired,
         "trusted": trusted,
         "battery": battery,
+        "batteryLevels": gatt_battery_levels,
     }
 
 
 def check_low_battery_notifications(battery: int | None, charging: bool):
     """Sends desktop notifications when battery reaches low or critical levels."""
     if battery is None or charging:
-        # If charging, reset notified states
         if os.path.exists(NOTIFY_STATE_FILE):
             try:
                 os.remove(NOTIFY_STATE_FILE)
@@ -142,7 +172,6 @@ def check_low_battery_notifications(battery: int | None, charging: bool):
         except Exception:
             state = {"low": False, "critical": False}
 
-    # Re-arm if battery has recovered
     if battery >= LOW_PCT + RECOVERY_MARGIN:
         state["low"] = False
     if battery >= CRITICAL_PCT + RECOVERY_MARGIN:
@@ -229,38 +258,65 @@ def get_status():
     usb_l, usb_r = check_usb()
     dev = get_device_info()
     bt_conn = dev["connected"]
+    levels = dev.get("batteryLevels", [])
     pct = dev["battery"]
 
     is_charging = usb_l or usb_r
     connected = usb_l or usb_r or bt_conn
 
-    # Trigger battery notification check
     check_low_battery_notifications(pct, is_charging)
+
+    # Djunho keyboard icon: \uf11c
+    icon = " "
 
     if not connected:
         return {
             "connected": False,
-            "text": "Disconnected",
+            "text": f"{icon}Disconnected",
             "tooltip": "MoErgo Glove80: Disconnected",
             "battery": None,
+            "batteryLevels": [],
             "charging": False,
             "usbLeft": False,
             "usbRight": False,
             "device": dev,
         }
 
-    if is_charging:
-        if pct is not None:
-            text = f"⚡ {pct}%"
-        else:
-            text = "⚡ USB"
+    left_level = levels[0] if len(levels) > 0 else pct
+    right_level = levels[1] if len(levels) > 1 else None
+
+    # Format Left
+    if usb_l:
+        l_str = f"L⚡{left_level}%" if left_level is not None else "L⚡"
+    elif left_level is not None:
+        l_str = f"L{left_level}%"
+    else:
+        l_str = ""
+
+    # Format Right
+    if usb_r:
+        r_str = f"R⚡{right_level}%" if right_level is not None else "R⚡"
+    elif right_level is not None:
+        r_str = f"R{right_level}%"
+    else:
+        r_str = ""
+
+    # Djunho split formatting
+    if len(levels) >= 2:
+        text = f"{icon}{l_str} {r_str}".strip()
+    elif usb_l and usb_r:
+        text = f"{icon}⚡ {pct}%" if pct is not None else f"{icon}⚡ USB"
+    elif usb_l:
+        text = f"{icon}⚡ {pct}%" if pct is not None else f"{icon}⚡ USB"
+    elif usb_r:
+        text = f"{icon}{pct}% R⚡" if pct is not None else f"{icon}R⚡"
     else:
         if pct is not None:
-            text = f"{pct}%"
+            text = f"{icon}{pct}%"
         elif bt_conn:
-            text = "Connected"
+            text = f"{icon}Connected"
         else:
-            text = "Disconnected"
+            text = f"{icon}Disconnected"
 
     # Tooltip with connection details
     if usb_l and usb_r:
@@ -272,7 +328,9 @@ def get_status():
     else:
         conn_mode = "Bluetooth"
 
-    if pct is not None:
+    if len(levels) >= 2:
+        tooltip = f"MoErgo Glove80: Left {levels[0]}%, Right {levels[1]}% ({conn_mode})"
+    elif pct is not None:
         tooltip = f"MoErgo Glove80: {pct}% ({conn_mode})"
     else:
         tooltip = f"MoErgo Glove80: {conn_mode}"
@@ -282,6 +340,7 @@ def get_status():
         "text": text,
         "tooltip": tooltip,
         "battery": pct,
+        "batteryLevels": levels,
         "charging": is_charging,
         "usbLeft": usb_l,
         "usbRight": usb_r,

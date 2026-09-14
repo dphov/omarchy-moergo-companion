@@ -130,8 +130,16 @@ Item {
                         }
                         Item { Layout.fillWidth: true }
                         Text {
-                            text: root.batteryLevel !== null ? (root.isCharging ? ("⚡ " + root.batteryLevel + "% (Charging via USB)") : (root.batteryLevel + "%")) : "Unknown"
-                            font.bold: true
+                            text: {
+                                var levels = (root.device && root.device.batteryLevels) ? root.device.batteryLevels : [];
+                                if (levels.length >= 2) {
+                                    return "Left: " + levels[0] + "%  |  Right: " + levels[1] + "%" + (root.isCharging ? " ⚡" : "");
+                                }
+                                if (root.batteryLevel !== null) {
+                                    return root.isCharging ? ("⚡ " + root.batteryLevel + "% (Charging via USB)") : (root.batteryLevel + "%");
+                                }
+                                return "Unknown";
+                            }
                             font.family: Style.font.family
                             font.pixelSize: Style.font.bodySmall
                             color: root.isCharging ? Color.accent : Color.foreground
