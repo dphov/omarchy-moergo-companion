@@ -88,7 +88,7 @@
           "glyph": ""
         },
         {
-          "text": "Control",
+          "text": "Ctrl",
           "title": "Control Modifier",
           "desc": "Control key modifier.",
           "trans": false,
@@ -261,7 +261,7 @@
           "glyph": ""
         },
         {
-          "text": "Control",
+          "text": "Ctrl",
           "title": "Control Modifier",
           "desc": "Control key modifier.",
           "trans": true,

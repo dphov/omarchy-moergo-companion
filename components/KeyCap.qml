@@ -64,12 +64,41 @@ Rectangle {
         }
     }
 
+    Row {
+        anchors.centerIn: parent
+        spacing: Style.space(2)
+        visible: root.keyGlyph !== "" && root.keyText !== ""
+
+        Image {
+            anchors.verticalCenter: parent.verticalCenter
+            width: Math.min(root.width * 0.28, Style.space(11))
+            height: width
+            source: root.keyGlyph !== "" ? Qt.resolvedUrl("../assets/key-glyphs/" + root.keyGlyph + ".svg") : ""
+            fillMode: Image.PreserveAspectFit
+        }
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.keyText
+            font.family: Style.font.family
+            font.pixelSize: Style.font.caption
+            fontSizeMode: Text.Fit
+            minimumPixelSize: 7
+            font.bold: true
+            color: root.isActive ? Color.background : Color.foreground
+            wrapMode: Text.NoWrap
+            horizontalAlignment: Text.AlignLeft
+            lineHeight: 1.0
+            width: Math.min(implicitWidth, root.width - Style.space(15))
+        }
+    }
+
     Image {
         anchors.centerIn: parent
-        width: Math.min(parent.width * 0.48, 18)
+        width: Math.min(parent.width * 0.48, Style.space(18))
         height: width
         source: root.keyGlyph !== "" ? Qt.resolvedUrl("../assets/key-glyphs/" + root.keyGlyph + ".svg") : ""
-        visible: root.keyGlyph !== ""
+        visible: root.keyGlyph !== "" && root.keyText === ""
         fillMode: Image.PreserveAspectFit
     }
 
@@ -86,7 +115,7 @@ Rectangle {
         horizontalAlignment: Text.AlignHCenter
         lineHeight: 1.0
         width: parent.width - Style.space(2)
-        visible: root.keyGlyph === ""
+        visible: root.keyGlyph === "" && root.keyText !== ""
     }
     MouseArea {
         id: mouse
