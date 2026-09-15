@@ -4,7 +4,7 @@ MoErgo Glove80 visualizer and hardware status plugin for [Omarchy shell](https:/
 
 ## Screenshots
 
-Shown with the [Outpost](https://github.com/simoz/omarchy-outpost-theme) (dark) and [Pissarro](https://github.com/mattbbia/pissarro) (light) Omarchy themes:
+Shown with the **Glorious Engrammer** keymap from [sunaku/glove80-keymaps](https://github.com/sunaku/glove80-keymaps), and the [Outpost](https://github.com/simoz/omarchy-outpost-theme) (dark) and [Pissarro](https://github.com/mattbbia/pissarro) (light) Omarchy themes:
 
 ![Omarchy Moergo Companion on Outpost dark theme](assets/screenshot-dark.webp)
 ![Omarchy Moergo Companion on Pissarro light theme](assets/screenshot-light.webp)
