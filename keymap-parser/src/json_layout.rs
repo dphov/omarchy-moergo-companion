@@ -54,6 +54,20 @@ fn json_val_to_str(val: &Value) -> String {
     }
 }
 
+fn normalize_hex_color(hex: &str) -> String {
+    let trimmed = hex.trim();
+    if trimmed.starts_with('#') && trimmed.len() == 9 {
+        let alpha = &trimmed[7..9];
+        let rgb = &trimmed[1..7];
+        if alpha.eq_ignore_ascii_case("ff") {
+            format!("#{rgb}")
+        } else {
+            format!("#{alpha}{rgb}")
+        }
+    } else {
+        trimmed.to_string()
+    }
+}
 fn key_to_raw(key_obj: &JsonKey) -> String {
     let behavior = json_val_to_str(&key_obj.value);
     let mut parts: Vec<String> = Vec::with_capacity(key_obj.params.len() + 1);
@@ -96,8 +110,13 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Vec<Layer>> {
                         if title.is_empty() || title.starts_with("Key: ") {
                             title = humanized.clone();
                         }
+                    } else if raw.starts_with('&') {
+                        humanized = String::new();
                     }
+                } else if raw.starts_with('&') && (dec.icon.is_some() || dec.background.is_some()) {
+                    humanized = String::new();
                 }
+
                 if let Some(d) = &dec.description {
                     let trimmed = d.trim();
                     if !trimmed.is_empty() {
@@ -105,9 +124,9 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Vec<Layer>> {
                     }
                 }
                 if let Some(bg) = &dec.background {
-                    let trimmed = bg.trim();
-                    if !trimmed.is_empty() {
-                        color = trimmed.to_string();
+                    let normalized = normalize_hex_color(bg);
+                    if !normalized.is_empty() {
+                        color = normalized;
                     }
                 }
                 if let Some(ic) = &dec.icon {

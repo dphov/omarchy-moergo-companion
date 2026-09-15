@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import QtQuick.Layouts
 import QtQuick.Shapes
 import qs.Commons
@@ -70,11 +71,21 @@ Rectangle {
         visible: root.keyGlyph !== "" && root.keyText !== ""
 
         Image {
+            id: rowGlyphImg
             anchors.verticalCenter: parent.verticalCenter
             width: Math.min(root.width * 0.28, Style.space(11))
             height: width
             source: root.keyGlyph !== "" ? Qt.resolvedUrl("../assets/key-glyphs/" + root.keyGlyph + ".svg") : ""
             fillMode: Image.PreserveAspectFit
+            visible: root.keyColor === ""
+        }
+
+        MultiEffect {
+            anchors.fill: rowGlyphImg
+            source: rowGlyphImg
+            visible: root.keyColor !== ""
+            colorization: 1.0
+            colorizationColor: "#1a1e22"
         }
 
         Text {
@@ -94,14 +105,22 @@ Rectangle {
     }
 
     Image {
+        id: standaloneGlyphImg
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.48, Style.space(18))
         height: width
         source: root.keyGlyph !== "" ? Qt.resolvedUrl("../assets/key-glyphs/" + root.keyGlyph + ".svg") : ""
-        visible: root.keyGlyph !== "" && root.keyText === ""
+        visible: root.keyGlyph !== "" && root.keyText === "" && root.keyColor === ""
         fillMode: Image.PreserveAspectFit
     }
 
+    MultiEffect {
+        anchors.fill: standaloneGlyphImg
+        source: standaloneGlyphImg
+        visible: root.keyGlyph !== "" && root.keyText === "" && root.keyColor !== ""
+        colorization: 1.0
+        colorizationColor: "#1a1e22"
+    }
     Text {
         anchors.centerIn: parent
         text: root.keyText
