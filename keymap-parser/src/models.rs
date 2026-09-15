@@ -60,4 +60,16 @@ pub struct Layer {
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
 pub struct Layout {
     pub layers: Vec<Layer>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub title: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tags: Vec<String>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub notes: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub custom_defined_behaviors: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub custom_devicetree: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub config_parameters: String,
 }

@@ -3,21 +3,31 @@ use crate::descriptions::describe_key_code;
 use crate::glyphs::glyph_for_key;
 use crate::layers::extract_layer_name;
 use crate::legends::humanize_key_code;
-use crate::models::{Key, Layer};
+use crate::models::{Key, Layer, Layout};
 use crate::reader::{read_file, strip_comments};
 use crate::tokenizer::tokenize;
 use crate::transparency::resolve_transparent_keys;
 use std::path::Path;
 
 /// Parse a ZMK `.keymap` file into layers.
-pub fn parse_keymap<P: AsRef<Path>>(path: P) -> std::io::Result<Vec<Layer>> {
-    let source = read_file(path)?;
-    let source = strip_comments(&source);
+pub fn parse_keymap<P: AsRef<Path>>(path: P) -> std::io::Result<Layout> {
+    let source = read_file(&path)?;
+    let stripped = strip_comments(&source);
+    let title = title_from_keymap_source(&source, &path);
+    let custom_defined_behaviors = extract_custom_behaviors(&source);
 
-    let Some(keymap_start) = source.find("keymap {") else {
-        return Ok(Vec::new());
+    let Some(keymap_start) = stripped.find("keymap {") else {
+        return Ok(Layout {
+            layers: Vec::new(),
+            title,
+            tags: Vec::new(),
+            notes: String::new(),
+            custom_defined_behaviors,
+            custom_devicetree: String::new(),
+            config_parameters: String::new(),
+        });
     };
-    let search_region = &source[keymap_start..];
+    let search_region = &stripped[keymap_start..];
 
     let mut layers: Vec<Layer> = Vec::new();
     let mut search_start = 0;
@@ -51,7 +61,64 @@ pub fn parse_keymap<P: AsRef<Path>>(path: P) -> std::io::Result<Vec<Layer>> {
         search_start = absolute_pos + eq_pos + lt_pos + gt_pos + 3;
     }
 
-    Ok(layers)
+    Ok(Layout {
+        layers,
+        title,
+        tags: Vec::new(),
+        notes: String::new(),
+        custom_defined_behaviors,
+        custom_devicetree: String::new(),
+        config_parameters: String::new(),
+    })
+}
+
+fn title_from_keymap_source<P: AsRef<Path>>(source: &str, path: P) -> String {
+    let path = path.as_ref();
+
+    // Look for a title in C-style comments like:
+    // // Title: My Layout
+    // // Sunaku's Keymap v52 -- "Glorious Engrammer"
+    for line in source.lines() {
+        let trimmed = line.trim();
+        if let Some(body) = trimmed.strip_prefix("//") {
+            let body = body.trim();
+            if let Some(t) = body.strip_prefix("Title:") {
+                let t = t.trim();
+                if !t.is_empty() {
+                    return t.to_string();
+                }
+            }
+        }
+    }
+
+    path.file_stem()
+        .and_then(|s| s.to_str())
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "Glove80 Layout".to_string())
+}
+
+fn extract_custom_behaviors(source: &str) -> String {
+    // Capture any custom macro/behavior definitions between the end of
+    // includes and the start of the device tree root (`/ {`). This mirrors
+    // how the Glove80 layout editor exposes "Custom Defined Behaviors".
+    let Some(dt_root) = source.find("/ {") else {
+        return String::new();
+    };
+    let prefix = &source[..dt_root];
+    let Some(include_end) = prefix.rfind("#include") else {
+        return String::new();
+    };
+    let Some(line_end) = prefix[include_end..].find('\n') else {
+        return String::new();
+    };
+    let slice = &prefix[include_end + line_end..];
+    let cleaned = slice.trim();
+    if cleaned.is_empty() {
+        String::new()
+    } else {
+        cleaned.to_string()
+    }
 }
 
 fn parse_layer_bindings(bindings_string: &str) -> Vec<Key> {
@@ -81,8 +148,8 @@ fn parse_layer_bindings(bindings_string: &str) -> Vec<Key> {
     keys
 }
 
-/// Parse either a `.json` layout file or a `.keymap` file and return layers.
-pub fn parse_file<P: AsRef<Path>>(path: P) -> std::io::Result<Vec<Layer>> {
+/// Parse either a `.json` layout file or a `.keymap` file and return a Layout.
+pub fn parse_file<P: AsRef<Path>>(path: P) -> std::io::Result<Layout> {
     let path = path.as_ref();
     if path
         .extension()
@@ -97,10 +164,11 @@ pub fn parse_file<P: AsRef<Path>>(path: P) -> std::io::Result<Vec<Layer>> {
 }
 
 /// Parse a file and resolve transparent keys, returning a `Layout` ready for JSON emission.
-pub fn parse_and_resolve<P: AsRef<Path>>(path: P) -> std::io::Result<crate::models::Layout> {
-    let mut layers = parse_file(path)?;
-    resolve_transparent_keys(&mut layers);
-    Ok(crate::models::Layout { layers })
+pub fn parse_and_resolve<P: AsRef<Path>>(path: P) -> std::io::Result<Layout> {
+    let path = path.as_ref();
+    let mut layout = parse_file(path)?;
+    resolve_transparent_keys(&mut layout.layers);
+    Ok(layout)
 }
 
 #[cfg(test)]
@@ -118,11 +186,11 @@ mod tests {
         "#;
         let tmp = std::env::temp_dir().join("omp_test_simple.keymap");
         std::fs::write(&tmp, source).unwrap();
-        let layers = parse_keymap(&tmp).unwrap();
-        assert_eq!(layers.len(), 1);
-        assert_eq!(layers[0].name, "Base");
-        assert_eq!(layers[0].keys.len(), 2);
-        assert_eq!(layers[0].keys[0].text, "A");
+        let layout = parse_keymap(&tmp).unwrap();
+        assert_eq!(layout.layers.len(), 1);
+        assert_eq!(layout.layers[0].name, "Base");
+        assert_eq!(layout.layers[0].keys.len(), 2);
+        assert_eq!(layout.layers[0].keys[0].text, "A");
         std::fs::remove_file(&tmp).unwrap();
     }
 }

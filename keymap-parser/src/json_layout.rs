@@ -1,12 +1,49 @@
 use crate::descriptions::describe_key_code;
 use crate::glyphs::glyph_for_key;
 use crate::legends::humanize_key_code;
-use crate::models::{Key, Layer};
+use crate::models::{Key, Layer, Layout};
 use serde::Deserialize;
 use serde_json::Value;
 use std::fs;
 use std::io;
 use std::path::Path;
+
+fn default_title_from_path<P: AsRef<Path>>(path: P) -> String {
+    let path = path.as_ref();
+    let stem = path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("Glove80 Layout");
+
+    // Strip common leading UUID prefix used by Glove80 downloads:
+    // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx[_-]...
+    let s = stem.trim();
+    let after_uuid = s
+        .char_indices()
+        .nth(36)
+        .and_then(|(pos, _c)| {
+            let prefix = &s[..pos];
+            let is_uuid = prefix.len() == 36
+                && prefix.bytes().enumerate().all(|(i, b)| {
+                    b.is_ascii_hexdigit()
+                        || (i == 8 || i == 13 || i == 18 || i == 23) && b == b'-'
+                })
+                && [8, 13, 18, 23].iter().all(|&i| prefix.as_bytes()[i] == b'-');
+            if is_uuid {
+                let rest = &s[pos..];
+                Some(rest.strip_prefix('_').or_else(|| rest.strip_prefix('-')).unwrap_or(rest).trim_start())
+            } else {
+                None
+            }
+        })
+        .unwrap_or(s);
+
+    if after_uuid.is_empty() {
+        stem.to_string()
+    } else {
+        after_uuid.to_string()
+    }
+}
 
 #[derive(Debug, Deserialize)]
 struct JsonDecoration {
@@ -33,11 +70,61 @@ struct JsonKey {
 }
 
 #[derive(Debug, Deserialize)]
+struct JsonConfigParam {
+    #[serde(default)]
+    param_name: Option<String>,
+    #[serde(default, rename = "paramName")]
+    param_name_alt: Option<String>,
+    #[serde(default)]
+    value: Option<Value>,
+}
+
+#[derive(Debug, Deserialize)]
 struct JsonLayout {
     #[serde(default)]
     layer_names: Vec<String>,
     #[serde(default)]
     layers: Vec<Vec<JsonKey>>,
+    #[serde(default)]
+    title: Option<String>,
+    #[serde(default)]
+    tags: Vec<String>,
+    #[serde(default)]
+    notes: Option<String>,
+    #[serde(default)]
+    custom_defined_behaviors: Option<String>,
+    #[serde(default)]
+    custom_devicetree: Option<String>,
+    #[serde(default)]
+    config_parameters: Option<Value>,
+    #[serde(default)]
+    layout_parameters: Option<Value>,
+}
+
+fn format_config_params(value: &Option<Value>) -> String {
+    let array = match value {
+        Some(Value::Array(arr)) => arr,
+        _ => return String::new(),
+    };
+
+    array
+        .iter()
+        .filter_map(|item| {
+            let param: JsonConfigParam = serde_json::from_value(item.clone()).ok()?;
+            let name = param
+                .param_name
+                .clone()
+                .or_else(|| param.param_name_alt.clone())
+                .filter(|s| !s.is_empty())?;
+            let value = param.value.as_ref().map(json_val_to_str).unwrap_or_default();
+            if value.is_empty() {
+                Some(name)
+            } else {
+                Some(format!("{name}: {value}"))
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 fn json_val_to_str(val: &Value) -> String {
@@ -84,9 +171,26 @@ fn key_to_raw(key_obj: &JsonKey) -> String {
     }
     parts.join(" ")
 }
-pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Vec<Layer>> {
+pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Layout> {
+    let path = path.as_ref();
     let data: JsonLayout = serde_json::from_reader(fs::File::open(path)?)
         .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+
+    let title = data
+        .title
+        .clone()
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or_else(|| default_title_from_path(path));
+
+    let config_parameters_text = format_config_params(&data.config_parameters);
+    let layout_parameters_text = format_config_params(&data.layout_parameters);
+    let combined_config = if config_parameters_text.is_empty() {
+        layout_parameters_text
+    } else if layout_parameters_text.is_empty() {
+        config_parameters_text
+    } else {
+        format!("{config_parameters_text}\n{layout_parameters_text}")
+    };
 
     let mut layers: Vec<Layer> = Vec::with_capacity(data.layers.len());
     for (idx, layer_keys) in data.layers.into_iter().enumerate() {
@@ -157,7 +261,15 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Vec<Layer>> {
         layers.push(Layer { name, keys });
     }
 
-    Ok(layers)
+    Ok(Layout {
+        layers,
+        title,
+        tags: data.tags,
+        notes: data.notes.unwrap_or_default(),
+        custom_defined_behaviors: data.custom_defined_behaviors.unwrap_or_default(),
+        custom_devicetree: data.custom_devicetree.unwrap_or_default(),
+        config_parameters: combined_config,
+    })
 }
 
 #[cfg(test)]
@@ -178,11 +290,11 @@ mod tests {
         }"#;
         let tmp = std::env::temp_dir().join("omp_test_layout.json");
         std::fs::write(&tmp, json).unwrap();
-        let layers = parse_layout_json(&tmp).unwrap();
-        assert_eq!(layers.len(), 1);
-        assert_eq!(layers[0].keys[0].text, "A");
-        assert_eq!(layers[0].keys[1].text, "Tog 1");
-        assert_eq!(layers[0].keys[2].text, "&mo 2");
+        let layout = parse_layout_json(&tmp).unwrap();
+        assert_eq!(layout.layers.len(), 1);
+        assert_eq!(layout.layers[0].keys[0].text, "A");
+        assert_eq!(layout.layers[0].keys[1].text, "Tog 1");
+        assert_eq!(layout.layers[0].keys[2].text, "&mo 2");
         std::fs::remove_file(&tmp).unwrap();
     }
 }

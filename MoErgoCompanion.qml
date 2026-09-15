@@ -33,6 +33,7 @@ Panel {
     property bool usbRight: false
     property var deviceData: null
     property bool showDashboard: false
+    property bool showLayoutInfo: false
     readonly property string helperScript: {
         var resolved = String(Qt.resolvedUrl("bin/glove80-status"))
         return decodeURIComponent(resolved.replace(/^file:\/\//, ""))
@@ -277,20 +278,43 @@ Panel {
                 Layout.fillWidth: true
                 ColumnLayout {
                     spacing: Style.space(2)
-                    Text { 
-                        text: "Glove80 Layout"
+                    Text {
+                        text: root.parsedLayout && root.parsedLayout.title ? root.parsedLayout.title : "Glove80 Layout"
                         font.bold: true
                         font.family: Style.font.family
                         font.pixelSize: Style.font.subtitle
-                        color: Color.foreground 
+                        color: Color.foreground
                     }
-                    Text { 
+                    Text {
                         text: "Source: " + root.keymapFile
                         color: Color.foreground
                         font.family: Style.font.family
                         font.pixelSize: Style.font.caption
                         elide: Text.ElideMiddle
                         Layout.maximumWidth: Style.space(360)
+                    }
+                    RowLayout {
+                        spacing: Style.space(4)
+                        visible: root.parsedLayout && root.parsedLayout.tags && root.parsedLayout.tags.length > 0
+
+                        Repeater {
+                            model: root.parsedLayout ? (root.parsedLayout.tags || []) : []
+                            delegate: Rectangle {
+                                color: Color.accent
+                                radius: Style.cornerRadius
+                                implicitWidth: tagText.implicitWidth + Style.space(10)
+                                implicitHeight: tagText.implicitHeight + Style.space(4)
+
+                                Text {
+                                    id: tagText
+                                    anchors.centerIn: parent
+                                    text: modelData
+                                    font.family: Style.font.family
+                                    font.pixelSize: Style.font.caption
+                                    color: Color.background
+                                }
+                            }
+                        }
                     }
                 }
                 Item { Layout.fillWidth: true }
@@ -324,11 +348,20 @@ Panel {
                 layers: root.parsedLayout ? root.parsedLayout.layers : []
                 currentIndex: root.currentLayerIndex
                 showDashboard: root.showDashboard
+                showLayoutInfo: root.showLayoutInfo
                 onLayerClicked: function(idx) {
                     root.showDashboard = false;
+                    root.showLayoutInfo = false;
                     root.currentLayerIndex = idx;
                 }
-                onDashboardClicked: root.showDashboard = !root.showDashboard
+                onLayoutInfoClicked: {
+                    root.showLayoutInfo = !root.showLayoutInfo;
+                    if (root.showLayoutInfo) root.showDashboard = false;
+                }
+                onDashboardClicked: {
+                    root.showDashboard = !root.showDashboard;
+                    if (root.showDashboard) root.showLayoutInfo = false;
+                }
             }
 
             // Visualizer Canvas
@@ -339,7 +372,7 @@ Panel {
                 Components.Glove80Matrix {
                     id: matrix
                     anchors.centerIn: parent
-                    visible: !root.showDashboard && root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers.length > 0
+                    visible: !root.showDashboard && !root.showLayoutInfo && root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers.length > 0
                     keys: (root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers[root.currentLayerIndex]) ? root.parsedLayout.layers[root.currentLayerIndex].keys : []
                     onLayerSwitchRequested: function(targetName) {
                         if (!targetName || !root.parsedLayout || !root.parsedLayout.layers) return;
@@ -347,11 +380,19 @@ Panel {
                         for (var i = 0; i < root.parsedLayout.layers.length; i++) {
                             if (root.parsedLayout.layers[i].name.toLowerCase().trim() === target) {
                                 root.showDashboard = false;
+                                root.showLayoutInfo = false;
                                 root.currentLayerIndex = i;
                                 break;
                             }
                         }
                     }
+                }
+
+                Components.MoErgoCompanionLayoutInfo {
+                    anchors.fill: parent
+                    anchors.margins: Style.space(8)
+                    visible: root.showLayoutInfo && root.parsedLayout
+                    layout: root.parsedLayout
                 }
 
                 Components.MoErgoCompanionDashboard {

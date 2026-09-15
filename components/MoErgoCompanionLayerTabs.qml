@@ -10,6 +10,7 @@ RowLayout {
     property var layers: []
     property int currentIndex: 0
     property bool showDashboard: false
+    property bool showLayoutInfo: false
     property real tabSpacing: Style.space(6)
     property string layerNamePrefix: "Layer "
 
@@ -23,6 +24,7 @@ RowLayout {
 
 
     signal layerClicked(int index)
+    signal layoutInfoClicked()
     signal dashboardClicked()
 
     Button {
@@ -66,6 +68,13 @@ RowLayout {
             flickable.contentWidth - flickable.width,
             flickable.contentX + flickable.width * 0.8
         )
+    }
+
+    Button {
+        text: "Layout Additional Info"
+        selected: root.showLayoutInfo
+        bordered: true
+        onClicked: root.layoutInfoClicked()
     }
 
     Button {
