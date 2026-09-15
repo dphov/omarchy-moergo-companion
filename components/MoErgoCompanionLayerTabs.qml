@@ -11,7 +11,7 @@ RowLayout {
     property int currentIndex: 0
     property bool showDashboard: false
     property bool showLayoutInfo: false
-    property real tabSpacing: Style.space(6)
+    property real tabSpacing: Style.space(12)
     property string layerNamePrefix: "Layer "
 
     function layerLabel(index, name) {

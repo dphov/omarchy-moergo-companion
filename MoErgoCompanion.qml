@@ -339,7 +339,31 @@ Panel {
                                     id: tagMouse
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
+                                    hoverEnabled: true
                                     onClicked: Qt.openUrlExternally("https://my.moergo.com/glove80/#/search?tags=" + encodeURIComponent(modelData))
+                                }
+
+                                Rectangle {
+                                    visible: tagMouse.containsMouse
+                                    color: Color.background
+                                    border.color: Color.muted
+                                    border.width: 1
+                                    radius: Style.cornerRadius
+                                    implicitWidth: tagTooltipText.implicitWidth + Style.space(12)
+                                    implicitHeight: tagTooltipText.implicitHeight + Style.space(8)
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.bottom: parent.top
+                                    anchors.bottomMargin: Style.space(4)
+                                    z: 100
+
+                                    Text {
+                                        id: tagTooltipText
+                                        anchors.centerIn: parent
+                                        text: "Search online layouts for tag: " + modelData
+                                        font.family: Style.font.family
+                                        font.pixelSize: Style.font.caption
+                                        color: Color.foreground
+                                    }
                                 }
                             }
                         }
@@ -409,6 +433,14 @@ Panel {
                             }
                         }
                     }
+                }
+
+                Button {
+                    text: "✕"
+                    tooltipText: "Clear search"
+                    bordered: true
+                    visible: layerSearchField.text !== ""
+                    onClicked: layerSearchField.text = ""
                 }
             }
 
