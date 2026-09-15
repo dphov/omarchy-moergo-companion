@@ -22,6 +22,7 @@ Item {
     readonly property real tooltipGap: Style.space(14)
     readonly property real tooltipFlipThreshold: Style.space(20)
     readonly property real tooltipLineHeight: 1.15
+    readonly property real positionLabelOpacity: 0.6
 
     property real unitSize: {
         if (parent && parent.width > 0 && parent.height > 0) {
@@ -206,7 +207,7 @@ Item {
         font.pixelSize: Style.font.body
         font.bold: true
         color: Color.foreground
-        opacity: 0.6
+        opacity: root.positionLabelOpacity
         visible: root.hoveredPosition !== ""
     }
 

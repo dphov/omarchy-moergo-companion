@@ -44,26 +44,14 @@ The compiled binaries will be in `keymap-parser/target/release/`:
 
 ## Features
 
-- **Live hardware monitor**: Real-time USB connection detection for both halves (`16c0:27db` Left, `16c0:27d9` Right) + Bluetooth battery percentage via UPower/BlueZ.
-- **Instant hotplug reactivity**: Monitors USB events via `udevadm monitor -s usb` with debouncing for immediate connection state updates on plug/unplug.
-- **Unified bar widget**: Displays charging icon and battery level (`⚡ 96%` when wired, `96%` on battery, `Disconnected` when offline). Detailed per-half status available on hover tooltip.
-- **Physical Glove80 matrix visualizer**: Authentic curved column-stagger and thumb cluster geometry.
-- **Layer fall-through resolution**: Transparent (`&trans`) keys automatically resolve through the layer stack down to Base layer keys, showing exact names rather than placeholder labels.
-- **Transparent key styling**: Unassigned/trans keys render with transparent fill and elegant dashed borders, while native layer keys render with solid fill and borders.
-- **Interactive layer jumping**: Hovering any layer switch key (`Base`, `Lower`, `Magic`, `Test`, `Layer`) shows a tooltip and clicking jumps directly to that layer.
-- **Rich keycap tooltips**: Hovering any key displays a styled floating card with its full action Title and Description (e.g. Output Selection USB, RGB controls, Bluetooth profile switching).
-- **Built-in Glove80 Dashboard**: Integrated hardware control center:
-  - Live device telemetry: Device Name, Bluetooth MAC address, connection transport (USB/BLE), pairing state, battery level with charging status.
-  - Controls: Connect / Disconnect BLE, Trust / Untrust device (auto-reconnect), Forget device.
-  - Quick Links: Glove80 Layout Editor (`my.glove80.com`), ZMK Studio (`zmk.studio`), and Moosytype trainer.
-  - Editable layout source: change the ZMK keymap file path directly from the dashboard; persisted to `settings.json`.
-  - Low-battery desktop notifications at $\le 20\%$ and $\le 10\%$ with hysteresis.
-- **Keyboard navigation**:
-  - `1` .. `4`: Jump directly to layers (Base, Lower, Magic, Test).
-  - `d` (or `c`): Toggle Dashboard view.
-  - `Tab` / `Shift+Tab`: Cycle forward/backward through layers.
-  - `Left` / `Right` (or `h` / `l`): Navigate layer tabs.
-  - `Esc`: Dismiss the panel.
+- **Hardware status in the bar**: live battery, USB/Bluetooth transport, and charging state for Glove80 left/right halves.
+- **Interactive layer visualizer**: physical Glove80 column-stagger and thumb-cluster layout with per-key colors, glyphs, and layer names.
+- **Transparent key resolution**: `&trans` keys follow the layer fall-through stack so you see the real binding from the base layer.
+- **Smart tooltips**: hover a key with a description, layer switch, sticky modifier, or special behavior to see its title and purpose.
+- **Layer navigation**: clickable tabs, search, and keyboard shortcuts (`1`–`4`, `Tab`/`Shift+Tab`, arrow keys) to move between layers.
+- **Dashboard**: device telemetry, BLE connect/disconnect/trust/forget controls, quick links, and an editable keymap path persisted to `settings.json`.
+- **Low-battery notifications**: desktop alerts at $\le 20\%$ and $\le 10\%$ with hysteresis to avoid spam.
+- **Theme-aware**: automatically inherits Omarchy colors for light and dark themes.
 
 ## Architecture
 

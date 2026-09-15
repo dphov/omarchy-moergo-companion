@@ -30,12 +30,10 @@ Panel {
 
     // Z-ordering constants
     readonly property int tooltipZ: 100
-    readonly property int overlayZ: 999
 
     // Opacity constants
     readonly property real separatorOpacity: 0.35
     readonly property real hintOpacity: 0.7
-    readonly property real positionLabelOpacity: 0.6
 
     // State
     property var parsedLayout: null
@@ -312,7 +310,7 @@ Panel {
                         font.family: Style.font.family
                         font.pixelSize: Style.font.caption
                         elide: Text.ElideMiddle
-                        Layout.maximumWidth: Style.space(360)
+                        Layout.maximumWidth: root.titleMaxWidth
                     }
                     Flow {
                         Layout.fillWidth: true
@@ -375,7 +373,7 @@ Panel {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     anchors.bottom: parent.top
                                     anchors.bottomMargin: Style.space(4)
-                                    z: 100
+                                    z: root.tooltipZ
 
                                     Text {
                                         id: tagTooltipText
@@ -403,7 +401,7 @@ Panel {
                 Layout.fillWidth: true
                 height: 1
                 color: Color.foreground
-                opacity: 0.35
+                opacity: root.separatorOpacity
             }
 
             RowLayout {
@@ -413,7 +411,7 @@ Panel {
                     color: Color.foreground
                     font.family: Style.font.family
                     font.pixelSize: Style.font.caption
-                    opacity: 0.7
+                    opacity: root.hintOpacity
                 }
                 Text {
                     id: currentLayerNameText
@@ -445,7 +443,7 @@ Panel {
                     font.family: Style.font.family
                     font.pixelSize: Style.font.caption
                     color: Color.foreground
-                    implicitWidth: Style.space(120)
+                    implicitWidth: root.layerNameMinWidth
                     background: Rectangle {
                         color: Color.background
                         radius: Style.cornerRadius
