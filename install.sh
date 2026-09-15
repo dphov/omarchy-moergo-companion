@@ -10,9 +10,10 @@ echo "Building Rust keymap parser..."
   cargo build --release
 )
 
-# Ensure the native parser is available alongside the other helpers.
+# Ensure the native parser and watcher are available alongside the other helpers.
 mkdir -p bin
 cp "$(dirname "$0")/keymap-parser/target/release/omarchy-moergo-keymap-parser" bin/
+cp "$(dirname "$0")/keymap-parser/target/release/moergo-watcher" bin/
 
 echo "Installing $PLUGIN_ID to $TARGET_DIR..."
 mkdir -p "$TARGET_DIR"
