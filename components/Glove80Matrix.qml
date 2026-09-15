@@ -6,9 +6,16 @@ Item {
     id: root
 
     property var keys: []
-    property real unitSize: Style.space(42)
-    property real keyWidth: Style.space(36)
-    property real keyHeight: Style.space(36)
+    property real unitSize: {
+        var natural = Style.space(42);
+        if (parent && parent.width > 0 && parent.height > 0) {
+            var scale = Math.min(parent.width / (19.6 * natural), parent.height / (8.72 * natural), 1.0);
+            return natural * scale;
+        }
+        return natural;
+    }
+    property real keyWidth: unitSize * 36 / 42
+    property real keyHeight: unitSize * 36 / 42
     property string hoveredPosition: ""
     property string activeTitle: ""
     property string activeDesc: ""
