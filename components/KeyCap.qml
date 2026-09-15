@@ -169,41 +169,4 @@ Rectangle {
         }
     }
 
-    ToolTip {
-        id: toolTip
-        visible: mouse.containsMouse && (root.keyTitle !== "" || root.keyDesc !== "" || root.isLayerKey)
-        delay: 200
-        padding: Style.space(12)
-        x: (root.width - implicitWidth) / 2
-        y: (root.y > root.height * 2.5) ? (-implicitHeight - Style.space(10)) : (root.height + Style.space(8))
-        background: Rectangle {
-            color: Color.background
-            border.color: Color.muted
-            border.width: 1
-            radius: Style.cornerRadius
-        }
-
-        contentItem: ColumnLayout {
-            spacing: Style.space(6)
-
-            Text {
-                text: root.keyTitle !== "" ? root.keyTitle : (root.isLayerKey ? ("Switch to " + root.targetLayer + " layer") : root.keyText)
-                font.bold: true
-                font.family: Style.font.family
-                font.pixelSize: Style.font.body
-                color: Color.accent
-            }
-
-            Text {
-                visible: text !== ""
-                text: root.keyDesc !== "" ? root.keyDesc : (root.isLayerKey ? ("Click to switch active layer tab to " + root.targetLayer + ".") : "")
-                font.family: Style.font.family
-                font.pixelSize: Style.font.bodySmall
-                color: Color.foreground
-                wrapMode: Text.Wrap
-                lineHeight: 1.15
-                Layout.maximumWidth: Style.space(320)
-            }
-        }
-    }
 }

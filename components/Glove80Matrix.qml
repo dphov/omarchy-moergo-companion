@@ -1,7 +1,7 @@
 import QtQuick
+import QtQuick.Layouts
 import qs.Commons
 import qs.Ui
-
 Item {
     id: root
 
@@ -10,6 +10,10 @@ Item {
     property real keyWidth: Style.space(36)
     property real keyHeight: Style.space(36)
     property string hoveredPosition: ""
+    property string activeTitle: ""
+    property string activeDesc: ""
+    property real activeKeyX: 0
+    property real activeKeyY: 0
     signal layerSwitchRequested(string layerName)
 
     readonly property var keyPositions: [
@@ -147,8 +151,16 @@ Item {
             onIsHoveredChanged: {
                 if (isHovered) {
                     root.hoveredPosition = (root.keyPositions && root.keyPositions.length > index) ? root.keyPositions[index] : "";
+                    if (keyTitle !== "" || keyDesc !== "" || isLayerKey) {
+                        root.activeTitle = keyTitle !== "" ? keyTitle : (isLayerKey ? ("Switch to " + targetLayer + " layer") : keyText);
+                        root.activeDesc = keyDesc !== "" ? keyDesc : (isLayerKey ? ("Click to switch active layer tab to " + targetLayer + ".") : "");
+                        root.activeKeyX = modelData.x * root.unitSize;
+                        root.activeKeyY = modelData.y * root.unitSize - root.keyHeight / 2;
+                    }
                 } else if (root.hoveredPosition === root.keyPositions[index]) {
                     root.hoveredPosition = "";
+                    root.activeTitle = "";
+                    root.activeDesc = "";
                 }
             }
             onLayerClicked: function(targetLayer) {
@@ -169,5 +181,52 @@ Item {
         color: Color.foreground
         opacity: 0.6
         visible: root.hoveredPosition !== ""
+    }
+
+    Rectangle {
+        id: infoDialog
+        visible: root.activeTitle !== "" || root.activeDesc !== ""
+        z: 999
+        radius: Style.cornerRadius
+        color: Color.background
+        border.color: Color.muted
+        border.width: 1
+
+        width: Math.min(contentColumn.implicitWidth + Style.space(28), Style.space(380))
+        height: contentColumn.implicitHeight + Style.space(22)
+
+        x: Math.max(Style.space(12), Math.min(root.width - width - Style.space(12), root.activeKeyX - width / 2))
+        y: (root.activeKeyY > height + Style.space(20))
+            ? (root.activeKeyY - height - Style.space(14))
+            : (root.activeKeyY + root.keyHeight + Style.space(14))
+
+        ColumnLayout {
+            id: contentColumn
+            anchors.centerIn: parent
+            width: parent.width - Style.space(24)
+            spacing: Style.space(4)
+
+            Text {
+                text: root.activeTitle
+                font.bold: true
+                font.family: Style.font.family
+                font.pixelSize: Style.font.body
+                color: Color.accent
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+            }
+
+            Text {
+                visible: text !== ""
+                text: root.activeDesc
+                font.family: Style.font.family
+                font.pixelSize: Style.font.caption
+                color: Color.foreground
+                opacity: 0.88
+                wrapMode: Text.Wrap
+                lineHeight: 1.15
+                Layout.fillWidth: true
+            }
+        }
     }
 }
