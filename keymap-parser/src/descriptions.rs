@@ -190,11 +190,6 @@ pub fn describe_key_code(raw: &str, humanized: &str, custom_behaviors: &[String]
         );
     }
 
-    if !humanized.is_empty() {
-        let clean = humanized.replace('\n', " ");
-        return (format!("Key: {clean}"), String::new());
-    }
-
     (String::new(), String::new())
 }
 
