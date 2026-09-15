@@ -1,3 +1,5 @@
+use crate::legends::humanize_key_code;
+
 pub fn describe_key_code(raw: &str, humanized: &str) -> (String, String) {
     if raw.is_empty() {
         return (String::new(), String::new());
@@ -48,6 +50,25 @@ pub fn describe_key_code(raw: &str, humanized: &str) -> (String, String) {
             format!("Hold to momentarily switch to {target} layer; double-tap to toggle."),
         );
     }
+    if let Some(rest) = raw.strip_prefix("&sk ") {
+        let target = modifier_name(rest.trim());
+        return (
+            "Sticky Key".into(),
+            format!(
+                "A Sticky Key stays pressed until another key is pressed. It is often used for \"sticky {target}\". By using a sticky {target}, you don't have to hold the {target} key to write a capital."
+            ),
+        );
+    }
+    if let Some(rest) = raw.strip_prefix("&sl ") {
+        let target = rest.trim();
+        return (
+            "Sticky Layer".into(),
+            format!(
+                "Activates the {target} layer until another key is pressed, then returns to the previous layer."
+            ),
+        );
+    }
+
     if raw == "&cap_word" || raw == "&caps_word" {
         return (
             "Caps Word".into(),
@@ -191,6 +212,20 @@ fn rgb_description(rgb: &str) -> (String, String) {
         (format!("RGB Underglow {rgb}"), desc.into())
     } else {
         (title.into(), desc.into())
+    }
+}
+
+fn modifier_name(raw: &str) -> String {
+    match raw {
+        "LSHFT" | "LSHIFT" => "Left Shift".into(),
+        "RSHFT" | "RSHIFT" => "Right Shift".into(),
+        "LCTRL" | "LCONTROL" => "Left Control".into(),
+        "RCTRL" | "RCONTROL" => "Right Control".into(),
+        "LALT" => "Left Alt".into(),
+        "RALT" => "Right Alt".into(),
+        "LGUI" => "Left GUI".into(),
+        "RGUI" => "Right GUI".into(),
+        _ => humanize_key_code(raw).replace('\n', " "),
     }
 }
 
