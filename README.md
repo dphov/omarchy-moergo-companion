@@ -1,6 +1,6 @@
 # Omarchy Moergo Companion (`dphov.omarchy-moergo-companion`)
 
-MoErgo Glove80 visualizer and hardware status plugin for [Omarchy shell](https://github.com/omacom/omarchy).
+MoErgo Glove80 visualizer and hardware status plugin for [Omarchy](https://github.com/omacom/omarchy).
 
 ## Screenshots
 

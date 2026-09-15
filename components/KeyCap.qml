@@ -17,6 +17,7 @@ Rectangle {
     readonly property real cornerGlyphLeftMargin: Style.space(3)
     readonly property real textSideMargin: Style.space(4)
     readonly property real transparentHatchOpacity: 0.4
+    readonly property real translucentOpacity: 0.75
 
     // Stroke alignment offset for crisp 1px borders drawn inside the rectangle.
     readonly property real hairlineOffset: 0.5

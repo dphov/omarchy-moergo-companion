@@ -251,7 +251,7 @@ Item {
                 color: Color.foreground
                 opacity: 0.88
                 wrapMode: Text.Wrap
-                lineHeight: 1.15
+                lineHeight: root.tooltipLineHeight
                 Layout.fillWidth: true
             }
         }
