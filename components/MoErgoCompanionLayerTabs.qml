@@ -71,7 +71,7 @@ RowLayout {
     }
 
     Button {
-        text: "Layout Additional Info"
+        text: "ℹ Info"
         selected: root.showLayoutInfo
         bordered: true
         onClicked: root.layoutInfoClicked()
