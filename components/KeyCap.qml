@@ -19,6 +19,12 @@ Rectangle {
     readonly property real transparentHatchOpacity: 0.4
     readonly property real translucentOpacity: 0.75
 
+    // Diagonal hatch line anchor ratios (start and end points as fractions of key size)
+    readonly property real hatchStart1: 0.35
+    readonly property real hatchStart2: 0.75
+    readonly property real hatchEnd1: 0.25
+    readonly property real hatchEnd2: 0.65
+
     // Stroke alignment offset for crisp 1px borders drawn inside the rectangle.
     readonly property real hairlineOffset: 0.5
     readonly property int dashPatternOn: 5
@@ -121,12 +127,6 @@ Rectangle {
         layer.enabled: true
         opacity: root.transparentHatchOpacity
 
-        // Diagonal hatch line anchor ratios (start and end points as fractions of key size)
-        readonly property real hatchStart1: 0.35
-        readonly property real hatchStart2: 0.75
-        readonly property real hatchEnd1: 0.25
-        readonly property real hatchEnd2: 0.65
-
         ShapePath {
             strokeColor: Color.muted
             strokeWidth: 1
@@ -134,8 +134,8 @@ Rectangle {
             fillColor: "transparent"
 
             startX: 0
-            startY: parent.height * hatchStart1
-            PathLine { x: parent.width * hatchStart1; y: 0 }
+            startY: parent.height * root.hatchStart1
+            PathLine { x: parent.width * root.hatchStart1; y: 0 }
         }
         ShapePath {
             strokeColor: Color.muted
@@ -144,8 +144,8 @@ Rectangle {
             fillColor: "transparent"
 
             startX: 0
-            startY: parent.height * hatchStart2
-            PathLine { x: parent.width * hatchStart2; y: 0 }
+            startY: parent.height * root.hatchStart2
+            PathLine { x: parent.width * root.hatchStart2; y: 0 }
         }
         ShapePath {
             strokeColor: Color.muted
@@ -153,9 +153,9 @@ Rectangle {
             strokeStyle: ShapePath.SolidLine
             fillColor: "transparent"
 
-            startX: parent.width * hatchEnd1
+            startX: parent.width * root.hatchEnd1
             startY: parent.height
-            PathLine { x: parent.width; y: parent.height * hatchEnd1 }
+            PathLine { x: parent.width; y: parent.height * root.hatchEnd1 }
         }
         ShapePath {
             strokeColor: Color.muted
@@ -163,9 +163,9 @@ Rectangle {
             strokeStyle: ShapePath.SolidLine
             fillColor: "transparent"
 
-            startX: parent.width * hatchEnd2
+            startX: parent.width * root.hatchEnd2
             startY: parent.height
-            PathLine { x: parent.width; y: parent.height * hatchEnd2 }
+            PathLine { x: parent.width; y: parent.height * root.hatchEnd2 }
         }
     }
 
@@ -178,7 +178,7 @@ Rectangle {
         anchors.leftMargin: root.cornerGlyphLeftMargin
         width: root.cornerGlyphSize
         height: width
-        opacity: root.isTrans ? 0.75 : 1.0
+        opacity: root.isTrans ? root.translucentOpacity : 1.0
         visible: root.keyGlyph !== "" && root.keyText !== ""
 
         Image {
@@ -214,7 +214,7 @@ Rectangle {
         verticalAlignment: Text.AlignVCenter
         lineHeight: 1.0
         width: parent.width - root.textSideMargin * 2
-        opacity: root.isTrans ? 0.75 : 1.0
+        opacity: root.isTrans ? root.translucentOpacity : 1.0
         visible: root.keyText !== ""
     }
 
@@ -223,7 +223,7 @@ Rectangle {
         anchors.centerIn: parent
         width: Math.min(parent.width * root.standaloneGlyphMaxRatio, root.standaloneGlyphMaxSize)
         height: width
-        opacity: root.isTrans ? 0.75 : 1.0
+        opacity: root.isTrans ? root.translucentOpacity : 1.0
         visible: root.keyGlyph !== "" && root.keyText === ""
 
         Image {
