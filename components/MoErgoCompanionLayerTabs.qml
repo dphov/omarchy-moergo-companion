@@ -30,32 +30,33 @@ RowLayout {
     Button {
         text: "<"
         bordered: true
-        enabled: flickable.contentX > 0
-        onClicked: flickable.contentX = Math.max(0, flickable.contentX - flickable.width * 0.8)
+        enabled: listView.contentX > 0
+        onClicked: listView.contentX = Math.max(0, listView.contentX - listView.width * 0.8)
     }
 
-    Flickable {
-        id: flickable
+    ListView {
+        id: listView
         Layout.fillWidth: true
-        Layout.preferredHeight: tabRow.implicitHeight
-        contentWidth: tabRow.implicitWidth
-        contentHeight: tabRow.implicitHeight
-        flickableDirection: Flickable.HorizontalFlick
-        interactive: false
+        Layout.preferredHeight: Math.max(contentItem.childrenRect.height, Style.space(32))
+        orientation: ListView.Horizontal
+        spacing: root.tabSpacing
+        model: root.layers
         clip: true
         boundsBehavior: Flickable.StopAtBounds
+        currentIndex: root.currentIndex
+        highlightRangeMode: ListView.ApplyRange
+        preferredHighlightBegin: 0
+        preferredHighlightEnd: width
 
-        RowLayout {
-            id: tabRow
-            spacing: root.tabSpacing
+        delegate: Button {
+            text: root.layerLabel(index, modelData.name)
+            selected: !root.showDashboard && root.currentIndex === index
+            onClicked: root.layerClicked(index)
+        }
 
-            Repeater {
-                model: root.layers
-                delegate: Button {
-                    text: root.layerLabel(index, modelData.name)
-                    selected: !root.showDashboard && root.currentIndex === index
-                    onClicked: root.layerClicked(index)
-                }
+        onCurrentIndexChanged: {
+            if (currentIndex >= 0 && currentIndex < count) {
+                positionViewAtIndex(currentIndex, ListView.Contain);
             }
         }
     }
@@ -63,10 +64,10 @@ RowLayout {
     Button {
         text: ">"
         bordered: true
-        enabled: flickable.contentX < flickable.contentWidth - flickable.width
-        onClicked: flickable.contentX = Math.min(
-            flickable.contentWidth - flickable.width,
-            flickable.contentX + flickable.width * 0.8
+        enabled: listView.contentX < listView.contentWidth - listView.width
+        onClicked: listView.contentX = Math.min(
+            listView.contentWidth - listView.width,
+            listView.contentX + listView.width * 0.8
         )
     }
 
