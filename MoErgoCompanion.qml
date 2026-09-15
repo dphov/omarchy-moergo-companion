@@ -260,8 +260,8 @@ Panel {
                     return;
                 }
                 var num = parseInt(t, 10);
-                if (!isNaN(num) && num >= 1 && root.parsedLayout && root.parsedLayout.layers) {
-                    var target = num - 1;
+                if (!isNaN(num) && num >= 0 && root.parsedLayout && root.parsedLayout.layers) {
+                    var target = num;
                     if (target < root.parsedLayout.layers.length) {
                         root.showDashboard = false;
                         root.currentLayerIndex = target;

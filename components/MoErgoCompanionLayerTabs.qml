@@ -44,9 +44,6 @@ RowLayout {
         clip: true
         boundsBehavior: Flickable.StopAtBounds
         currentIndex: root.currentIndex
-        highlightRangeMode: ListView.ApplyRange
-        preferredHighlightBegin: 0
-        preferredHighlightEnd: width
 
         delegate: Button {
             text: root.layerLabel(index, modelData.name)

@@ -14,6 +14,8 @@ echo "Building Rust keymap parser..."
 mkdir -p bin
 cp "$(dirname "$0")/keymap-parser/target/release/omarchy-moergo-keymap-parser" bin/
 cp "$(dirname "$0")/keymap-parser/target/release/moergo-watcher" bin/
+cp "$(dirname "$0")/keymap-parser/target/release/moergo-companion-settings" bin/
+cp "$(dirname "$0")/keymap-parser/target/release/glove80-status" bin/
 
 echo "Installing $PLUGIN_ID to $TARGET_DIR..."
 mkdir -p "$TARGET_DIR"
