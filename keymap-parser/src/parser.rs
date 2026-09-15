@@ -65,6 +65,8 @@ pub fn parse_keymap<P: AsRef<Path>>(path: P) -> std::io::Result<Layout> {
         search_start = absolute_pos + eq_pos + lt_pos + gt_pos + 3;
     }
 
+    resolve_layer_references(&mut layers);
+
     Ok(Layout {
         layers,
         title,
@@ -76,6 +78,33 @@ pub fn parse_keymap<P: AsRef<Path>>(path: P) -> std::io::Result<Layout> {
         language: language_from_keymap_source(&source),
         custom_behaviors,
     })
+}
+
+pub fn resolve_layer_references(layers: &mut [Layer]) {
+    let names: Vec<String> = layers.iter().map(|l| l.name.clone()).collect();
+    for layer in layers.iter_mut() {
+        for key in layer.keys.iter_mut() {
+            if let Some(new_title) = resolve_layer_in_title(&key.raw, &key.title, &names) {
+                key.title = new_title;
+            }
+        }
+    }
+}
+
+fn resolve_layer_in_title(raw: &str, title: &str, names: &[String]) -> Option<String> {
+    let parts: Vec<&str> = raw.split_whitespace().collect();
+    if parts.len() < 2 {
+        return None;
+    }
+    let behavior = parts[0];
+    let target = parts[1];
+    if !matches!(behavior, "&tog" | "&mo" | "&to" | "&sl") {
+        return None;
+    }
+    let idx: usize = target.parse().ok()?;
+    let name = names.get(idx)?;
+    let label = format!("{idx} {name}");
+    Some(title.replacen(target, &label, 1))
 }
 
 fn title_from_keymap_source<P: AsRef<Path>>(source: &str, path: P) -> String {

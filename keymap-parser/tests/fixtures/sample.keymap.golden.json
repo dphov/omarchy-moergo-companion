@@ -8,168 +8,192 @@
           "title": "Key Press Esc",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp ESC"
         },
         {
           "text": "!\n1",
           "title": "Key Press ! 1",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp N1"
         },
         {
           "text": "@\n2",
           "title": "Key Press @ 2",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp N2"
         },
         {
           "text": "#\n3",
           "title": "Key Press # 3",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp N3"
         },
         {
           "text": "Tab",
           "title": "Key Press Tab",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp TAB"
         },
         {
           "text": "Q",
           "title": "Key Press Q",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp Q"
         },
         {
           "text": "W",
           "title": "Key Press W",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp W"
         },
         {
           "text": "E",
           "title": "Key Press E",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp E"
         },
         {
           "text": "Shift",
           "title": "Key Press Shift",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": "modifier"
+          "glyph": "modifier",
+          "raw": "&kp LSHFT"
         },
         {
           "text": "A",
           "title": "Key Press A",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp A"
         },
         {
           "text": "S",
           "title": "Key Press S",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp S"
         },
         {
           "text": "D",
           "title": "Key Press D",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp D"
         },
         {
           "text": "Ctrl",
           "title": "Key Press Ctrl",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": "modifier"
+          "glyph": "modifier",
+          "raw": "&kp LCTRL"
         },
         {
           "text": "Z",
           "title": "Key Press Z",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp Z"
         },
         {
           "text": "X",
           "title": "Key Press X",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp X"
         },
         {
           "text": "C",
           "title": "Key Press C",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp C"
         },
         {
           "text": "←",
           "title": "Key Press ←",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp LEFT"
         },
         {
           "text": "→",
           "title": "Key Press →",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp RIGHT"
         },
         {
           "text": "↑",
           "title": "Key Press ↑",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp UP"
         },
         {
           "text": "↓",
           "title": "Key Press ↓",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp DOWN"
         },
         {
           "text": "",
           "title": "",
           "desc": "",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&none"
         },
         {
           "text": "Space",
           "title": "Key Press Space",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp SPACE"
         },
         {
           "text": "Bksp",
           "title": "Key Press Bksp",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp BSPC"
         },
         {
           "text": "Enter",
           "title": "Key Press Enter",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp RET"
         }
       ]
     },
@@ -181,168 +205,192 @@
           "title": "Key Press Esc",
           "desc": "Send standard keycode on press and release",
           "trans": true,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&trans"
         },
         {
           "text": "F1",
           "title": "Key Press F1",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp F1"
         },
         {
           "text": "F2",
           "title": "Key Press F2",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp F2"
         },
         {
           "text": "F3",
           "title": "Key Press F3",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp F3"
         },
         {
           "text": "Tab",
           "title": "Key Press Tab",
           "desc": "Send standard keycode on press and release",
           "trans": true,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&trans"
         },
         {
           "text": "EXCL",
           "title": "Key Press EXCL",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp EXCL"
         },
         {
           "text": "AT",
           "title": "Key Press AT",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp AT"
         },
         {
           "text": "HASH",
           "title": "Key Press HASH",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp HASH"
         },
         {
           "text": "Shift",
           "title": "Key Press Shift",
           "desc": "Send standard keycode on press and release",
           "trans": true,
-          "glyph": "modifier"
+          "glyph": "modifier",
+          "raw": "&trans"
         },
         {
           "text": "A",
           "title": "Key Press A",
           "desc": "Send standard keycode on press and release",
           "trans": true,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&trans"
         },
         {
           "text": "S",
           "title": "Key Press S",
           "desc": "Send standard keycode on press and release",
           "trans": true,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&trans"
         },
         {
           "text": "D",
           "title": "Key Press D",
           "desc": "Send standard keycode on press and release",
           "trans": true,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&trans"
         },
         {
           "text": "Ctrl",
           "title": "Key Press Ctrl",
           "desc": "Send standard keycode on press and release",
           "trans": true,
-          "glyph": "modifier"
+          "glyph": "modifier",
+          "raw": "&trans"
         },
         {
           "text": "(",
           "title": "Key Press (",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp LPAR"
         },
         {
           "text": ")",
           "title": "Key Press )",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp RPAR"
         },
         {
           "text": "%",
           "title": "Key Press %",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp PRCNT"
         },
         {
           "text": "Home",
           "title": "Key Press Home",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp HOME"
         },
         {
           "text": "End",
           "title": "Key Press End",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp END"
         },
         {
           "text": "PgUp",
           "title": "Key Press PgUp",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp PG_UP"
         },
         {
           "text": "PgDn",
           "title": "Key Press PgDn",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp PG_DN"
         },
         {
           "text": "",
           "title": "",
           "desc": "",
           "trans": true,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&trans"
         },
         {
           "text": "Space",
           "title": "Key Press Space",
           "desc": "Send standard keycode on press and release",
           "trans": true,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&trans"
         },
         {
           "text": "Delete",
           "title": "Key Press Delete",
           "desc": "Send standard keycode on press and release",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&kp DEL"
         },
         {
           "text": "Enter",
           "title": "Key Press Enter",
           "desc": "Send standard keycode on press and release",
           "trans": true,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&trans"
         }
       ]
     },
@@ -354,168 +402,192 @@
           "title": "Bootloader Mode",
           "desc": "Reboots keyboard into UF2 mass-storage bootloader mode for firmware flashing.",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&bootloader"
         },
         {
           "text": "Reset",
           "title": "Reset",
           "desc": "Reset this half of the keyboard.",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&sys_reset"
         },
         {
           "text": "",
           "title": "",
           "desc": "",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&none"
         },
         {
           "text": "",
           "title": "",
           "desc": "",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&none"
         },
         {
           "text": "BT\nClr",
           "title": "Bluetooth Clear Profile",
           "desc": "Clears the pairing record for the currently selected Bluetooth profile.",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&bt BT_CLR"
         },
         {
           "text": "BT\n1",
           "title": "Bluetooth Profile 1",
           "desc": "Quick-tap to connect to profile 1; double-tap to explicitly disconnect.",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&bt_0"
         },
         {
           "text": "BT\n2",
           "title": "Bluetooth Profile 2",
           "desc": "Quick-tap to connect to profile 2; double-tap to explicitly disconnect.",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&bt_1"
         },
         {
           "text": "BT\n3",
           "title": "Bluetooth Profile 3",
           "desc": "Quick-tap to connect to profile 3; double-tap to explicitly disconnect.",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&bt_2"
         },
         {
           "text": "USB",
           "title": "Output Selection USB",
           "desc": "Allows selecting whether keyboard output is sent to the USB or bluetooth connection when both are connected.",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&out OUT_USB"
         },
         {
           "text": "BLE",
           "title": "Output Selection BLE",
           "desc": "Allows selecting whether keyboard output is sent to the USB or bluetooth connection when both are connected.",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&out OUT_BLE"
         },
         {
           "text": "RGB\nTog",
           "title": "RGB Underglow Toggle",
           "desc": "RGB underglow control",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&rgb_ug RGB_TOG"
         },
         {
           "text": "RGB\nEff",
           "title": "RGB Underglow Effect",
           "desc": "RGB underglow control",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&rgb_ug RGB_EFF"
         },
         {
           "text": "RGB\nBri+",
           "title": "RGB Underglow Brightness Up",
           "desc": "RGB underglow control",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&rgb_ug RGB_BRI"
         },
         {
           "text": "RGB\nRGB_BRK",
           "title": "RGB Underglow RGB_BRK",
           "desc": "RGB underglow control",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&rgb_ug RGB_BRK"
         },
         {
           "text": "",
           "title": "",
           "desc": "",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&none"
         },
         {
           "text": "",
           "title": "",
           "desc": "",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&none"
         },
         {
           "text": "",
           "title": "",
           "desc": "",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&none"
         },
         {
           "text": "",
           "title": "",
           "desc": "",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&none"
         },
         {
           "text": "",
           "title": "",
           "desc": "",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&none"
         },
         {
           "text": "",
           "title": "",
           "desc": "",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&none"
         },
         {
           "text": "Base",
           "title": "To Layer: Base",
           "desc": "Switches keyboard layer back to the default Base layer.",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&to DEFAULT"
         },
         {
           "text": "Test",
           "title": "To Layer: Test",
           "desc": "Switches keyboard layer to the factory test layer.",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&to FACTORY_TEST"
         },
         {
           "text": "Lower",
           "title": "Lower Layer",
           "desc": "Hold to momentarily switch to Lower layer; double-tap to toggle.",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&lower"
         },
         {
           "text": "",
           "title": "",
           "desc": "",
           "trans": false,
-          "glyph": ""
+          "glyph": "",
+          "raw": "&none"
         }
       ]
     }

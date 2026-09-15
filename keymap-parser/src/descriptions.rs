@@ -227,7 +227,7 @@ fn firmware_description(raw: &str) -> Option<(&'static str, &'static str)> {
             "Bootloader Mode",
             "Reboots keyboard into UF2 mass-storage bootloader mode for firmware flashing.",
         )),
-        "&sys_reset" => Some(("Reset", "Reset this half of the keyboard.")),
+        "&sys_reset" | "&reset" => Some(("Reset", "Reset this half of the keyboard.")),
         _ => None,
     }
 }

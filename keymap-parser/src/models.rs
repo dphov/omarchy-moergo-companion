@@ -12,6 +12,8 @@ pub struct Key {
     pub color: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub text_color: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub raw: String,
 }
 
 impl Key {
@@ -47,6 +49,7 @@ impl Key {
             glyph,
             color,
             text_color,
+            raw: raw.into(),
         }
     }
 }

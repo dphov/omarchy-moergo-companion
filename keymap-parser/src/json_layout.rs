@@ -2,6 +2,7 @@ use crate::descriptions::{describe_key_code, extract_custom_behavior_names};
 use crate::glyphs::glyph_for_key;
 use crate::legends::humanize_key_code;
 use crate::models::{Key, Layer, Layout};
+use crate::parser::resolve_layer_references;
 use serde::Deserialize;
 use serde_json::Value;
 use std::fs;
@@ -275,6 +276,8 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Layout> {
         }
         layers.push(Layer { name, keys });
     }
+
+    resolve_layer_references(&mut layers);
 
     Ok(Layout {
         layers,
