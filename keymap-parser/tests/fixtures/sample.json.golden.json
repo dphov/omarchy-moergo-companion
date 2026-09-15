@@ -116,28 +116,28 @@
           "glyph": ""
         },
         {
-          "text": "\u2190",
+          "text": "←",
           "title": "Left Arrow",
           "desc": "Moves cursor left.",
           "trans": false,
           "glyph": ""
         },
         {
-          "text": "\u2192",
+          "text": "→",
           "title": "Right Arrow",
           "desc": "Moves cursor right.",
           "trans": false,
           "glyph": ""
         },
         {
-          "text": "\u2191",
+          "text": "↑",
           "title": "Up Arrow",
           "desc": "Moves cursor up.",
           "trans": false,
           "glyph": ""
         },
         {
-          "text": "\u2193",
+          "text": "↓",
           "title": "Down Arrow",
           "desc": "Moves cursor down.",
           "trans": false,
@@ -504,9 +504,9 @@
           "glyph": ""
         },
         {
-          "text": "",
-          "title": "",
-          "desc": "",
+          "text": "Lower",
+          "title": "Lower Layer",
+          "desc": "Switches keyboard layer to the Lower layer.",
           "trans": false,
           "glyph": ""
         },

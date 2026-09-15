@@ -8,6 +8,8 @@ const TEXT_BEHAVIORS: &[&str] = &[
     "&sys_reset",
     "&studio_unlock",
     "&layer_td",
+    "&lower",
+    "lower",
     "&magic",
     "&bt",
     "&out",
@@ -53,6 +55,7 @@ mod tests {
     fn text_behaviors_have_no_glyph() {
         assert_eq!(glyph_for_key("&kp A"), "");
         assert_eq!(glyph_for_key("&trans"), "");
+        assert_eq!(glyph_for_key("&lower"), "");
     }
 
     #[test]

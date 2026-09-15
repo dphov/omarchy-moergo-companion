@@ -1,7 +1,7 @@
 pub fn behavior_arity(behavior: &str) -> usize {
     match behavior {
         "&none" | "none" | "&trans" | "trans" | "&sys_reset" | "&bootloader" | "&studio_unlock"
-        | "&layer_td" => 0,
+        | "&layer_td" | "&lower" | "lower" => 0,
         "&magic" => 2,
         _ => {
             if behavior.starts_with("&bt_") || behavior.starts_with("bt_") {
@@ -31,6 +31,7 @@ mod tests {
         assert_eq!(behavior_arity("&trans"), 0);
         assert_eq!(behavior_arity("&none"), 0);
         assert_eq!(behavior_arity("&bt_1"), 0);
+        assert_eq!(behavior_arity("&lower"), 0);
     }
 
     #[test]

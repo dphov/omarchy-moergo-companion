@@ -35,6 +35,12 @@ pub fn describe_key_code(raw: &str, humanized: &str) -> (String, String) {
             "Tap to toggle layer, hold to temporarily access the Lower layer.".into(),
         );
     }
+    if raw == "&lower" || raw == "lower" {
+        return (
+            "Lower Layer".into(),
+            "Switches keyboard layer to the Lower layer.".into(),
+        );
+    }
     if raw == "&to FACTORY_TEST" {
         return (
             "To Layer: Test".into(),
@@ -228,5 +234,12 @@ mod tests {
     fn describes_media_key() {
         let (title, _) = describe_key_code("&kp C_PP", "Play");
         assert_eq!(title, "Play / Pause");
+    }
+
+    #[test]
+    fn describes_lower_layer() {
+        let (title, desc) = describe_key_code("&lower", "Lower");
+        assert_eq!(title, "Lower Layer");
+        assert!(desc.contains("Lower"));
     }
 }

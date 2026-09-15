@@ -34,7 +34,7 @@
                 &out OUT_USB &out OUT_BLE &rgb_ug RGB_TOG &rgb_ug RGB_EFF
                 &rgb_ug RGB_BRI &rgb_ug RGB_BRK &none &none
                 &none       &none      &none     &none
-                &to DEFAULT &to FACTORY_TEST &none &none
+                &to DEFAULT &to FACTORY_TEST &lower &none
             >;
         };
     };

@@ -76,7 +76,7 @@
       {"value": "&none"},
       {"value": "&to", "params": [{"value": "DEFAULT"}]},
       {"value": "&to", "params": [{"value": "FACTORY_TEST"}]},
-      {"value": "&none"},
+      {"value": "&lower"},
       {"value": "&none"}
     ]
   ]

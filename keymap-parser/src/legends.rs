@@ -6,6 +6,7 @@ pub fn humanize_key_code(raw: &str) -> String {
         "&bootloader" => "Boot".into(),
         "&sys_reset" => "Reset".into(),
         "&layer_td" => "Layer".into(),
+        "&lower" | "lower" => "Lower".into(),
         _ => {
             if raw.starts_with("&bt_") || raw.starts_with("bt_") {
                 return bt_profile_legend(raw);
@@ -181,6 +182,7 @@ mod tests {
         assert_eq!(humanize_key_code("&trans"), "");
         assert_eq!(humanize_key_code("&bootloader"), "Boot");
         assert_eq!(humanize_key_code("&sys_reset"), "Reset");
+        assert_eq!(humanize_key_code("&lower"), "Lower");
     }
 
     #[test]
