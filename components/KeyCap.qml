@@ -51,7 +51,7 @@ Rectangle {
         if (root.keyColor !== "") return root.isLightKeyColor ? "#1a1e22" : "#ffffff";
         return "#c7cf9b";
     }
-
+    readonly property bool isHovered: mouse.containsMouse
     signal layerClicked(string targetLayer)
 
     width: Style.space(36)

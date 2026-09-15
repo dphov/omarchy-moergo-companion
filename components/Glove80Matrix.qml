@@ -9,8 +9,38 @@ Item {
     property real unitSize: Style.space(42)
     property real keyWidth: Style.space(36)
     property real keyHeight: Style.space(36)
+    property string hoveredPosition: ""
     signal layerSwitchRequested(string layerName)
 
+    readonly property var keyPositions: [
+        // Row 0: F1-F10
+        "LH C6R1", "LH C5R1", "LH C4R1", "LH C3R1", "LH C2R1",
+        "RH C2R1", "RH C3R1", "RH C4R1", "RH C5R1", "RH C6R1",
+
+        // Row 1: Number row
+        "LH C6R2", "LH C5R2", "LH C4R2", "LH C3R2", "LH C2R2", "LH C1R2",
+        "RH C1R2", "RH C2R2", "RH C3R2", "RH C4R2", "RH C5R2", "RH C6R2",
+
+        // Row 2: Top alpha row
+        "LH C6R3", "LH C5R3", "LH C4R3", "LH C3R3", "LH C2R3", "LH C1R3",
+        "RH C1R3", "RH C2R3", "RH C3R3", "RH C4R3", "RH C5R3", "RH C6R3",
+
+        // Row 3: Home row
+        "LH C6R4", "LH C5R4", "LH C4R4", "LH C3R4", "LH C2R4", "LH C1R4",
+        "RH C1R4", "RH C2R4", "RH C3R4", "RH C4R4", "RH C5R4", "RH C6R4",
+
+        // Row 4: Lower row + Thumbs top row
+        "LH C6R5", "LH C5R5", "LH C4R5", "LH C3R5", "LH C2R5", "LH C1R5",
+        "LH T1", "LH T2", "LH T3",
+        "RH T3", "RH T2", "RH T1",
+        "RH C1R5", "RH C2R5", "RH C3R5", "RH C4R5", "RH C5R5", "RH C6R5",
+
+        // Row 5: Bottom row + Thumbs bottom row
+        "LH C6R6", "LH C5R6", "LH C4R6", "LH C3R6", "LH C2R6",
+        "LH T4", "LH T5", "LH T6",
+        "RH T6", "RH T5", "RH T4",
+        "RH C2R6", "RH C3R6", "RH C4R6", "RH C5R6", "RH C6R6"
+    ]
 
     implicitWidth: 19.6 * unitSize
     implicitHeight: 8.72 * unitSize
@@ -114,9 +144,30 @@ Item {
             keyColor: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.color || "") : ""
             keyTextColor: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.text_color || "") : ""
             isTrans: (typeof currentKey === "object" && currentKey !== null) ? !!currentKey.trans : false
+            onIsHoveredChanged: {
+                if (isHovered) {
+                    root.hoveredPosition = (root.keyPositions && root.keyPositions.length > index) ? root.keyPositions[index] : "";
+                } else if (root.hoveredPosition === root.keyPositions[index]) {
+                    root.hoveredPosition = "";
+                }
+            }
             onLayerClicked: function(targetLayer) {
                 root.layerSwitchRequested(targetLayer);
             }
         }
+    }
+
+    Text {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.rightMargin: Style.space(16)
+        anchors.bottomMargin: Style.space(8)
+        text: root.hoveredPosition
+        font.family: Style.font.family
+        font.pixelSize: Style.font.body
+        font.bold: true
+        color: Color.foreground
+        opacity: 0.6
+        visible: root.hoveredPosition !== ""
     }
 }
