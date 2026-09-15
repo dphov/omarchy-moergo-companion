@@ -64,18 +64,6 @@ Rectangle {
     border.color: (mouse.containsMouse && isLayerKey) ? Color.accent : (isActive ? Color.accent : (root.keyColor !== "" ? Qt.darker(root.keyColor, 1.25) : Color.muted))
     border.width: isTrans && !(mouse.containsMouse && isLayerKey) ? 0 : 1
 
-    // Subtle bottom keycap accent line
-    Rectangle {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        height: Style.space(2)
-        radius: 0
-        color: root.isActive ? Qt.darker(Color.accent, 1.2) : (root.keyColor !== "" ? Qt.darker(root.keyColor, 1.35) : "#d4a574")
-        opacity: root.isTrans ? 0.0 : 0.25
-        z: -1
-    }
-
     Shape {
         anchors.fill: parent
         visible: root.isTrans && !root.isActive
