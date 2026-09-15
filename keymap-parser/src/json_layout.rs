@@ -99,7 +99,7 @@ struct JsonLayout {
     config_parameters: Option<Value>,
     #[serde(default)]
     layout_parameters: Option<Value>,
-    #[serde(default)]
+    #[serde(default, rename = "locale")]
     language: Option<String>,
 }
 
