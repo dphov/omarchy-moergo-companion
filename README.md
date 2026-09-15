@@ -1,13 +1,11 @@
-# Omarchy Moergo Companion (`dphov.omarchy-moergo-companion`)
+# Omarchy MoErgo Companion
 
-MoErgo Glove80 visualizer and hardware status plugin for [Omarchy](https://github.com/omacom/omarchy).
-
-## Screenshots
+An [Omarchy](https://github.com/omacom/omarchy) plugin that visualizes MoErgo Glove80 keymap layers in the bar panel and monitors hardware status in real time.
 
 Shown with the **Glorious Engrammer** keymap from [sunaku/glove80-keymaps](https://github.com/sunaku/glove80-keymaps), and the [Outpost](https://github.com/simoz/omarchy-outpost-theme) (dark) and [Pissarro](https://github.com/mattbbia/pissarro) (light) Omarchy themes:
 
-![Omarchy Moergo Companion on Outpost dark theme](assets/screenshot-dark.webp)
-![Omarchy Moergo Companion on Pissarro light theme](assets/screenshot-light.webp)
+![Preview](preview.png)
+![Omarchy MoErgo Companion on Pissarro light theme](assets/screenshot-light.webp)
 
 The plugin inherits the active Omarchy theme colors automatically.
 
@@ -23,81 +21,156 @@ omarchy-restart-shell
 ### From source
 
 ```bash
-./install.sh
+just install
+```
+
+This builds the Rust helpers in release mode and copies the plugin to `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/`.
+
+To build manually:
+
+```bash
+just build
+```
+
+Then restart the Omarchy shell:
+
+```bash
 omarchy-restart-shell
 ```
 
-`install.sh` builds the Rust crate in release mode and places all helper
-binaries (`omarchy-moergo-keymap-parser`, `moergo-watcher`, `glove80-status`,
-`moergo-companion-settings`) in `bin/`. No separate `cargo` command is required.
+## Usage
 
-To build the helpers manually:
+Click the Glove80 bar item to open the panel. Inside the panel you can:
 
-```bash
-cd keymap-parser
-cargo build --release
-```
-
-The compiled binaries will be in `keymap-parser/target/release/`:
-`omarchy-moergo-keymap-parser`, `moergo-watcher`, `glove80-status`, and
-`moergo-companion-settings`.
+- Browse layers with the tab row, search field, or keyboard shortcuts.
+- Hover keys to see behavior descriptions and layer-switch hints.
+- Press `1`–`9` to jump to a layer, `Tab`/`Shift+Tab` or arrow keys to cycle, and `D` or `C` to toggle the dashboard.
+- Open the dashboard to see battery, USB/Bluetooth transport state, and BLE controls.
+- Change the keymap file path in the dashboard; the new path is validated and persisted to `~/.config/omarchy/glove80-plugin-settings.json`.
 
 ## Features
 
-- **Hardware status in the bar**: live battery, USB/Bluetooth transport, and charging state for Glove80 left/right halves.
-- **Interactive layer visualizer**: physical Glove80 column-stagger and thumb-cluster layout with per-key colors, glyphs, and layer names.
-- **Transparent key resolution**: `&trans` keys follow the layer fall-through stack so you see the real binding from the base layer.
-- **Smart tooltips**: hover a key with a description, layer switch, sticky modifier, or special behavior to see its title and purpose.
-- **Layer navigation**: clickable tabs, search, and keyboard shortcuts (`1`–`4`, `Tab`/`Shift+Tab`, arrow keys) to move between layers.
-- **Dashboard**: device telemetry, BLE connect/disconnect/trust/forget controls, quick links, and an editable keymap path persisted to `settings.json`.
-- **Low-battery notifications**: desktop alerts at $\le 20\%$ and $\le 10\%$ with hysteresis to avoid spam.
-- **Theme-aware**: automatically inherits Omarchy colors for light and dark themes.
+- **Hardware status in the bar** — live battery, USB/Bluetooth transport, and charging state for the Glove80 left/right halves.
+- **Interactive layer visualizer** — physical Glove80 column-stagger and thumb-cluster layout with per-key colors, glyphs, and layer names.
+- **Transparent key resolution** — `&trans` keys follow the layer fall-through stack so you see the real binding from the base layer.
+- **Smart tooltips** — hover a key with a description, layer switch, sticky modifier, or special behavior to see its title and purpose.
+- **Layer navigation** — clickable tabs, search, and keyboard shortcuts (`1`–`9`, `Tab`/`Shift+Tab`, arrow keys) to move between layers.
+- **Dashboard** — device telemetry, BLE connect/disconnect/trust/forget controls, quick links, and an editable keymap path.
+- **Low-battery notifications** — desktop alerts at ≤20% and ≤10% with hysteresis to avoid spam.
+- **Theme-aware** — automatically inherits Omarchy colors for light and dark themes.
 
 ## Architecture
 
+The plugin is split into a **service** and a **bar widget**, so background work runs once even when multiple widget instances exist.
+
 ```
-├── manifest.json                   # Omarchy bar-widget plugin registration
-├── MoErgoCompanion.qml             # Unified Panel: bar button + KeyboardPanel popup
+├── manifest.json                    # Omarchy plugin registration (service + bar-widget)
+├── Service.qml                        # Background service: hardware monitors, keymap watcher, settings
+├── MoErgoCompanion.qml                # Bar widget: button + panel UI
 ├── components/
-│   ├── MoErgoCompanionDashboard.qml # Hardware control center and device status
-│   ├── Glove80Matrix.qml           # Physical key matrix positioning and geometry
-│   ├── KeyCap.qml                  # Keycap rendering, borders, tooltips, interaction
-│   └── MoErgoCompanionLayerTabs.qml # Dynamic paginated layer selector
-├── keymap-parser/                  # Rust ZMK keymap and Glove80 JSON parser
+│   ├── MoErgoCompanionDashboard.qml   # Hardware control center and device status
+│   ├── MoErgoCompanionLayoutInfo.qml # Layout metadata tabs (notes, behaviors, devicetree, config)
+│   ├── MoErgoCompanionLayerTabs.qml   # Dynamic paginated layer selector
+│   ├── Glove80Matrix.qml              # Physical key matrix positioning and geometry
+│   └── KeyCap.qml                     # Keycap rendering, borders, tooltips, interaction
+├── keymap-parser/                     # Rust crate
 │   ├── Cargo.toml
 │   ├── src/
-│   │   ├── main.rs                 # CLI entry point
+│   │   ├── main.rs                    # CLI parser entry point
 │   │   ├── lib.rs
-│   │   ├── parser.rs               # Keymap parsing orchestration
-│   │   ├── reader.rs               # File I/O and comment stripping
-│   │   ├── tokenizer.rs            # Bindings tokenization
-│   │   ├── behaviors.rs            # ZMK behavior arity lookup
-│   │   ├── legends.rs              # Key legend mapping tables
-│   │   ├── descriptions.rs         # Tooltip title/description tables
-│   │   ├── glyphs.rs               # SVG glyph category lookup
-│   │   ├── layers.rs               # Layer name extraction/humanization
-│   │   ├── json_layout.rs          # Glove80 layout-editor JSON adapter
-│   │   ├── transparency.rs         # &trans fall-through resolution
-│   │   └── models.rs               # Key/Layer data structures
-│   └── tests/fixtures/             # Golden JSON integration tests
+│   │   ├── parser.rs                  # Keymap parsing orchestration
+│   │   ├── reader.rs                  # File I/O and comment stripping
+│   │   ├── tokenizer.rs               # Bindings tokenization
+│   │   ├── behaviors.rs                 # ZMK behavior arity lookup
+│   │   ├── legends.rs                   # Key legend mapping tables
+│   │   ├── descriptions.rs            # Tooltip title/description tables
+│   │   ├── glyphs.rs                    # SVG glyph category lookup
+│   │   ├── layers.rs                    # Layer name extraction/humanization
+│   │   ├── json_layout.rs               # Glove80 layout-editor JSON adapter
+│   │   ├── transparency.rs              # &trans fall-through resolution
+│   │   └── models.rs                    # Key/Layer data structures
+│   └── tests/fixtures/                  # Golden JSON integration tests
 ├── bin/
-│   ├── moergo-companion-settings   # Rust plugin settings read/write helper with validation
-│   ├── glove80-status              # Rust hardware monitor (USB sysfs + BlueZ/UPower)
-│   ├── moergo-watcher              # Rust watcher: polls keymap/JSON file and streams layout JSON to QML
-│   └── omarchy-moergo-keymap-parser # Rust native keymap parser (built by install.sh)
-└── install.sh                      # Builds Rust helpers and installs plugin
+│   ├── omarchy-moergo-keymap-parser     # Native keymap/JSON parser CLI
+│   ├── moergo-watcher                 # File watcher: polls keymap/JSON and emits layout JSON
+│   ├── glove80-status                 # Hardware monitor (USB sysfs + BlueZ/UPower)
+│   └── moergo-companion-settings      # Settings read/write helper with keymap validation
+├── install.sh                         # Builds helpers and installs the plugin
+├── justfile                           # Common tasks: build, test, lint, install, restart
+└── preview.png                        # Marketplace preview image
 ```
 
-> Note: the previous `watcher.sh` was replaced by `bin/moergo-watcher`. All helper binaries are now built from the Rust crate in `keymap-parser/`.
+### Service / widget split
+
+`Service.qml` owns all background work:
+
+- `moergo-watcher` polls the keymap file and streams parsed layout JSON.
+- `glove80-status` polls every 30 seconds for battery and transport state.
+- `udevadm monitor` and `gdbus monitor` watch for USB/Bluetooth changes.
+- `moergo-companion-settings` loads and persists the keymap path.
+- Dashboard actions (`--connect`, `--disconnect`, `--trust`, `--untrust`, `--forget`) are sent to `glove80-status`.
+
+`MoErgoCompanion.qml` only renders the bar button and panel, binds to the service state, and forwards user input to service methods.
+
+### Rust binaries
+
+| Binary | Purpose |
+|--------|---------|
+| `omarchy-moergo-keymap-parser` | Parse a `.keymap` or Glove80 layout-editor `.json` file and print the resolved layout as JSON. |
+| `moergo-watcher` | Watch a keymap/JSON file and emit the latest layout JSON on stdout whenever the file changes. |
+| `glove80-status` | Read USB/Bluetooth/battery state and execute BLE connect/disconnect/trust/forget actions. |
+| `moergo-companion-settings` | Load, get, or set plugin settings with keymap path validation. |
+
+## Development
+
+Common tasks are in `justfile`:
+
+```bash
+just build      # cargo build --release
+just test       # cargo test
+just lint       # qmllint *.qml components/*.qml
+just install    # build + install to ~/.config/omarchy/plugins/
+just restart    # omarchy-restart-shell
+just reload     # install + restart
+just clean      # cargo clean
+just dev        # cargo watch with auto-reload
+```
+
+## Configuration
+
+The plugin reads the keymap path from `~/.config/omarchy/glove80-plugin-settings.json`. On first run it defaults to:
+
+```text
+~/.dotfiles/zmk/config/glove80.keymap
+```
+
+Change it from the dashboard, or edit the settings file directly:
+
+```json
+{
+  "keymapFile": "/path/to/your/glove80.keymap"
+}
+```
+
+The file is validated before being saved. Both ZMK `.keymap` files and Glove80 layout-editor `.json` exports are supported.
 
 ## Dependencies
 
-- Omarchy with bar-widget support
-- Rust toolchain (`cargo`) to build the helper binaries
-- `upower`, `bluez` / `bluetoothctl` (hardware status and battery monitoring)
-- A local Glove80 ZMK keymap at `~/.dotfiles/zmk/config/glove80.keymap` (or edit the keymap path in the dashboard settings)
+- [Omarchy](https://github.com/omacom/omarchy) with bar-widget support
+- [Rust toolchain](https://rustup.rs/) (`cargo`) to build helper binaries
+- [just](https://github.com/casey/just) for convenience tasks (optional, `install.sh` works without it)
+- `upower`, BlueZ / `bluetoothctl` (hardware status and battery)
+- `udevadm`, `gdbus` (hotplug monitoring)
+- `zenity` (keymap file picker in the dashboard)
 
-## Removal
+## Troubleshooting
+
+- **No layers appear** — check that `keymapFile` points to a valid `.keymap` or `.json` file and that the path is saved in `~/.config/omarchy/glove80-plugin-settings.json`.
+- **Old watcher still running** — `moergo-watcher` uses a PID lock at `/tmp/glove80_watcher.pid`; kill any stale process if the shell reloads leave multiple watchers running.
+- **Battery shows unknown** — ensure `upower` and BlueZ are running and the Glove80 halves are paired.
+- **Check shell logs** — `journalctl --user -u omarchy-shell -n 100` or `journalctl --user -n 100` for QML/Rust errors.
+
+## Uninstall
 
 ```bash
 omarchy plugin disable dphov.omarchy-moergo-companion
@@ -105,4 +178,13 @@ omarchy plugin remove dphov.omarchy-moergo-companion
 omarchy-restart-shell
 ```
 
-Or, if installed manually, delete `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/` and restart the shell.
+Or delete `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/` manually and restart the shell.
+
+## Attributions
+
+Key glyphs in `assets/key-glyphs/` are from open icon sets used under their respective licenses:
+
+- **[Font Awesome Free](https://fontawesome.com/)** — `fa-*` glyphs. License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (icons) / [SIL OFL 1.1](https://scripts.sil.org/OFL) (fonts) / MIT (code). Copyright Fonticons, Inc.
+- **[Ionicons](https://ionic.io/ionicons)** — `io-finger-print` and the `system.svg` glyph. License: [MIT](https://github.com/ionic-team/ionicons/blob/main/LICENSE).
+- **[Tabler Icons](https://tabler-icons.io/)** — `tb-*` glyphs and the `tap.svg` glyph. License: [MIT](https://github.com/tabler/tabler-icons/blob/main/LICENSE).
+- **[Devicon](https://devicon.dev/)** — `di-linux.svg`. License: [MIT](https://github.com/devicons/devicon/blob/master/LICENSE).

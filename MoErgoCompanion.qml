@@ -12,13 +12,28 @@ Panel {
     moduleName: "dphov.omarchy-moergo-companion"
     ipcTarget: "dphov.omarchy-moergo-companion"
 
+    readonly property var moergoService: bar && bar.shell
+        ? bar.shell.serviceFor(root.moduleName) : null
+
+    readonly property var parsedLayout: moergoService ? moergoService.parsedLayout : null
+    readonly property int currentLayerIndex: moergoService ? moergoService.currentLayerIndex : 0
+    readonly property string keymapFile: moergoService ? moergoService.keymapFile : ""
+    readonly property string lastKeymapError: moergoService ? moergoService.lastKeymapError : ""
+
+    readonly property string statusText: moergoService ? moergoService.statusText : "Loading…"
+    readonly property string statusTooltip: moergoService ? moergoService.statusTooltip : "MoErgo Glove80"
+    readonly property bool isConnected: moergoService ? moergoService.isConnected : false
+    readonly property bool charging: moergoService ? moergoService.charging : false
+    readonly property var battery: moergoService ? moergoService.battery : null
+    readonly property bool usbLeft: moergoService ? moergoService.usbLeft : false
+    readonly property bool usbRight: moergoService ? moergoService.usbRight : false
+    readonly property var deviceData: moergoService ? moergoService.deviceData : null
+
     visible: root.statusText !== ""
     implicitWidth: visible ? button.implicitWidth : 0
     implicitHeight: visible ? button.implicitHeight : 0
 
-    // Timing and layout constants
-    readonly property int hotplugDebounceIntervalMs: 250
-    readonly property int statusPollIntervalMs: 30000
+    // Layout constants
     readonly property real panelContentWidth: Style.space(900)
     readonly property real panelContentHeight: Style.space(560)
     readonly property real buttonHorizontalMargin: Style.space(6)
@@ -35,203 +50,9 @@ Panel {
     readonly property real separatorOpacity: 0.35
     readonly property real hintOpacity: 0.7
 
-    // State
-    property var parsedLayout: null
-    property int currentLayerIndex: 0
-    property string keymapFile: Quickshell.env("HOME") + "/.dotfiles/zmk/config/glove80.keymap"
-    property string jsonFile: "/tmp/glove80_layout.json"
-    property string lastKeymapError: ""
-
-    // Hardware battery & connection state
-    property string statusText: "Loading…"
-    property string statusTooltip: "MoErgo Glove80"
-    property bool isConnected: false
-    property bool charging: false
-    property var battery: null
-    property bool usbLeft: false
-    property bool usbRight: false
-    property var deviceData: null
+    // UI-only state
     property bool showDashboard: false
     property bool showLayoutInfo: false
-    readonly property string helperScript: {
-        var resolved = String(Qt.resolvedUrl("bin/glove80-status"))
-        return decodeURIComponent(resolved.replace(/^file:\/\//, ""))
-    }
-    readonly property string watcherScript: {
-        var resolved = String(Qt.resolvedUrl("bin/moergo-watcher"))
-        return decodeURIComponent(resolved.replace(/^file:\/\//, ""))
-    }
-    onParsedLayoutChanged: {
-        root.currentLayerIndex = 0;
-    }
-    readonly property string settingsScript: {
-        var resolved = String(Qt.resolvedUrl("bin/moergo-companion-settings"))
-        return decodeURIComponent(resolved.replace(/^file:\/\//, ""))
-    }
-
-    function refreshStatus() {
-        if (!statusProc.running) {
-            statusProc.running = true;
-        }
-    }
-
-    function updateStatus(raw) {
-        try {
-            var data = JSON.parse(raw);
-            root.isConnected = !!data.connected;
-            root.statusText = data.text || (root.isConnected ? "Connected" : " Off");
-            root.statusTooltip = data.tooltip || "MoErgo Glove80";
-            root.battery = (data.battery !== undefined) ? data.battery : null;
-            root.charging = !!data.charging;
-            root.usbLeft = !!data.usbLeft;
-            root.usbRight = !!data.usbRight;
-            root.deviceData = data.device || null;
-        } catch (e) {
-        }
-    }
-
-    Process {
-        id: statusProc
-        command: [root.helperScript]
-        stdout: StdioCollector {
-            waitForEnd: true
-            onStreamFinished: root.updateStatus(text)
-        }
-    }
-    Process {
-        id: actionProc
-        stdout: StdioCollector {
-            waitForEnd: true
-            onStreamFinished: root.refreshStatus()
-        }
-    }
-    Process {
-        id: settingsProc
-        stdout: StdioCollector {
-            waitForEnd: true
-            onStreamFinished: {
-                try {
-                    root.applySettings(JSON.parse(text));
-                } catch (e) {
-                    console.error("Failed to parse settings:", e);
-                }
-            }
-        }
-    }
-    Process {
-        id: saveSettingsProc
-        stdout: StdioCollector {
-            waitForEnd: true
-            onStreamFinished: {
-                try {
-                    root.applySettings(JSON.parse(text));
-                } catch (e) {
-                    console.error("Failed to save settings:", e);
-                }
-            }
-        }
-    }
-
-    function runDashboardAction(act) {
-        actionProc.command = [root.helperScript, act];
-        actionProc.running = true;
-    }
-
-    function applySettings(settings) {
-        if (!settings) return;
-        if (settings.success === false) {
-            root.lastKeymapError = settings.error || "Invalid keymap file";
-            return;
-        }
-        root.lastKeymapError = "";
-        if (settings.keymapFile && settings.keymapFile !== "") {
-            root.keymapFile = settings.keymapFile;
-            root.restartWatcher();
-        }
-    }
-
-    function restartWatcher() {
-        watcherProcess.running = false;
-        watcherProcess.command = [root.watcherScript, root.keymapFile, root.jsonFile];
-        watcherProcess.running = true;
-    }
-
-    function saveKeymapFile(path) {
-        if (!path || path === "") return;
-        saveSettingsProc.command = [root.settingsScript, "--set", "keymapFile", path];
-        saveSettingsProc.running = true;
-    }
-
-
-    // Real-time USB hotplug monitor via udevadm
-    Process {
-        id: udevMonitor
-        command: ["udevadm", "monitor", "-u", "-s", "usb"]
-        running: true
-        stdout: SplitParser {
-            onRead: function(line) {
-                if (line.indexOf("add") !== -1 || line.indexOf("remove") !== -1) {
-                    hotplugDebounceTimer.restart();
-                }
-            }
-        }
-    }
-
-    // Real-time Bluetooth connection & property change monitor via gdbus
-    Process {
-        id: bluezMonitor
-        command: ["gdbus", "monitor", "--system", "-d", "org.bluez"]
-        running: true
-        stdout: SplitParser {
-            onRead: function(line) {
-                if (line.indexOf("PropertiesChanged") !== -1 ||
-                    line.indexOf("InterfacesAdded") !== -1 ||
-                    line.indexOf("InterfacesRemoved") !== -1 ||
-                    line.indexOf("Connected") !== -1) {
-                    hotplugDebounceTimer.restart();
-                }
-            }
-        }
-    }
-
-    Timer {
-        id: hotplugDebounceTimer
-        interval: root.hotplugDebounceIntervalMs
-        repeat: false
-        onTriggered: root.refreshStatus()
-    }
-
-    // Periodic polling for hardware status
-    Timer {
-        interval: root.statusPollIntervalMs
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: root.refreshStatus()
-    }
-
-    Component.onCompleted: {
-        settingsProc.command = [root.settingsScript, "--load"];
-        settingsProc.running = true;
-    }
-
-    // Background watcher process: parses keymap and streams JSON back
-    Process {
-        id: watcherProcess
-        command: [root.watcherScript, root.keymapFile, root.jsonFile]
-        running: true
-        stdout: SplitParser {
-            onRead: function(line) {
-                line = String(line).trim();
-                if (line.indexOf("{") !== 0) return;
-                try {
-                    root.parsedLayout = JSON.parse(line);
-                } catch (e) {
-                    console.error("Failed to parse keymap JSON:", e);
-                }
-            }
-        }
-    }
 
     WidgetButton {
         id: button
@@ -260,18 +81,12 @@ Panel {
 
             onCloseRequested: root.close()
             onTabRequested: function(dir) {
-                if (!root.parsedLayout || !root.parsedLayout.layers) return;
-                var total = root.parsedLayout.layers.length;
-                if (total <= 0) return;
-                root.currentLayerIndex = (root.currentLayerIndex + dir + total) % total;
+                if (!root.moergoService) return;
+                root.moergoService.changeLayer(dir);
             }
             onMoveRequested: function(dx, dy) {
-                if (dx !== 0 && root.parsedLayout && root.parsedLayout.layers) {
-                    var total = root.parsedLayout.layers.length;
-                    if (total > 0) {
-                        root.currentLayerIndex = (root.currentLayerIndex + dx + total) % total;
-                    }
-                }
+                if (!root.moergoService) return;
+                if (dx !== 0) root.moergoService.changeLayer(dx);
             }
             onTextKey: function(t) {
                 if (t === "d" || t === "D" || t === "c" || t === "C") {
@@ -279,289 +94,282 @@ Panel {
                     return;
                 }
                 var num = parseInt(t, 10);
-                if (!isNaN(num) && num >= 0 && root.parsedLayout && root.parsedLayout.layers) {
-                    var target = num;
-                    if (target < root.parsedLayout.layers.length) {
-                        root.showDashboard = false;
-                        root.currentLayerIndex = target;
-                    }
+                if (!isNaN(num) && num >= 0 && root.moergoService) {
+                    root.showDashboard = false;
+                    root.showLayoutInfo = false;
+                    root.moergoService.setLayer(num);
                 }
             }
 
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: root.panelMargin
-            spacing: root.panelSpacing
+                spacing: root.panelSpacing
 
-            RowLayout {
-                Layout.fillWidth: true
-                ColumnLayout {
-                    spacing: Style.space(2)
-                    Text {
-                        text: root.parsedLayout && root.parsedLayout.title ? root.parsedLayout.title : "Glove80 Layout"
-                        font.bold: true
-                        font.family: Style.font.family
-                        font.pixelSize: Style.font.subtitle
-                        color: Color.foreground
-                    }
-                    Text {
-                        text: "Source: " + root.keymapFile
-                        color: Color.foreground
-                        font.family: Style.font.family
-                        font.pixelSize: Style.font.caption
-                        elide: Text.ElideMiddle
-                        Layout.maximumWidth: root.titleMaxWidth
-                    }
-                    Flow {
-                        Layout.fillWidth: true
-                        spacing: Style.space(4)
-                        visible: (!!root.parsedLayout && !!root.parsedLayout.language)
-                            || (!!(root.parsedLayout && root.parsedLayout.tags) && root.parsedLayout.tags.length > 0)
-
-                        Rectangle {
-                            visible: !!(root.parsedLayout && root.parsedLayout.language)
-                            color: "transparent"
-                            radius: Style.cornerRadius
-                            border.color: Color.muted
-                            border.width: 1
-                            implicitWidth: langText.implicitWidth + Style.space(10)
-                            implicitHeight: langText.implicitHeight + Style.space(4)
-
-                            Text {
-                                id: langText
-                                anchors.centerIn: parent
-                                text: "🌐 " + (root.parsedLayout ? (root.parsedLayout.language || "") : "")
-                                font.family: Style.font.family
-                                font.pixelSize: Style.font.caption
-                                color: Color.foreground
-                            }
+                RowLayout {
+                    Layout.fillWidth: true
+                    ColumnLayout {
+                        spacing: Style.space(2)
+                        Text {
+                            text: root.parsedLayout && root.parsedLayout.title ? root.parsedLayout.title : "Glove80 Layout"
+                            font.bold: true
+                            font.family: Style.font.family
+                            font.pixelSize: Style.font.subtitle
+                            color: Color.foreground
                         }
+                        Text {
+                            text: "Source: " + root.keymapFile
+                            color: Color.foreground
+                            font.family: Style.font.family
+                            font.pixelSize: Style.font.caption
+                            elide: Text.ElideMiddle
+                            Layout.maximumWidth: root.titleMaxWidth
+                        }
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: Style.space(4)
+                            visible: (!!root.parsedLayout && !!root.parsedLayout.language)
+                                || (!!(root.parsedLayout && root.parsedLayout.tags) && root.parsedLayout.tags.length > 0)
 
-                        Repeater {
-                            model: root.parsedLayout ? (root.parsedLayout.tags || []) : []
-                            delegate: Rectangle {
-                                color: tagMouse.containsMouse ? Qt.lighter(Color.accent, 1.2) : Color.accent
+                            Rectangle {
+                                visible: !!(root.parsedLayout && root.parsedLayout.language)
+                                color: "transparent"
                                 radius: Style.cornerRadius
-                                implicitWidth: tagText.implicitWidth + Style.space(10)
-                                implicitHeight: tagText.implicitHeight + Style.space(4)
+                                border.color: Color.muted
+                                border.width: 1
+                                implicitWidth: langText.implicitWidth + Style.space(10)
+                                implicitHeight: langText.implicitHeight + Style.space(4)
 
                                 Text {
-                                    id: tagText
+                                    id: langText
                                     anchors.centerIn: parent
-                                    text: modelData
+                                    text: "🌐 " + (root.parsedLayout ? (root.parsedLayout.language || "") : "")
                                     font.family: Style.font.family
                                     font.pixelSize: Style.font.caption
-                                    color: Color.background
+                                    color: Color.foreground
                                 }
+                            }
 
-                                MouseArea {
-                                    id: tagMouse
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    hoverEnabled: true
-                                    onClicked: Qt.openUrlExternally("https://my.moergo.com/glove80/#/search?tags=" + encodeURIComponent(modelData))
-                                }
-
-                                Rectangle {
-                                    visible: tagMouse.containsMouse
-                                    color: Color.background
-                                    border.color: Color.muted
-                                    border.width: 1
+                            Repeater {
+                                model: root.parsedLayout ? (root.parsedLayout.tags || []) : []
+                                delegate: Rectangle {
+                                    color: tagMouse.containsMouse ? Qt.lighter(Color.accent, 1.2) : Color.accent
                                     radius: Style.cornerRadius
-                                    implicitWidth: tagTooltipText.implicitWidth + Style.space(12)
-                                    implicitHeight: tagTooltipText.implicitHeight + Style.space(8)
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    anchors.bottom: parent.top
-                                    anchors.bottomMargin: Style.space(4)
-                                    z: root.tooltipZ
+                                    implicitWidth: tagText.implicitWidth + Style.space(10)
+                                    implicitHeight: tagText.implicitHeight + Style.space(4)
 
                                     Text {
-                                        id: tagTooltipText
+                                        id: tagText
                                         anchors.centerIn: parent
-                                        text: "Search online layouts for tag: " + modelData
+                                        text: modelData
                                         font.family: Style.font.family
                                         font.pixelSize: Style.font.caption
-                                        color: Color.foreground
+                                        color: Color.background
+                                    }
+
+                                    MouseArea {
+                                        id: tagMouse
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        hoverEnabled: true
+                                        onClicked: Qt.openUrlExternally("https://my.moergo.com/glove80/#/search?tags=" + encodeURIComponent(modelData))
+                                    }
+
+                                    Rectangle {
+                                        visible: tagMouse.containsMouse
+                                        color: Color.background
+                                        border.color: Color.muted
+                                        border.width: 1
+                                        radius: Style.cornerRadius
+                                        implicitWidth: tagTooltipText.implicitWidth + Style.space(12)
+                                        implicitHeight: tagTooltipText.implicitHeight + Style.space(8)
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        anchors.bottom: parent.top
+                                        anchors.bottomMargin: Style.space(4)
+                                        z: root.tooltipZ
+
+                                        Text {
+                                            id: tagTooltipText
+                                            anchors.centerIn: parent
+                                            text: "Search online layouts for tag: " + modelData
+                                            font.family: Style.font.family
+                                            font.pixelSize: Style.font.caption
+                                            color: Color.foreground
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                    Item { Layout.fillWidth: true }
+                    Text {
+                        text: root.statusTooltip
+                        color: Color.foreground
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.caption
+                    }
                 }
-                Item { Layout.fillWidth: true }
-                Text {
-                    text: root.statusTooltip
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 1
                     color: Color.foreground
-                    font.family: Style.font.family
-                    font.pixelSize: Style.font.caption
+                    opacity: root.separatorOpacity
                 }
-            }
 
-            Rectangle {
-                Layout.fillWidth: true
-                height: 1
-                color: Color.foreground
-                opacity: root.separatorOpacity
-            }
+                RowLayout {
+                    spacing: Style.space(8)
+                    Text {
+                        text: "Layers"
+                        color: Color.foreground
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.caption
+                        opacity: root.hintOpacity
+                    }
+                    Text {
+                        id: currentLayerNameText
+                        text: root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers[root.currentLayerIndex]
+                            ? root.parsedLayout.layers[root.currentLayerIndex].name
+                            : ""
+                        visible: text !== ""
+                        color: Color.accent
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.caption
+                        font.bold: true
 
-            RowLayout {
-                spacing: Style.space(8)
-                Text {
-                    text: "Layers"
-                    color: Color.foreground
-                    font.family: Style.font.family
-                    font.pixelSize: Style.font.caption
-                    opacity: root.hintOpacity
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.showDashboard = false;
+                                root.showLayoutInfo = false;
+                                layerTabs.refocusCurrent();
+                            }
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Controls.TextField {
+                        id: layerSearchField
+                        placeholderText: "Search layers..."
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.caption
+                        color: Color.foreground
+                        implicitWidth: root.layerNameMinWidth
+                        background: Rectangle {
+                            color: Color.background
+                            radius: Style.cornerRadius
+                            border.color: layerSearchField.activeFocus ? Color.accent : Color.muted
+                            border.width: 1
+                        }
+                        onTextChanged: {
+                            if (!root.parsedLayout || !root.parsedLayout.layers || !root.moergoService) return;
+                            var query = text.toLowerCase().trim();
+                            if (query === "") return;
+                            for (var i = 0; i < root.parsedLayout.layers.length; i++) {
+                                if (root.parsedLayout.layers[i].name.toLowerCase().indexOf(query) !== -1) {
+                                    root.showDashboard = false;
+                                    root.showLayoutInfo = false;
+                                    root.moergoService.setLayer(i);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+
+                    Button {
+                        text: "✕"
+                        tooltipText: "Clear search"
+                        bordered: true
+                        visible: layerSearchField.text !== ""
+                        Layout.preferredWidth: visible ? implicitWidth : 0
+                        Layout.maximumWidth: visible ? implicitWidth : 0
+                        Layout.preferredHeight: layerSearchField.implicitHeight
+                        Layout.maximumHeight: layerSearchField.implicitHeight
+                        Layout.alignment: Qt.AlignVCenter
+                        onClicked: layerSearchField.text = ""
+                    }
                 }
-                Text {
-                    id: currentLayerNameText
-                    text: root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers[root.currentLayerIndex]
-                        ? root.parsedLayout.layers[root.currentLayerIndex].name
-                        : ""
-                    visible: text !== ""
-                    color: Color.accent
-                    font.family: Style.font.family
-                    font.pixelSize: Style.font.caption
-                    font.bold: true
 
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
+                // Layer Tabs
+                Components.MoErgoCompanionLayerTabs {
+                    id: layerTabs
+                    Layout.fillWidth: true
+                    layers: root.parsedLayout ? root.parsedLayout.layers : []
+                    currentIndex: root.currentLayerIndex
+                    showDashboard: root.showDashboard
+                    showLayoutInfo: root.showLayoutInfo
+                    onLayerClicked: function(idx) {
+                        if (!root.moergoService) return;
+                        root.showDashboard = false;
+                        root.showLayoutInfo = false;
+                        root.moergoService.setLayer(idx);
+                    }
+                    onLayoutInfoClicked: {
+                        root.showLayoutInfo = !root.showLayoutInfo;
+                        if (root.showLayoutInfo) root.showDashboard = false;
+                    }
+                    onDashboardClicked: {
+                        root.showDashboard = !root.showDashboard;
+                        if (root.showDashboard) root.showLayoutInfo = false;
+                    }
+                }
+
+                // Visualizer Canvas
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    Components.Glove80Matrix {
+                        id: matrix
+                        anchors.centerIn: parent
+                        visible: !root.showDashboard && !root.showLayoutInfo && root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers.length > 0
+                        keys: (root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers[root.currentLayerIndex]) ? root.parsedLayout.layers[root.currentLayerIndex].keys : []
+                        onLayerSwitchRequested: function(targetName) {
+                            if (!root.moergoService) return;
                             root.showDashboard = false;
                             root.showLayoutInfo = false;
-                            layerTabs.refocusCurrent();
+                            root.moergoService.setLayerByName(targetName);
                         }
                     }
-                }
 
-                Item { Layout.fillWidth: true }
-
-                Controls.TextField {
-                    id: layerSearchField
-                    placeholderText: "Search layers..."
-                    font.family: Style.font.family
-                    font.pixelSize: Style.font.caption
-                    color: Color.foreground
-                    implicitWidth: root.layerNameMinWidth
-                    background: Rectangle {
-                        color: Color.background
-                        radius: Style.cornerRadius
-                        border.color: layerSearchField.activeFocus ? Color.accent : Color.muted
-                        border.width: 1
+                    Components.MoErgoCompanionLayoutInfo {
+                        anchors.fill: parent
+                        anchors.margins: Style.space(8)
+                        visible: root.showLayoutInfo && root.parsedLayout
+                        layout: root.parsedLayout
                     }
-                    onTextChanged: {
-                        if (!root.parsedLayout || !root.parsedLayout.layers) return;
-                        var query = text.toLowerCase().trim();
-                        if (query === "") return;
-                        for (var i = 0; i < root.parsedLayout.layers.length; i++) {
-                            if (root.parsedLayout.layers[i].name.toLowerCase().indexOf(query) !== -1) {
-                                root.showDashboard = false;
-                                root.showLayoutInfo = false;
-                                root.currentLayerIndex = i;
-                                return;
-                            }
+
+                    Components.MoErgoCompanionDashboard {
+                        anchors.fill: parent
+                        visible: root.showDashboard
+                        device: root.deviceData
+                        isConnected: root.isConnected
+                        isCharging: root.charging
+                        batteryLevel: root.battery
+                        usbLeft: root.usbLeft
+                        usbRight: root.usbRight
+                        keymapFile: root.keymapFile
+                        keymapError: root.lastKeymapError
+                        onActionRequested: function(act) {
+                            if (root.moergoService) root.moergoService.runAction(act);
+                        }
+                        onKeymapPathSubmitted: function(path) {
+                            if (root.moergoService) root.moergoService.saveKeymapFile(path);
                         }
                     }
-                }
 
-                Button {
-                    text: "✕"
-                    tooltipText: "Clear search"
-                    bordered: true
-                    visible: layerSearchField.text !== ""
-                    Layout.preferredWidth: visible ? implicitWidth : 0
-                    Layout.maximumWidth: visible ? implicitWidth : 0
-                    Layout.preferredHeight: layerSearchField.implicitHeight
-                    Layout.maximumHeight: layerSearchField.implicitHeight
-                    Layout.alignment: Qt.AlignVCenter
-                    onClicked: layerSearchField.text = ""
-                }
-            }
-
-            // Layer Tabs
-            Components.MoErgoCompanionLayerTabs {
-                id: layerTabs
-                Layout.fillWidth: true
-                layers: root.parsedLayout ? root.parsedLayout.layers : []
-                currentIndex: root.currentLayerIndex
-                showDashboard: root.showDashboard
-                showLayoutInfo: root.showLayoutInfo
-                onLayerClicked: function(idx) {
-                    root.showDashboard = false;
-                    root.showLayoutInfo = false;
-                    root.currentLayerIndex = idx;
-                }
-                onLayoutInfoClicked: {
-                    root.showLayoutInfo = !root.showLayoutInfo;
-                    if (root.showLayoutInfo) root.showDashboard = false;
-                }
-                onDashboardClicked: {
-                    root.showDashboard = !root.showDashboard;
-                    if (root.showDashboard) root.showLayoutInfo = false;
-                }
-            }
-
-            // Visualizer Canvas
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-
-                Components.Glove80Matrix {
-                    id: matrix
-                    anchors.centerIn: parent
-                    visible: !root.showDashboard && !root.showLayoutInfo && root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers.length > 0
-                    keys: (root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers[root.currentLayerIndex]) ? root.parsedLayout.layers[root.currentLayerIndex].keys : []
-                    onLayerSwitchRequested: function(targetName) {
-                        if (!targetName || !root.parsedLayout || !root.parsedLayout.layers) return;
-                        var target = String(targetName).toLowerCase().trim();
-                        for (var i = 0; i < root.parsedLayout.layers.length; i++) {
-                            if (root.parsedLayout.layers[i].name.toLowerCase().trim() === target) {
-                                root.showDashboard = false;
-                                root.showLayoutInfo = false;
-                                root.currentLayerIndex = i;
-                                break;
-                            }
-                        }
+                    Text {
+                        anchors.centerIn: parent
+                        visible: !root.showDashboard && (!root.parsedLayout || !root.parsedLayout.layers || root.parsedLayout.layers.length === 0)
+                        text: "No valid keymap layers found."
+                        color: Color.foreground
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.body
                     }
-                }
-
-                Components.MoErgoCompanionLayoutInfo {
-                    anchors.fill: parent
-                    anchors.margins: Style.space(8)
-                    visible: root.showLayoutInfo && root.parsedLayout
-                    layout: root.parsedLayout
-                }
-
-                Components.MoErgoCompanionDashboard {
-                    anchors.fill: parent
-                    visible: root.showDashboard
-                    device: root.deviceData
-                    isConnected: root.isConnected
-                    isCharging: root.charging
-                    batteryLevel: root.battery
-                    usbLeft: root.usbLeft
-                    usbRight: root.usbRight
-                    keymapFile: root.keymapFile
-                    keymapError: root.lastKeymapError
-                    onActionRequested: function(act) {
-                        root.runDashboardAction(act);
-                    }
-                    onKeymapPathSubmitted: function(path) {
-                        root.saveKeymapFile(path);
-                    }
-                }
-
-                Text {
-                    anchors.centerIn: parent
-                    visible: !root.showDashboard && (!root.parsedLayout || !root.parsedLayout.layers || root.parsedLayout.layers.length === 0)
-                    text: "No valid keymap layers found."
-                    color: Color.foreground
-                    font.family: Style.font.family
-                    font.pixelSize: Style.font.body
                 }
             }
         }
     }
-}
 }

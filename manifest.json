@@ -4,11 +4,13 @@
   "name": "Omarchy Moergo Companion",
   "description": "MoErgo Glove80 layer visualizer, live USB/Bluetooth hardware monitor, and device dashboard",
   "version": "1.0.0",
-  "author": "dphov",
+  "author": "Dmitry Petukhov",
   "license": "MIT",
   "icon": "keyboard-outline",
-  "kinds": ["bar-widget"],
+  "preview": "preview.png",
+  "kinds": ["service", "bar-widget"],
   "entryPoints": {
+    "service": "Service.qml",
     "barWidget": "MoErgoCompanion.qml"
   },
   "barWidget": {
