@@ -20,11 +20,7 @@ mkdir -p "$TARGET_DIR"
 # Copy all necessary files
 rsync -av --delete \
   --exclude="install.sh" \
-  --exclude=".venv" \
   --exclude=".git" \
-  --exclude="*.pyc" \
-  --exclude="__pycache__" \
-  --exclude="watcher.sh" \
   --exclude="keymap-parser/target" \
   . "$TARGET_DIR/"
 

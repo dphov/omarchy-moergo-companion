@@ -10,11 +10,13 @@ pub struct Key {
     pub glyph: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub color: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub text_color: String,
 }
 
 impl Key {
     pub fn new(raw: &str, text: String, title: String, desc: String, glyph: String) -> Self {
-        Self::with_color(raw, text, title, desc, glyph, String::new())
+        Self::with_details(raw, text, title, desc, glyph, String::new(), String::new())
     }
 
     pub fn with_color(
@@ -25,6 +27,18 @@ impl Key {
         glyph: String,
         color: String,
     ) -> Self {
+        Self::with_details(raw, text, title, desc, glyph, color, String::new())
+    }
+
+    pub fn with_details(
+        raw: &str,
+        text: String,
+        title: String,
+        desc: String,
+        glyph: String,
+        color: String,
+        text_color: String,
+    ) -> Self {
         Self {
             text,
             title,
@@ -32,6 +46,7 @@ impl Key {
             is_trans: raw == "&trans" || raw == "trans",
             glyph,
             color,
+            text_color,
         }
     }
 }

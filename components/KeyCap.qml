@@ -14,6 +14,7 @@ Rectangle {
     property string keyDesc: ""
     property string keyGlyph: ""
     property string keyColor: ""
+    property string keyTextColor: ""
     property bool isActive: false
     property bool isTrans: false
     readonly property string normalizedKeyText: keyText.replace(/\s+/g, " ").trim()
@@ -29,6 +30,26 @@ Rectangle {
         if (k === "magic") return "Magic";
         if (k === "test") return "Test";
         return "";
+    }
+
+    readonly property bool isLightKeyColor: {
+        if (!keyColor || keyColor === "") return false;
+        var c = Qt.color(keyColor);
+        return (c.r * 0.299 + c.g * 0.587 + c.b * 0.114) > 0.55;
+    }
+
+    readonly property color resolvedTextColor: {
+        if (root.isActive) return Color.background;
+        if (root.keyTextColor !== "") return root.keyTextColor;
+        if (root.keyColor !== "") return root.isLightKeyColor ? "#1a1e22" : "#ffffff";
+        return Color.foreground;
+    }
+
+    readonly property color resolvedIconColor: {
+        if (root.isActive) return Color.background;
+        if (root.keyTextColor !== "") return root.keyTextColor;
+        if (root.keyColor !== "") return root.isLightKeyColor ? "#1a1e22" : "#ffffff";
+        return "#c7cf9b";
     }
 
     signal layerClicked(string targetLayer)
@@ -71,22 +92,27 @@ Rectangle {
         spacing: Style.space(2)
         visible: root.keyGlyph !== "" && root.keyText !== ""
 
-        Image {
-            id: rowGlyphImg
-            anchors.verticalCenter: parent.verticalCenter
-            width: Math.min(root.width * 0.28, Style.space(11))
+        Item {
+            id: glyphContainer
+            width: Math.min(root.width * 0.28, Style.space(10))
             height: width
-            source: root.keyGlyph !== "" ? Qt.resolvedUrl("../assets/key-glyphs/" + root.keyGlyph + ".svg") : ""
-            fillMode: Image.PreserveAspectFit
-            visible: root.keyColor === ""
-        }
+            anchors.verticalCenter: parent.verticalCenter
 
-        MultiEffect {
-            anchors.fill: rowGlyphImg
-            source: rowGlyphImg
-            visible: root.keyColor !== ""
-            colorization: 1.0
-            colorizationColor: "#1a1e22"
+            Image {
+                id: rowGlyphImg
+                anchors.fill: parent
+                source: root.keyGlyph !== "" ? Qt.resolvedUrl("../assets/key-glyphs/" + root.keyGlyph + ".svg") : ""
+                fillMode: Image.PreserveAspectFit
+                opacity: (root.keyColor !== "" || root.keyTextColor !== "") ? 0 : 1
+            }
+
+            MultiEffect {
+                anchors.fill: parent
+                source: rowGlyphImg
+                visible: root.keyColor !== "" || root.keyTextColor !== ""
+                colorization: 1.0
+                colorizationColor: root.resolvedIconColor
+            }
         }
 
         Text {
@@ -97,40 +123,46 @@ Rectangle {
             fontSizeMode: Text.Fit
             minimumPixelSize: 7
             font.bold: true
-            color: root.isActive ? Color.background : (root.keyColor !== "" ? "#1a1e22" : Color.foreground)
+            color: root.resolvedTextColor
             wrapMode: Text.NoWrap
             horizontalAlignment: Text.AlignLeft
             lineHeight: 1.0
-            width: Math.min(implicitWidth, root.width - Style.space(15))
+            width: Math.min(implicitWidth, root.width - glyphContainer.width - Style.space(6))
         }
     }
 
-    Image {
-        id: standaloneGlyphImg
+    Item {
         anchors.centerIn: parent
-        width: Math.min(parent.width * 0.48, Style.space(18))
+        width: Math.min(parent.width * 0.48, Style.space(16))
         height: width
-        source: root.keyGlyph !== "" ? Qt.resolvedUrl("../assets/key-glyphs/" + root.keyGlyph + ".svg") : ""
-        visible: root.keyGlyph !== "" && root.keyText === "" && root.keyColor === ""
-        fillMode: Image.PreserveAspectFit
+        visible: root.keyGlyph !== "" && root.keyText === ""
+
+        Image {
+            id: standaloneGlyphImg
+            anchors.fill: parent
+            source: root.keyGlyph !== "" ? Qt.resolvedUrl("../assets/key-glyphs/" + root.keyGlyph + ".svg") : ""
+            fillMode: Image.PreserveAspectFit
+            opacity: (root.keyColor !== "" || root.keyTextColor !== "") ? 0 : 1
+        }
+
+        MultiEffect {
+            anchors.fill: parent
+            source: standaloneGlyphImg
+            visible: root.keyColor !== "" || root.keyTextColor !== ""
+            colorization: 1.0
+            colorizationColor: root.resolvedIconColor
+        }
     }
 
-    MultiEffect {
-        anchors.fill: standaloneGlyphImg
-        source: standaloneGlyphImg
-        visible: root.keyGlyph !== "" && root.keyText === "" && root.keyColor !== ""
-        colorization: 1.0
-        colorizationColor: "#1a1e22"
-    }
     Text {
         anchors.centerIn: parent
         text: root.keyText
         font.family: Style.font.family
         font.pixelSize: Style.font.caption
         fontSizeMode: Text.Fit
-        minimumPixelSize: 9
+        minimumPixelSize: 8
         font.bold: true
-        color: root.isActive ? Color.background : (root.keyColor !== "" ? "#1a1e22" : Color.foreground)
+        color: root.resolvedTextColor
         wrapMode: root.keyText.indexOf("\n") !== -1 ? Text.Wrap : Text.NoWrap
         horizontalAlignment: Text.AlignHCenter
         lineHeight: 1.0

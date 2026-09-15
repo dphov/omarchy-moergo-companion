@@ -18,6 +18,8 @@ struct JsonDecoration {
     icon: Option<String>,
     #[serde(default)]
     background: Option<String>,
+    #[serde(default)]
+    color: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -96,12 +98,14 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Vec<Layer>> {
 
         let mut keys: Vec<Key> = Vec::with_capacity(layer_keys.len());
         for key_obj in layer_keys {
+            let behavior = json_val_to_str(&key_obj.value);
+            let is_custom = behavior == "Custom";
             let raw = key_to_raw(&key_obj);
             let mut humanized = humanize_key_code(&raw);
             let (mut title, mut desc) = describe_key_code(&raw, &humanized);
             let mut glyph = glyph_for_key(&raw);
             let mut color = String::new();
-
+            let mut text_color = String::new();
             if let Some(dec) = &key_obj.decoration {
                 if let Some(lbl) = &dec.label {
                     let trimmed = lbl.trim();
@@ -110,10 +114,10 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Vec<Layer>> {
                         if title.is_empty() || title.starts_with("Key: ") {
                             title = humanized.clone();
                         }
-                    } else if raw.starts_with('&') {
+                    } else if is_custom {
                         humanized = String::new();
                     }
-                } else if raw.starts_with('&') && (dec.icon.is_some() || dec.background.is_some()) {
+                } else if is_custom {
                     humanized = String::new();
                 }
 
@@ -129,18 +133,31 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Vec<Layer>> {
                         color = normalized;
                     }
                 }
+                if let Some(c) = &dec.color {
+                    let normalized = normalize_hex_color(c);
+                    if !normalized.is_empty() {
+                        text_color = normalized;
+                    }
+                }
                 if let Some(ic) = &dec.icon {
-                    if ic.starts_with("fa-align-") || ic.contains("angle") || ic.contains("arrow") {
+                    if ic.starts_with("fa-") && ic.len() == 4 && ic.as_bytes()[3].is_ascii_digit() {
+                        humanized = ic[3..].to_string();
+                        glyph = String::new();
+                    } else if ic.starts_with("fa-align-") || ic.contains("angle") || ic.contains("arrow") {
                         glyph = "modifier".into();
-                    } else if ic.contains("circle") || ic.contains("dot") {
+                    } else if ic.contains("circle-dot") {
                         glyph = "tap".into();
                     } else if ic.contains("finger") || ic.contains("win") {
                         glyph = "system".into();
+                    } else if dec.label.is_some() {
+                        glyph = String::new();
                     }
+                } else if dec.label.is_some() {
+                    glyph = String::new();
                 }
             }
 
-            keys.push(Key::with_color(&raw, humanized, title, desc, glyph, color));
+            keys.push(Key::with_details(&raw, humanized, title, desc, glyph, color, text_color));
         }
         layers.push(Layer { name, keys });
     }

@@ -23,13 +23,15 @@ const TEXT_BEHAVIORS: &[&str] = &[
     "&rgb_ug",
     "&kp",
     "kp",
+    "&kt",
+    "kt",
 ];
 
 const MODIFIER_CODES: &[&str] = &["LSHFT", "RSHFT", "LCTRL", "RCTRL", "LALT", "RALT"];
 const SYSTEM_CODES: &[&str] = &["LGUI", "RGUI"];
 
 pub fn glyph_for_key(raw: &str) -> String {
-    let key_code = raw.strip_prefix("&kp ").unwrap_or(raw);
+    let key_code = raw.strip_prefix("&kp ").or_else(|| raw.strip_prefix("&kt ")).unwrap_or(raw);
     if SYSTEM_CODES.contains(&key_code) {
         return "system".into();
     }

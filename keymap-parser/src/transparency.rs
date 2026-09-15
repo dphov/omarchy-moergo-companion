@@ -28,6 +28,7 @@ pub fn resolve_transparent_keys(layers: &mut [Layer]) {
         key.title.clone_from(&source.title);
         key.desc.clone_from(&source.desc);
         key.color.clone_from(&source.color);
+        key.text_color.clone_from(&source.text_color);
     }
 }
 

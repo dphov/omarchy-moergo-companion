@@ -112,6 +112,7 @@ Item {
             keyDesc: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.desc || "") : ""
             keyGlyph: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.glyph || "") : ""
             keyColor: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.color || "") : ""
+            keyTextColor: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.text_color || "") : ""
             isTrans: (typeof currentKey === "object" && currentKey !== null) ? !!currentKey.trans : false
             onLayerClicked: function(targetLayer) {
                 root.layerSwitchRequested(targetLayer);

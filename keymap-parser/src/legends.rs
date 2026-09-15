@@ -45,7 +45,10 @@ pub fn humanize_key_code(raw: &str) -> String {
                             if let Some(rgb) = raw.strip_prefix("rgb_ug ") {
                                 return rgb_legend(rgb);
                             }
-                            let key = raw.strip_prefix("&kp ").unwrap_or(raw);
+                            let key = raw
+                                .strip_prefix("&kp ")
+                                .or_else(|| raw.strip_prefix("&kt "))
+                                .unwrap_or(raw);
                             if key.len() == 2
                                 && key.starts_with('N')
                                 && key
