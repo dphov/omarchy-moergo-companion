@@ -395,6 +395,7 @@ Panel {
                     opacity: 0.7
                 }
                 Text {
+                    id: currentLayerNameText
                     text: root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers[root.currentLayerIndex]
                         ? root.parsedLayout.layers[root.currentLayerIndex].name
                         : ""
@@ -403,6 +404,16 @@ Panel {
                     font.family: Style.font.family
                     font.pixelSize: Style.font.caption
                     font.bold: true
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.showDashboard = false;
+                            root.showLayoutInfo = false;
+                            layerTabs.refocusCurrent();
+                        }
+                    }
                 }
 
                 Item { Layout.fillWidth: true }
@@ -471,7 +482,7 @@ Panel {
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.topMargin: Style.space(12)
+                Layout.topMargin: Style.space(20)
 
                 Components.Glove80Matrix {
                     id: matrix

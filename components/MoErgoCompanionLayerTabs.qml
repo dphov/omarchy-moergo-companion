@@ -22,6 +22,9 @@ RowLayout {
         return index + " " + displayName;
     }
 
+    function refocusCurrent() {
+        listView.positionViewAtIndex(root.currentIndex, ListView.Contain);
+    }
 
     signal layerClicked(int index)
     signal layoutInfoClicked()
