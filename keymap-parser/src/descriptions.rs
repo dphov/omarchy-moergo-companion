@@ -136,6 +136,13 @@ pub fn describe_key_code(raw: &str, humanized: &str, custom_behaviors: &[String]
             "Switches keyboard layer back to the default Base layer.".into(),
         );
     }
+    if let Some(rest) = raw.strip_prefix("&tog ") {
+        let target = rest.trim();
+        return (
+            format!("Toggle Layer {target}"),
+            "Enables a layer until the layer is manually disabled.".into(),
+        );
+    }
 
     if let Some((title, desc)) = firmware_description(raw) {
         return (title.into(), desc.into());
@@ -220,10 +227,7 @@ fn firmware_description(raw: &str) -> Option<(&'static str, &'static str)> {
             "Bootloader Mode",
             "Reboots keyboard into UF2 mass-storage bootloader mode for firmware flashing.",
         )),
-        "&sys_reset" => Some((
-            "System Reset",
-            "Performs a hardware reset on the keyboard controller.",
-        )),
+        "&sys_reset" => Some(("Reset", "Reset this half of the keyboard.")),
         _ => None,
     }
 }

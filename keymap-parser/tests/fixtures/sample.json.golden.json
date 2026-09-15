@@ -358,8 +358,8 @@
         },
         {
           "text": "Reset",
-          "title": "System Reset",
-          "desc": "Performs a hardware reset on the keyboard controller.",
+          "title": "Reset",
+          "desc": "Reset this half of the keyboard.",
           "trans": false,
           "glyph": ""
         },
