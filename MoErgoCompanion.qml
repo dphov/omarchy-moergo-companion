@@ -334,12 +334,25 @@ Panel {
                 opacity: 0.35
             }
 
-            Text {
-                text: "Layers"
-                color: Color.foreground
-                font.family: Style.font.family
-                font.pixelSize: Style.font.caption
-                opacity: 0.7
+            RowLayout {
+                spacing: Style.space(8)
+                Text {
+                    text: "Layers"
+                    color: Color.foreground
+                    font.family: Style.font.family
+                    font.pixelSize: Style.font.caption
+                    opacity: 0.7
+                }
+                Text {
+                    text: root.parsedLayout && root.parsedLayout.layers && root.parsedLayout.layers[root.currentLayerIndex]
+                        ? root.parsedLayout.layers[root.currentLayerIndex].name
+                        : ""
+                    visible: text !== ""
+                    color: Color.accent
+                    font.family: Style.font.family
+                    font.pixelSize: Style.font.caption
+                    font.bold: true
+                }
             }
 
             // Layer Tabs
