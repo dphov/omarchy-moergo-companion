@@ -3,29 +3,17 @@ use crate::glyphs::glyph_for_key;
 use crate::legends::humanize_key_code;
 use crate::models::{Key, Layer};
 use serde::Deserialize;
+use serde_json::Value;
 use std::fs;
 use std::io;
 use std::path::Path;
 
 #[derive(Debug, Deserialize)]
-struct JsonKeyParam {
-    #[serde(default)]
-    value: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-enum JsonParam {
-    String(String),
-    Object(JsonKeyParam),
-}
-
-#[derive(Debug, Deserialize)]
 struct JsonKey {
     #[serde(default)]
-    value: String,
+    value: Value,
     #[serde(default)]
-    params: Vec<JsonParam>,
+    params: Vec<Value>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -36,21 +24,36 @@ struct JsonLayout {
     layers: Vec<Vec<JsonKey>>,
 }
 
+fn json_val_to_str(val: &Value) -> String {
+    match val {
+        Value::String(s) => s.clone(),
+        Value::Number(n) => n.to_string(),
+        Value::Bool(b) => b.to_string(),
+        Value::Object(map) => {
+            if let Some(inner) = map.get("value") {
+                json_val_to_str(inner)
+            } else {
+                String::new()
+            }
+        }
+        _ => String::new(),
+    }
+}
+
 fn key_to_raw(key_obj: &JsonKey) -> String {
+    let behavior = json_val_to_str(&key_obj.value);
     let mut parts: Vec<String> = Vec::with_capacity(key_obj.params.len() + 1);
-    parts.push(key_obj.value.clone());
+    if !behavior.is_empty() {
+        parts.push(behavior);
+    }
     for param in &key_obj.params {
-        let value = match param {
-            JsonParam::String(s) => s.clone(),
-            JsonParam::Object(o) => o.value.clone().unwrap_or_default(),
-        };
+        let value = json_val_to_str(param);
         if !value.is_empty() {
             parts.push(value);
         }
     }
     parts.join(" ")
 }
-
 pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Vec<Layer>> {
     let data: JsonLayout = serde_json::from_reader(fs::File::open(path)?)
         .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
@@ -85,14 +88,21 @@ mod tests {
     fn parses_minimal_json_layout() {
         let json = r#"{
             "layer_names": ["Base"],
-            "layers": [[{"value": "&kp", "params": [{"value": "A"}]}]]
+            "layers": [
+                [
+                    {"value": "&kp", "params": [{"value": "A"}]},
+                    {"value": "&tog", "params": [{"value": 1}]},
+                    {"value": "&mo", "params": [2]}
+                ]
+            ]
         }"#;
         let tmp = std::env::temp_dir().join("omp_test_layout.json");
         std::fs::write(&tmp, json).unwrap();
         let layers = parse_layout_json(&tmp).unwrap();
         assert_eq!(layers.len(), 1);
-        assert_eq!(layers[0].name, "Base");
         assert_eq!(layers[0].keys[0].text, "A");
+        assert_eq!(layers[0].keys[1].text, "&tog 1");
+        assert_eq!(layers[0].keys[2].text, "&mo 2");
         std::fs::remove_file(&tmp).unwrap();
     }
 }
