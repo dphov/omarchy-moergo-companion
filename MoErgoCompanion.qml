@@ -486,10 +486,9 @@ Panel {
             // Visualizer Canvas
             Item {
                 Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.topMargin: Style.space(32)
-                Layout.bottomMargin: Style.space(20)
-                Layout.minimumHeight: matrix.implicitHeight + Style.space(40)
+                Layout.topMargin: Style.space(20)
+                Layout.bottomMargin: Style.space(12)
+                Layout.preferredHeight: matrix.implicitHeight + Style.space(28)
 
                 Components.Glove80Matrix {
                     id: matrix
