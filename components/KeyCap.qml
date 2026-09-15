@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
+import Qt5Compat.GraphicalEffects
 import QtQuick.Layouts
 import QtQuick.Shapes
 import qs.Commons
@@ -103,15 +103,14 @@ Rectangle {
             anchors.fill: parent
             source: root.keyGlyph !== "" ? Qt.resolvedUrl("../assets/key-glyphs/" + root.keyGlyph + ".svg") : ""
             fillMode: Image.PreserveAspectFit
-            opacity: (root.keyColor !== "" || root.keyTextColor !== "") ? 0 : 1
+            visible: root.keyGlyph === "di-linux"
         }
 
-        MultiEffect {
-            anchors.fill: parent
+        ColorOverlay {
+            anchors.fill: cornerGlyphImg
             source: cornerGlyphImg
-            visible: root.keyColor !== "" || root.keyTextColor !== ""
-            colorization: 1.0
-            colorizationColor: root.resolvedIconColor
+            visible: root.keyGlyph !== "di-linux"
+            color: root.resolvedIconColor
         }
     }
 
@@ -147,15 +146,14 @@ Rectangle {
             anchors.fill: parent
             source: root.keyGlyph !== "" ? Qt.resolvedUrl("../assets/key-glyphs/" + root.keyGlyph + ".svg") : ""
             fillMode: Image.PreserveAspectFit
-            opacity: (root.keyColor !== "" || root.keyTextColor !== "") ? 0 : 1
+            visible: root.keyGlyph === "di-linux"
         }
 
-        MultiEffect {
-            anchors.fill: parent
+        ColorOverlay {
+            anchors.fill: standaloneGlyphImg
             source: standaloneGlyphImg
-            visible: root.keyColor !== "" || root.keyTextColor !== ""
-            colorization: 1.0
-            colorizationColor: root.resolvedIconColor
+            visible: root.keyGlyph !== "di-linux"
+            color: root.resolvedIconColor
         }
     }
 
