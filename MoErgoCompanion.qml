@@ -453,6 +453,9 @@ Panel {
                     visible: layerSearchField.text !== ""
                     Layout.preferredWidth: visible ? implicitWidth : 0
                     Layout.maximumWidth: visible ? implicitWidth : 0
+                    Layout.preferredHeight: layerSearchField.implicitHeight
+                    Layout.maximumHeight: layerSearchField.implicitHeight
+                    Layout.alignment: Qt.AlignVCenter
                     onClicked: layerSearchField.text = ""
                 }
             }
