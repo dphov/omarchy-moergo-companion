@@ -9,11 +9,25 @@ use std::io;
 use std::path::Path;
 
 #[derive(Debug, Deserialize)]
+struct JsonDecoration {
+    #[serde(default)]
+    label: Option<String>,
+    #[serde(default)]
+    description: Option<String>,
+    #[serde(default)]
+    icon: Option<String>,
+    #[serde(default)]
+    background: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
 struct JsonKey {
     #[serde(default)]
     value: Value,
     #[serde(default)]
     params: Vec<Value>,
+    #[serde(default)]
+    decoration: Option<JsonDecoration>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -43,7 +57,7 @@ fn json_val_to_str(val: &Value) -> String {
 fn key_to_raw(key_obj: &JsonKey) -> String {
     let behavior = json_val_to_str(&key_obj.value);
     let mut parts: Vec<String> = Vec::with_capacity(key_obj.params.len() + 1);
-    if !behavior.is_empty() {
+    if !behavior.is_empty() && behavior != "Custom" {
         parts.push(behavior);
     }
     for param in &key_obj.params {
@@ -69,10 +83,45 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Vec<Layer>> {
         let mut keys: Vec<Key> = Vec::with_capacity(layer_keys.len());
         for key_obj in layer_keys {
             let raw = key_to_raw(&key_obj);
-            let humanized = humanize_key_code(&raw);
-            let (title, desc) = describe_key_code(&raw, &humanized);
-            let glyph = glyph_for_key(&raw);
-            keys.push(Key::new(&raw, humanized, title, desc, glyph));
+            let mut humanized = humanize_key_code(&raw);
+            let (mut title, mut desc) = describe_key_code(&raw, &humanized);
+            let mut glyph = glyph_for_key(&raw);
+            let mut color = String::new();
+
+            if let Some(dec) = &key_obj.decoration {
+                if let Some(lbl) = &dec.label {
+                    let trimmed = lbl.trim();
+                    if !trimmed.is_empty() {
+                        humanized = trimmed.to_string();
+                        if title.is_empty() || title.starts_with("Key: ") {
+                            title = humanized.clone();
+                        }
+                    }
+                }
+                if let Some(d) = &dec.description {
+                    let trimmed = d.trim();
+                    if !trimmed.is_empty() {
+                        desc = trimmed.to_string();
+                    }
+                }
+                if let Some(bg) = &dec.background {
+                    let trimmed = bg.trim();
+                    if !trimmed.is_empty() {
+                        color = trimmed.to_string();
+                    }
+                }
+                if let Some(ic) = &dec.icon {
+                    if ic.starts_with("fa-align-") || ic.contains("angle") || ic.contains("arrow") {
+                        glyph = "modifier".into();
+                    } else if ic.contains("circle") || ic.contains("dot") {
+                        glyph = "tap".into();
+                    } else if ic.contains("finger") || ic.contains("win") {
+                        glyph = "system".into();
+                    }
+                }
+            }
+
+            keys.push(Key::with_color(&raw, humanized, title, desc, glyph, color));
         }
         layers.push(Layer { name, keys });
     }

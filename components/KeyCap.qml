@@ -12,9 +12,9 @@ Rectangle {
     property string keyTitle: ""
     property string keyDesc: ""
     property string keyGlyph: ""
+    property string keyColor: ""
     property bool isActive: false
     property bool isTrans: false
-    readonly property string normalizedKeyText: keyText.replace(/\s+/g, " ").trim()
     readonly property bool isLayerKey: {
         var k = normalizedKeyText.toLowerCase();
         return k === "layer" || k === "base" || k === "lower" || k === "magic" || k === "test";
@@ -35,8 +35,8 @@ Rectangle {
     height: Style.space(36)
     radius: Style.space(7)
 
-    color: isActive ? Color.accent : (isTrans ? "transparent" : Style.normalFill)
-    border.color: (mouse.containsMouse && isLayerKey) ? Color.accent : (isActive ? Color.accent : Color.muted)
+    color: isActive ? Color.accent : (isTrans ? "transparent" : (root.keyColor !== "" ? root.keyColor : Style.normalFill))
+    border.color: (mouse.containsMouse && isLayerKey) ? Color.accent : (isActive ? Color.accent : (root.keyColor !== "" ? Qt.darker(root.keyColor, 1.25) : Color.muted))
     border.width: isTrans && !(mouse.containsMouse && isLayerKey) ? 0 : 1
 
     Shape {
@@ -85,7 +85,7 @@ Rectangle {
             fontSizeMode: Text.Fit
             minimumPixelSize: 7
             font.bold: true
-            color: root.isActive ? Color.background : Color.foreground
+            color: root.isActive ? Color.background : (root.keyColor !== "" ? "#1a1e22" : Color.foreground)
             wrapMode: Text.NoWrap
             horizontalAlignment: Text.AlignLeft
             lineHeight: 1.0
@@ -110,7 +110,7 @@ Rectangle {
         fontSizeMode: Text.Fit
         minimumPixelSize: 9
         font.bold: true
-        color: root.isActive ? Color.background : Color.foreground
+        color: root.isActive ? Color.background : (root.keyColor !== "" ? "#1a1e22" : Color.foreground)
         wrapMode: root.keyText.indexOf("\n") !== -1 ? Text.Wrap : Text.NoWrap
         horizontalAlignment: Text.AlignHCenter
         lineHeight: 1.0
