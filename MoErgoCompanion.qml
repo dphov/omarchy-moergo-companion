@@ -301,7 +301,7 @@ Panel {
                         Repeater {
                             model: root.parsedLayout ? (root.parsedLayout.tags || []) : []
                             delegate: Rectangle {
-                                color: Color.accent
+                                color: tagMouse.containsMouse ? Qt.lighter(Color.accent, 1.2) : Color.accent
                                 radius: Style.cornerRadius
                                 implicitWidth: tagText.implicitWidth + Style.space(10)
                                 implicitHeight: tagText.implicitHeight + Style.space(4)
@@ -313,6 +313,13 @@ Panel {
                                     font.family: Style.font.family
                                     font.pixelSize: Style.font.caption
                                     color: Color.background
+                                }
+
+                                MouseArea {
+                                    id: tagMouse
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: Qt.openUrlExternally("https://my.moergo.com/glove80/#/search?tags=" + encodeURIComponent(modelData))
                                 }
                             }
                         }
