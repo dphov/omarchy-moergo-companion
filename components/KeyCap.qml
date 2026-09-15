@@ -38,18 +38,20 @@ Rectangle {
         return (c.r * 0.299 + c.g * 0.587 + c.b * 0.114) > 0.55;
     }
 
+    readonly property color tealLabel: "#4a9e9e"
+
     readonly property color resolvedTextColor: {
         if (root.isActive) return Color.background;
         if (root.keyTextColor !== "") return root.keyTextColor;
-        if (root.keyColor !== "") return root.isLightKeyColor ? "#1a1e22" : "#ffffff";
-        return Color.foreground;
+        if (root.keyColor !== "") return root.isLightKeyColor ? tealLabel : "#ffffff";
+        return tealLabel;
     }
 
     readonly property color resolvedIconColor: {
         if (root.isActive) return Color.background;
         if (root.keyTextColor !== "") return root.keyTextColor;
-        if (root.keyColor !== "") return root.isLightKeyColor ? "#1a1e22" : "#ffffff";
-        return "#c7cf9b";
+        if (root.keyColor !== "") return root.isLightKeyColor ? tealLabel : "#ffffff";
+        return tealLabel;
     }
     readonly property bool isHovered: mouse.containsMouse
     signal layerClicked(string targetLayer)
@@ -61,6 +63,19 @@ Rectangle {
     color: isActive ? Color.accent : (isTrans ? "transparent" : (root.keyColor !== "" ? root.keyColor : Style.normalFill))
     border.color: (mouse.containsMouse && isLayerKey) ? Color.accent : (isActive ? Color.accent : (root.keyColor !== "" ? Qt.darker(root.keyColor, 1.25) : Color.muted))
     border.width: isTrans && !(mouse.containsMouse && isLayerKey) ? 0 : 1
+
+    // Subtle bottom highlight/shadow (MoErgo canonical keycap style)
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: -Style.space(1)
+        height: Style.space(3)
+        radius: root.radius
+        color: root.isActive ? Qt.darker(Color.accent, 1.2) : (root.keyColor !== "" ? Qt.darker(root.keyColor, 1.35) : "#d4a574")
+        opacity: root.isTrans ? 0.0 : 0.55
+        z: -1
+    }
 
     Shape {
         anchors.fill: parent
@@ -87,6 +102,55 @@ Rectangle {
         }
     }
 
+    // Diagonal transparency hatch
+    Shape {
+        anchors.fill: parent
+        visible: root.isTrans && !root.isActive
+        layer.enabled: true
+        opacity: 0.4
+
+        ShapePath {
+            strokeColor: Color.muted
+            strokeWidth: 1
+            strokeStyle: ShapePath.SolidLine
+            fillColor: "transparent"
+
+            startX: 0
+            startY: root.height * 0.35
+            PathLine { x: root.width * 0.35; y: 0 }
+        }
+        ShapePath {
+            strokeColor: Color.muted
+            strokeWidth: 1
+            strokeStyle: ShapePath.SolidLine
+            fillColor: "transparent"
+
+            startX: 0
+            startY: root.height * 0.75
+            PathLine { x: root.width * 0.75; y: 0 }
+        }
+        ShapePath {
+            strokeColor: Color.muted
+            strokeWidth: 1
+            strokeStyle: ShapePath.SolidLine
+            fillColor: "transparent"
+
+            startX: root.width * 0.25
+            startY: root.height
+            PathLine { x: root.width; y: root.height * 0.25 }
+        }
+        ShapePath {
+            strokeColor: Color.muted
+            strokeWidth: 1
+            strokeStyle: ShapePath.SolidLine
+            fillColor: "transparent"
+
+            startX: root.width * 0.65
+            startY: root.height
+            PathLine { x: root.width; y: root.height * 0.65 }
+        }
+    }
+
     // 1. Behavior icon: pinned to upper-left corner (MoErgo canonical layout)
     Item {
         id: cornerGlyph
@@ -96,6 +160,7 @@ Rectangle {
         anchors.leftMargin: Style.space(3)
         width: Style.space(10)
         height: width
+        opacity: root.isTrans ? 0.75 : 1.0
         visible: root.keyGlyph !== "" && root.keyText !== ""
 
         Image {
@@ -131,6 +196,7 @@ Rectangle {
         verticalAlignment: Text.AlignVCenter
         lineHeight: 1.0
         width: parent.width - Style.space(4)
+        opacity: root.isTrans ? 0.75 : 1.0
         visible: root.keyText !== ""
     }
 
@@ -139,6 +205,7 @@ Rectangle {
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.48, Style.space(16))
         height: width
+        opacity: root.isTrans ? 0.75 : 1.0
         visible: root.keyGlyph !== "" && root.keyText === ""
 
         Image {

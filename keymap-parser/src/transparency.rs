@@ -14,7 +14,12 @@ pub fn resolve_transparent_keys(layers: &mut [Layer]) {
                     continue;
                 }
                 let source = &previous.keys[key_idx];
-                if !source.is_trans && !source.text.is_empty() {
+                // Consider a source key valid if it has visible content:
+                // text, a glyph, or an explicit color.
+                let has_content = !source.text.is_empty()
+                    || !source.glyph.is_empty()
+                    || !source.color.is_empty();
+                if !source.is_trans && has_content {
                     resolutions.push((layer_idx, key_idx, source.clone()));
                     break;
                 }
@@ -27,6 +32,7 @@ pub fn resolve_transparent_keys(layers: &mut [Layer]) {
         key.text.clone_from(&source.text);
         key.title.clone_from(&source.title);
         key.desc.clone_from(&source.desc);
+        key.glyph.clone_from(&source.glyph);
         key.color.clone_from(&source.color);
         key.text_color.clone_from(&source.text_color);
     }

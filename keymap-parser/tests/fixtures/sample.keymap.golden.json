@@ -237,7 +237,7 @@
           "title": "Shift Modifier",
           "desc": "Shift key modifier.",
           "trans": true,
-          "glyph": ""
+          "glyph": "modifier"
         },
         {
           "text": "A",
@@ -265,7 +265,7 @@
           "title": "Control Modifier",
           "desc": "Control key modifier.",
           "trans": true,
-          "glyph": ""
+          "glyph": "modifier"
         },
         {
           "text": "(",
