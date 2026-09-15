@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import qs.Commons
 import qs.Ui
@@ -63,20 +64,44 @@ Rectangle {
             id: bodyFlickable
             Layout.fillWidth: true
             Layout.fillHeight: true
-            contentWidth: width
-            contentHeight: bodyText.implicitHeight
+            contentWidth: bodyRow.implicitWidth
+            contentHeight: bodyRow.implicitHeight
             clip: true
 
-            Text {
-                id: bodyText
-                width: bodyFlickable.width
-                text: root.bodyFor(root.tabs[root.currentTab] ? root.tabs[root.currentTab].key : "")
-                font.family: Style.font.family
-                font.pixelSize: Style.font.bodySmall
-                color: Color.foreground
-                wrapMode: Text.Wrap
-                lineHeight: 1.25
-                textFormat: Text.PlainText
+            ScrollBar.vertical: ScrollBar {}
+
+            Row {
+                id: bodyRow
+                spacing: Style.space(8)
+
+                Text {
+                    id: lineNumberText
+                    text: {
+                        var body = root.bodyFor(root.tabs[root.currentTab] ? root.tabs[root.currentTab].key : "");
+                        var count = body.split("\n").length;
+                        var lines = [];
+                        for (var i = 1; i <= count; i++) {
+                            lines.push(i);
+                        }
+                        return lines.join("\n");
+                    }
+                    font.family: Style.font.family
+                    font.pixelSize: Style.font.bodySmall
+                    color: Color.muted
+                    lineHeight: 1.25
+                    textFormat: Text.PlainText
+                }
+
+                Text {
+                    id: bodyText
+                    text: root.bodyFor(root.tabs[root.currentTab] ? root.tabs[root.currentTab].key : "")
+                    font.family: Style.font.family
+                    font.pixelSize: Style.font.bodySmall
+                    color: Color.foreground
+                    wrapMode: Text.NoWrap
+                    lineHeight: 1.25
+                    textFormat: Text.PlainText
+                }
             }
         }
     }

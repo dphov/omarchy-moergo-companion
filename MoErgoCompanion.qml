@@ -296,7 +296,27 @@ Panel {
                     Flow {
                         Layout.fillWidth: true
                         spacing: Style.space(4)
-                        visible: !!(root.parsedLayout && root.parsedLayout.tags) && root.parsedLayout.tags.length > 0
+                        visible: (!!root.parsedLayout && !!root.parsedLayout.language)
+                            || (!!(root.parsedLayout && root.parsedLayout.tags) && root.parsedLayout.tags.length > 0)
+
+                        Rectangle {
+                            visible: !!(root.parsedLayout && root.parsedLayout.language)
+                            color: "transparent"
+                            radius: Style.cornerRadius
+                            border.color: Color.muted
+                            border.width: 1
+                            implicitWidth: langText.implicitWidth + Style.space(10)
+                            implicitHeight: langText.implicitHeight + Style.space(4)
+
+                            Text {
+                                id: langText
+                                anchors.centerIn: parent
+                                text: "🌐 " + (root.parsedLayout ? (root.parsedLayout.language || "") : "")
+                                font.family: Style.font.family
+                                font.pixelSize: Style.font.caption
+                                color: Color.foreground
+                            }
+                        }
 
                         Repeater {
                             model: root.parsedLayout ? (root.parsedLayout.tags || []) : []
@@ -359,6 +379,36 @@ Panel {
                     font.family: Style.font.family
                     font.pixelSize: Style.font.caption
                     font.bold: true
+                }
+
+                Item { Layout.fillWidth: true }
+
+                Controls.TextField {
+                    id: layerSearchField
+                    placeholderText: "Search layers..."
+                    font.family: Style.font.family
+                    font.pixelSize: Style.font.caption
+                    color: Color.foreground
+                    implicitWidth: Style.space(120)
+                    background: Rectangle {
+                        color: Color.background
+                        radius: Style.cornerRadius
+                        border.color: layerSearchField.activeFocus ? Color.accent : Color.muted
+                        border.width: 1
+                    }
+                    onTextChanged: {
+                        if (!root.parsedLayout || !root.parsedLayout.layers) return;
+                        var query = text.toLowerCase().trim();
+                        if (query === "") return;
+                        for (var i = 0; i < root.parsedLayout.layers.length; i++) {
+                            if (root.parsedLayout.layers[i].name.toLowerCase().indexOf(query) !== -1) {
+                                root.showDashboard = false;
+                                root.showLayoutInfo = false;
+                                root.currentLayerIndex = i;
+                                return;
+                            }
+                        }
+                    }
                 }
             }
 

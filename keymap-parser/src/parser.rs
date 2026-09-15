@@ -25,6 +25,7 @@ pub fn parse_keymap<P: AsRef<Path>>(path: P) -> std::io::Result<Layout> {
             custom_defined_behaviors,
             custom_devicetree: String::new(),
             config_parameters: String::new(),
+            language: language_from_keymap_source(&source),
         });
     };
     let search_region = &stripped[keymap_start..];
@@ -69,6 +70,7 @@ pub fn parse_keymap<P: AsRef<Path>>(path: P) -> std::io::Result<Layout> {
         custom_defined_behaviors,
         custom_devicetree: String::new(),
         config_parameters: String::new(),
+        language: language_from_keymap_source(&source),
     })
 }
 
@@ -96,6 +98,24 @@ fn title_from_keymap_source<P: AsRef<Path>>(source: &str, path: P) -> String {
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
         .unwrap_or_else(|| "Glove80 Layout".to_string())
+}
+
+fn language_from_keymap_source(source: &str) -> String {
+    // Look for a language hint in C-style comments like:
+    // // Language: en-US
+    for line in source.lines() {
+        let trimmed = line.trim();
+        if let Some(body) = trimmed.strip_prefix("//") {
+            let body = body.trim();
+            if let Some(l) = body.strip_prefix("Language:") {
+                let l = l.trim();
+                if !l.is_empty() {
+                    return l.to_string();
+                }
+            }
+        }
+    }
+    String::new()
 }
 
 fn extract_custom_behaviors(source: &str) -> String {

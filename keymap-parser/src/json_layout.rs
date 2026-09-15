@@ -99,6 +99,8 @@ struct JsonLayout {
     config_parameters: Option<Value>,
     #[serde(default)]
     layout_parameters: Option<Value>,
+    #[serde(default)]
+    language: Option<String>,
 }
 
 fn format_config_params(value: &Option<Value>) -> String {
@@ -269,6 +271,7 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Layout> {
         custom_defined_behaviors: data.custom_defined_behaviors.unwrap_or_default(),
         custom_devicetree: data.custom_devicetree.unwrap_or_default(),
         config_parameters: combined_config,
+        language: data.language.unwrap_or_default(),
     })
 }
 

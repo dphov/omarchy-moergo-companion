@@ -72,4 +72,6 @@ pub struct Layout {
     pub custom_devicetree: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub config_parameters: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub language: String,
 }
