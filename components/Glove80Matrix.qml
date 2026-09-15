@@ -113,6 +113,7 @@ Item {
             keyGlyph: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.glyph || "") : ""
             keyColor: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.color || "") : ""
             isTrans: (typeof currentKey === "object" && currentKey !== null) ? !!currentKey.trans : false
+            onLayerClicked: function(targetLayer) {
                 root.layerSwitchRequested(targetLayer);
             }
         }
