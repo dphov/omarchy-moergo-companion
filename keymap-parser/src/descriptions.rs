@@ -42,8 +42,13 @@ pub fn describe_key_code(raw: &str, humanized: &str, custom_behaviors: &[String]
 
     let behavior_name = raw.strip_prefix('&').unwrap_or(raw).split_whitespace().next().unwrap_or(raw);
     if custom_behaviors.iter().any(|n| n == behavior_name) {
+        let display = if humanized.trim().is_empty() {
+            behavior_name
+        } else {
+            humanized.trim()
+        };
         return (
-            format!("Custom Behavior {raw}"),
+            format!("Custom Behavior {display}"),
             "Specify the key behavior by text input, to be used in conjunction with Custom Defined Behaviors.".into(),
         );
     }
@@ -338,7 +343,7 @@ mod tests {
     #[test]
     fn describes_custom_behavior() {
         let (title, desc) = describe_key_code("&emoji_sunrise", "", &["emoji_sunrise".into()]);
-        assert_eq!(title, "Custom Behavior &emoji_sunrise");
+        assert_eq!(title, "Custom Behavior emoji_sunrise");
         assert!(desc.contains("Custom Defined Behaviors"));
     }
 }
