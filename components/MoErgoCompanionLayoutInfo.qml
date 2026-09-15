@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Quickshell
+import Quickshell.Io
 import qs.Commons
 import qs.Ui
 
@@ -13,6 +15,19 @@ Rectangle {
 
     property var layout: null
     property int currentTab: 0
+
+    function copyCurrentBody() {
+        var key = root.tabs[root.currentTab] ? root.tabs[root.currentTab].key : "";
+        var body = root.bodyFor(key);
+        if (body === "") return;
+        copyProc.command = ["wl-copy", body];
+        copyProc.running = true;
+    }
+
+    Process {
+        id: copyProc
+        command: ["wl-copy"]
+    }
 
     readonly property var tabs: {
         var list = [];
@@ -50,6 +65,15 @@ Rectangle {
                     bordered: true
                     onClicked: root.currentTab = index
                 }
+            }
+
+            Item { Layout.fillWidth: true }
+
+            Button {
+                text: "Copy"
+                tooltipText: "Copy this section to clipboard"
+                bordered: true
+                onClicked: root.copyCurrentBody()
             }
         }
 

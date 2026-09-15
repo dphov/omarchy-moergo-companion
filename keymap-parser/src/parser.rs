@@ -1,6 +1,7 @@
 use crate::behaviors::behavior_arity;
 use crate::descriptions::describe_key_code;
 use crate::glyphs::glyph_for_key;
+use crate::descriptions::extract_custom_behavior_names;
 use crate::layers::extract_layer_name;
 use crate::legends::humanize_key_code;
 use crate::models::{Key, Layer, Layout};
@@ -15,6 +16,7 @@ pub fn parse_keymap<P: AsRef<Path>>(path: P) -> std::io::Result<Layout> {
     let stripped = strip_comments(&source);
     let title = title_from_keymap_source(&source, &path);
     let custom_defined_behaviors = extract_custom_behaviors(&source);
+    let custom_behaviors = extract_custom_behavior_names(&custom_defined_behaviors);
 
     let Some(keymap_start) = stripped.find("keymap {") else {
         return Ok(Layout {
@@ -26,6 +28,7 @@ pub fn parse_keymap<P: AsRef<Path>>(path: P) -> std::io::Result<Layout> {
             custom_devicetree: String::new(),
             config_parameters: String::new(),
             language: language_from_keymap_source(&source),
+            custom_behaviors,
         });
     };
     let search_region = &stripped[keymap_start..];
@@ -53,7 +56,7 @@ pub fn parse_keymap<P: AsRef<Path>>(path: P) -> std::io::Result<Layout> {
 
         let bindings_content = &after_lt[..gt_pos];
         let layer_name = extract_layer_name(search_region, absolute_pos);
-        let keys = parse_layer_bindings(bindings_content);
+        let keys = parse_layer_bindings(bindings_content, &custom_behaviors);
         layers.push(Layer {
             name: layer_name,
             keys,
@@ -71,6 +74,7 @@ pub fn parse_keymap<P: AsRef<Path>>(path: P) -> std::io::Result<Layout> {
         custom_devicetree: String::new(),
         config_parameters: String::new(),
         language: language_from_keymap_source(&source),
+        custom_behaviors,
     })
 }
 
@@ -141,7 +145,7 @@ fn extract_custom_behaviors(source: &str) -> String {
     }
 }
 
-fn parse_layer_bindings(bindings_string: &str) -> Vec<Key> {
+fn parse_layer_bindings(bindings_string: &str, custom_behaviors: &[String]) -> Vec<Key> {
     let tokens = tokenize(bindings_string);
     let mut keys: Vec<Key> = Vec::new();
     let mut i = 0;
@@ -159,7 +163,7 @@ fn parse_layer_bindings(bindings_string: &str) -> Vec<Key> {
         }
         let raw = key_tokens.join(" ");
         let humanized = humanize_key_code(&raw);
-        let (title, desc) = describe_key_code(&raw, &humanized);
+        let (title, desc) = describe_key_code(&raw, &humanized, custom_behaviors);
         let glyph = glyph_for_key(&raw);
         keys.push(Key::new(&raw, humanized, title, desc, glyph));
         i += 1;

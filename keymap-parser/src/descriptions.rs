@@ -1,8 +1,59 @@
 use crate::legends::humanize_key_code;
 
-pub fn describe_key_code(raw: &str, humanized: &str) -> (String, String) {
+/// Extract custom behavior/macro names from the custom-defined-behaviors text block.
+/// Matches definitions like `emoji_sunrise: emoji_sunrise { ... }` or
+/// `&emoji_sunrise { ... }`.
+pub fn extract_custom_behavior_names(text: &str) -> Vec<String> {
+    let mut names = Vec::new();
+    for line in text.lines() {
+        let line = line.trim();
+        // Match `name: name {` or `name: {` style definitions.
+        if let Some(colon) = line.find(':') {
+            let before = line[..colon].trim();
+            let after = line[colon + 1..].trim();
+            // Use the name before the colon if it looks like an identifier.
+            if is_behavior_identifier(before) {
+                names.push(before.to_string());
+                continue;
+            }
+            // Also check after the colon for `&name` references.
+            if after.starts_with('&') {
+                let ident = &after[1..].split_whitespace().next().unwrap_or("");
+                if is_behavior_identifier(ident) {
+                    names.push(ident.to_string());
+                }
+            }
+        }
+        // Match standalone `&name` usage.
+        if line.starts_with('&') {
+            let ident = &line[1..].split_whitespace().next().unwrap_or("");
+            if is_behavior_identifier(ident) {
+                names.push(ident.to_string());
+            }
+        }
+    }
+    names.sort();
+    names.dedup();
+    names
+}
+
+fn is_behavior_identifier(s: &str) -> bool {
+    !s.is_empty()
+        && s.chars().next().map(|c| c.is_ascii_alphabetic() || c == '_').unwrap_or(false)
+        && s.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
+pub fn describe_key_code(raw: &str, humanized: &str, custom_behaviors: &[String]) -> (String, String) {
     if raw.is_empty() {
         return (String::new(), String::new());
+    }
+
+    let behavior_name = raw.strip_prefix('&').unwrap_or(raw).split_whitespace().next().unwrap_or(raw);
+    if custom_behaviors.iter().any(|n| n == behavior_name) {
+        return (
+            format!("Custom Behavior {raw}"),
+            "Specify the key behavior by text input, to be used in conjunction with Custom Defined Behaviors.".into(),
+        );
     }
 
     if let Some((title, desc)) = output_description(raw) {
@@ -279,21 +330,28 @@ mod tests {
 
     #[test]
     fn describes_bt_profile() {
-        let (title, desc) = describe_key_code("&bt_2", "BT\n3");
+        let (title, desc) = describe_key_code("&bt_2", "BT\n3", &[]);
         assert_eq!(title, "Bluetooth Profile 3");
         assert!(desc.contains("profile 3"));
     }
 
     #[test]
     fn describes_media_key() {
-        let (title, _) = describe_key_code("&kp C_PP", "Play");
+        let (title, _) = describe_key_code("&kp C_PP", "Play", &[]);
         assert_eq!(title, "Play / Pause");
     }
 
     #[test]
     fn describes_lower_layer() {
-        let (title, desc) = describe_key_code("&lower", "Lower");
+        let (title, desc) = describe_key_code("&lower", "Lower", &[]);
         assert_eq!(title, "Lower Layer");
         assert!(desc.contains("Lower"));
+    }
+
+    #[test]
+    fn describes_custom_behavior() {
+        let (title, desc) = describe_key_code("&emoji_sunrise", "", &["emoji_sunrise".into()]);
+        assert_eq!(title, "Custom Behavior &emoji_sunrise");
+        assert!(desc.contains("Custom Defined Behaviors"));
     }
 }

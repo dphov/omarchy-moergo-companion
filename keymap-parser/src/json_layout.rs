@@ -1,4 +1,4 @@
-use crate::descriptions::describe_key_code;
+use crate::descriptions::{describe_key_code, extract_custom_behavior_names};
 use crate::glyphs::glyph_for_key;
 use crate::legends::humanize_key_code;
 use crate::models::{Key, Layer, Layout};
@@ -194,6 +194,9 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Layout> {
         format!("{config_parameters_text}\n{layout_parameters_text}")
     };
 
+    let custom_defined_behaviors_text = data.custom_defined_behaviors.clone().unwrap_or_default();
+    let custom_behaviors = extract_custom_behavior_names(&custom_defined_behaviors_text);
+
     let mut layers: Vec<Layer> = Vec::with_capacity(data.layers.len());
     for (idx, layer_keys) in data.layers.into_iter().enumerate() {
         let name = data
@@ -208,7 +211,7 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Layout> {
             let is_custom = behavior == "Custom";
             let raw = key_to_raw(&key_obj);
             let mut humanized = humanize_key_code(&raw);
-            let (mut title, mut desc) = describe_key_code(&raw, &humanized);
+            let (mut title, mut desc) = describe_key_code(&raw, &humanized, &custom_behaviors);
             let mut glyph = glyph_for_key(&raw);
             let mut color = String::new();
             let mut text_color = String::new();
@@ -230,7 +233,17 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Layout> {
                 if let Some(d) = &dec.description {
                     let trimmed = d.trim();
                     if !trimmed.is_empty() {
-                        desc = trimmed.to_string();
+                        if is_custom && !title.starts_with("Custom Behavior") {
+                            title = format!("Custom Behavior {raw}");
+                        }
+                        let generic = "Specify the key behavior by text input, to be used in conjunction with Custom Defined Behaviors.";
+                        if desc.trim() == trimmed {
+                            desc = format!("{generic}\n\n{trimmed}");
+                        } else if !desc.contains(generic) {
+                            desc = format!("{generic}\n\n{trimmed}");
+                        } else {
+                            desc = format!("{desc}\n\n{trimmed}");
+                        }
                     }
                 }
                 if let Some(bg) = &dec.background {
@@ -268,10 +281,11 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Layout> {
         title,
         tags: data.tags,
         notes: data.notes.unwrap_or_default(),
-        custom_defined_behaviors: data.custom_defined_behaviors.unwrap_or_default(),
+        custom_defined_behaviors: custom_defined_behaviors_text,
         custom_devicetree: data.custom_devicetree.unwrap_or_default(),
         config_parameters: combined_config,
         language: data.language.unwrap_or_default(),
+        custom_behaviors,
     })
 }
 

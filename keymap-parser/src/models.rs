@@ -74,4 +74,6 @@ pub struct Layout {
     pub config_parameters: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub language: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub custom_behaviors: Vec<String>,
 }
