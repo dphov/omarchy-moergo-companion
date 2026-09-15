@@ -122,14 +122,14 @@ Rectangle {
         font.family: Style.font.family
         font.pixelSize: Style.font.caption
         fontSizeMode: Text.Fit
-        minimumPixelSize: 7
+        minimumPixelSize: 9
         font.bold: true
         color: root.resolvedTextColor
         wrapMode: root.keyText.indexOf("\n") !== -1 ? Text.Wrap : Text.WordWrap
         maximumLineCount: 2
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        lineHeight: 0.92
+        lineHeight: 1.0
         width: parent.width - Style.space(4)
         visible: root.keyText !== ""
     }
