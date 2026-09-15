@@ -1,34 +1,17 @@
 use crate::legends::humanize_key_code;
 
 /// Extract custom behavior/macro names from the custom-defined-behaviors text block.
-/// Matches definitions like `emoji_sunrise: emoji_sunrise { ... }` or
-/// `&emoji_sunrise { ... }`.
+/// Matches device-tree node definitions like `emoji_sunrise: emoji_sunrise { ... }`
+/// while excluding standard ZMK behaviors.
 pub fn extract_custom_behavior_names(text: &str) -> Vec<String> {
     let mut names = Vec::new();
     for line in text.lines() {
         let line = line.trim();
-        // Match `name: name {` or `name: {` style definitions.
+        // Match `name: name {` style definitions.
         if let Some(colon) = line.find(':') {
             let before = line[..colon].trim();
-            let after = line[colon + 1..].trim();
-            // Use the name before the colon if it looks like an identifier.
-            if is_behavior_identifier(before) {
+            if is_behavior_identifier(before) && !is_standard_behavior(before) {
                 names.push(before.to_string());
-                continue;
-            }
-            // Also check after the colon for `&name` references.
-            if after.starts_with('&') {
-                let ident = &after[1..].split_whitespace().next().unwrap_or("");
-                if is_behavior_identifier(ident) {
-                    names.push(ident.to_string());
-                }
-            }
-        }
-        // Match standalone `&name` usage.
-        if line.starts_with('&') {
-            let ident = &line[1..].split_whitespace().next().unwrap_or("");
-            if is_behavior_identifier(ident) {
-                names.push(ident.to_string());
             }
         }
     }
@@ -41,6 +24,15 @@ fn is_behavior_identifier(s: &str) -> bool {
     !s.is_empty()
         && s.chars().next().map(|c| c.is_ascii_alphabetic() || c == '_').unwrap_or(false)
         && s.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
+fn is_standard_behavior(name: &str) -> bool {
+    const STANDARD: &[&str] = &[
+        "kp", "sk", "sl", "mo", "to", "mt", "lt", "lm", "td", "trans", "none", "out", "bt",
+        "rgb_ug", "bootloader", "sys_reset", "magic", "layer_td", "lower", "key_repeat",
+        "caps_word", "cap_word", "studio_unlock", "studio_lock",
+    ];
+    STANDARD.iter().any(|s| *s == name)
 }
 
 pub fn describe_key_code(raw: &str, humanized: &str, custom_behaviors: &[String]) -> (String, String) {
@@ -156,6 +148,15 @@ pub fn describe_key_code(raw: &str, humanized: &str, custom_behaviors: &[String]
         return rgb_description(rgb);
     }
 
+    if let Some(key) = raw.strip_prefix("&kp ") {
+        let name = if humanized.is_empty() { key } else { humanized };
+        let clean = name.replace('\n', " ");
+        return (
+            format!("Key Press {clean}"),
+            "Send standard keycode on press and release".into(),
+        );
+    }
+
     let key = raw.strip_prefix("&kp ").unwrap_or(raw);
 
     if let Some((title, desc)) = key_description(key) {
@@ -228,42 +229,23 @@ fn firmware_description(raw: &str) -> Option<(&'static str, &'static str)> {
 }
 
 fn rgb_description(rgb: &str) -> (String, String) {
-    let (title, desc): (&str, &str) = match rgb {
-        "RGB_TOG" => (
-            "RGB Underglow Toggle",
-            "Toggles underglow RGB lighting on or off.",
-        ),
-        "RGB_EFF" => (
-            "RGB Underglow Effect",
-            "Cycles through underglow RGB animation effects.",
-        ),
-        "RGB_BRI" => ("RGB Brightness Up", "Increases underglow RGB brightness."),
-        "RGB_BRD" => ("RGB Brightness Down", "Decreases underglow RGB brightness."),
-        "RGB_HUI" => ("RGB Hue Up", "Increases underglow RGB color hue."),
-        "RGB_HUD" => ("RGB Hue Down", "Decreases underglow RGB color hue."),
-        "RGB_SAI" => (
-            "RGB Saturation Up",
-            "Increases underglow RGB color saturation.",
-        ),
-        "RGB_SAD" => (
-            "RGB Saturation Down",
-            "Decreases underglow RGB color saturation.",
-        ),
-        "RGB_SPI" => (
-            "RGB Speed Up",
-            "Increases animation speed of underglow RGB effects.",
-        ),
-        "RGB_SPD" => (
-            "RGB Speed Down",
-            "Decreases animation speed of underglow RGB effects.",
-        ),
-        _ => ("", ""),
+    let action = match rgb {
+        "RGB_TOG" => "Toggle",
+        "RGB_EFF" => "Effect",
+        "RGB_BRI" => "Brightness Up",
+        "RGB_BRD" => "Brightness Down",
+        "RGB_HUI" => "Hue Up",
+        "RGB_HUD" => "Hue Down",
+        "RGB_SAI" => "Saturation Up",
+        "RGB_SAD" => "Saturation Down",
+        "RGB_SPI" => "Speed Up",
+        "RGB_SPD" => "Speed Down",
+        _ => rgb,
     };
-    if title.is_empty() {
-        (format!("RGB Underglow {rgb}"), desc.into())
-    } else {
-        (title.into(), desc.into())
-    }
+    (
+        format!("RGB Underglow {action}"),
+        "RGB underglow control".into(),
+    )
 }
 
 fn modifier_name(raw: &str) -> String {
@@ -337,8 +319,9 @@ mod tests {
 
     #[test]
     fn describes_media_key() {
-        let (title, _) = describe_key_code("&kp C_PP", "Play", &[]);
-        assert_eq!(title, "Play / Pause");
+        let (title, desc) = describe_key_code("&kp C_PP", "Play", &[]);
+        assert_eq!(title, "Key Press Play");
+        assert!(desc.contains("standard keycode"));
     }
 
     #[test]

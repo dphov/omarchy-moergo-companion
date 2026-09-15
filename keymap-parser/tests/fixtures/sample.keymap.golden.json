@@ -5,141 +5,141 @@
       "keys": [
         {
           "text": "Esc",
-          "title": "Escape",
-          "desc": "Sends Escape key.",
+          "title": "Key Press Esc",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "!\n1",
-          "title": "Key: ! 1",
-          "desc": "",
+          "title": "Key Press ! 1",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "@\n2",
-          "title": "Key: @ 2",
-          "desc": "",
+          "title": "Key Press @ 2",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "#\n3",
-          "title": "Key: # 3",
-          "desc": "",
+          "title": "Key Press # 3",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "Tab",
-          "title": "Tab",
-          "desc": "Advances focus or inserts tab space.",
+          "title": "Key Press Tab",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "Q",
-          "title": "Key: Q",
-          "desc": "",
+          "title": "Key Press Q",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "W",
-          "title": "Key: W",
-          "desc": "",
+          "title": "Key Press W",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "E",
-          "title": "Key: E",
-          "desc": "",
+          "title": "Key Press E",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "Shift",
-          "title": "Shift Modifier",
-          "desc": "Shift key modifier.",
+          "title": "Key Press Shift",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": "modifier"
         },
         {
           "text": "A",
-          "title": "Key: A",
-          "desc": "",
+          "title": "Key Press A",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "S",
-          "title": "Key: S",
-          "desc": "",
+          "title": "Key Press S",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "D",
-          "title": "Key: D",
-          "desc": "",
+          "title": "Key Press D",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "Ctrl",
-          "title": "Control Modifier",
-          "desc": "Control key modifier.",
+          "title": "Key Press Ctrl",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": "modifier"
         },
         {
           "text": "Z",
-          "title": "Key: Z",
-          "desc": "",
+          "title": "Key Press Z",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "X",
-          "title": "Key: X",
-          "desc": "",
+          "title": "Key Press X",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "C",
-          "title": "Key: C",
-          "desc": "",
+          "title": "Key Press C",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "←",
-          "title": "Left Arrow",
-          "desc": "Moves cursor left.",
+          "title": "Key Press ←",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "→",
-          "title": "Right Arrow",
-          "desc": "Moves cursor right.",
+          "title": "Key Press →",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "↑",
-          "title": "Up Arrow",
-          "desc": "Moves cursor up.",
+          "title": "Key Press ↑",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "↓",
-          "title": "Down Arrow",
-          "desc": "Moves cursor down.",
+          "title": "Key Press ↓",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
@@ -152,22 +152,22 @@
         },
         {
           "text": "Space",
-          "title": "Space",
-          "desc": "Inserts a space character.",
+          "title": "Key Press Space",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "Bksp",
-          "title": "Backspace",
-          "desc": "Deletes character before the cursor.",
+          "title": "Key Press Bksp",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "Enter",
-          "title": "Enter / Return",
-          "desc": "Sends Return / Enter key.",
+          "title": "Key Press Enter",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         }
@@ -178,141 +178,141 @@
       "keys": [
         {
           "text": "Esc",
-          "title": "Escape",
-          "desc": "Sends Escape key.",
+          "title": "Key Press Esc",
+          "desc": "Send standard keycode on press and release",
           "trans": true,
           "glyph": ""
         },
         {
           "text": "F1",
-          "title": "Key: F1",
-          "desc": "",
+          "title": "Key Press F1",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "F2",
-          "title": "Key: F2",
-          "desc": "",
+          "title": "Key Press F2",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "F3",
-          "title": "Key: F3",
-          "desc": "",
+          "title": "Key Press F3",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "Tab",
-          "title": "Tab",
-          "desc": "Advances focus or inserts tab space.",
+          "title": "Key Press Tab",
+          "desc": "Send standard keycode on press and release",
           "trans": true,
           "glyph": ""
         },
         {
           "text": "EXCL",
-          "title": "Key: EXCL",
-          "desc": "",
+          "title": "Key Press EXCL",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "AT",
-          "title": "Key: AT",
-          "desc": "",
+          "title": "Key Press AT",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "HASH",
-          "title": "Key: HASH",
-          "desc": "",
+          "title": "Key Press HASH",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "Shift",
-          "title": "Shift Modifier",
-          "desc": "Shift key modifier.",
+          "title": "Key Press Shift",
+          "desc": "Send standard keycode on press and release",
           "trans": true,
           "glyph": "modifier"
         },
         {
           "text": "A",
-          "title": "Key: A",
-          "desc": "",
+          "title": "Key Press A",
+          "desc": "Send standard keycode on press and release",
           "trans": true,
           "glyph": ""
         },
         {
           "text": "S",
-          "title": "Key: S",
-          "desc": "",
+          "title": "Key Press S",
+          "desc": "Send standard keycode on press and release",
           "trans": true,
           "glyph": ""
         },
         {
           "text": "D",
-          "title": "Key: D",
-          "desc": "",
+          "title": "Key Press D",
+          "desc": "Send standard keycode on press and release",
           "trans": true,
           "glyph": ""
         },
         {
           "text": "Ctrl",
-          "title": "Control Modifier",
-          "desc": "Control key modifier.",
+          "title": "Key Press Ctrl",
+          "desc": "Send standard keycode on press and release",
           "trans": true,
           "glyph": "modifier"
         },
         {
           "text": "(",
-          "title": "Key: (",
-          "desc": "",
+          "title": "Key Press (",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": ")",
-          "title": "Key: )",
-          "desc": "",
+          "title": "Key Press )",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "%",
-          "title": "Key: %",
-          "desc": "",
+          "title": "Key Press %",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "Home",
-          "title": "Home",
-          "desc": "Moves cursor to the start of the line.",
+          "title": "Key Press Home",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "End",
-          "title": "End",
-          "desc": "Moves cursor to the end of the line.",
+          "title": "Key Press End",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "PgUp",
-          "title": "Page Up",
-          "desc": "Scrolls up one page.",
+          "title": "Key Press PgUp",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "PgDn",
-          "title": "Page Down",
-          "desc": "Scrolls down one page.",
+          "title": "Key Press PgDn",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
@@ -325,22 +325,22 @@
         },
         {
           "text": "Space",
-          "title": "Space",
-          "desc": "Inserts a space character.",
+          "title": "Key Press Space",
+          "desc": "Send standard keycode on press and release",
           "trans": true,
           "glyph": ""
         },
         {
           "text": "Delete",
-          "title": "Delete",
-          "desc": "Deletes character after the cursor.",
+          "title": "Key Press Delete",
+          "desc": "Send standard keycode on press and release",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "Enter",
-          "title": "Enter / Return",
-          "desc": "Sends Return / Enter key.",
+          "title": "Key Press Enter",
+          "desc": "Send standard keycode on press and release",
           "trans": true,
           "glyph": ""
         }
@@ -422,28 +422,28 @@
         {
           "text": "RGB\nTog",
           "title": "RGB Underglow Toggle",
-          "desc": "Toggles underglow RGB lighting on or off.",
+          "desc": "RGB underglow control",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "RGB\nEff",
           "title": "RGB Underglow Effect",
-          "desc": "Cycles through underglow RGB animation effects.",
+          "desc": "RGB underglow control",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "RGB\nBri+",
-          "title": "RGB Brightness Up",
-          "desc": "Increases underglow RGB brightness.",
+          "title": "RGB Underglow Brightness Up",
+          "desc": "RGB underglow control",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "RGB\nRGB_BRK",
           "title": "RGB Underglow RGB_BRK",
-          "desc": "",
+          "desc": "RGB underglow control",
           "trans": false,
           "glyph": ""
         },
