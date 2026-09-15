@@ -237,38 +237,42 @@ fn get_device_info() -> DeviceInfo {
                 continue;
             }
 
-            let mut level: Option<i64> = char_iface
-                .get("Value")
-                .and_then(|v| v.get("data"))
-                .and_then(|v| v.as_array())
-                .and_then(|a| a.first())
-                .and_then(|v| v.as_i64());
-
-            if level.is_none() {
-                if let Some(out) = run_command(
-                    &[
-                        "busctl",
-                        "call",
-                        "-j",
-                        "org.bluez",
-                        path,
-                        "org.bluez.GattCharacteristic1",
-                        "ReadValue",
-                        "a{sv}",
-                        "0",
-                    ],
-                    1,
-                ) {
-                    if let Ok(v) = serde_json::from_str::<Value>(&out) {
-                        level = v
-                            .get("data")
-                            .and_then(|d| d.as_array())
-                            .and_then(|a| a.first())
-                            .and_then(|v| v.as_array())
-                            .and_then(|a| a.first())
-                            .and_then(|v| v.as_i64());
-                    }
+            // Always request a fresh read; BlueZ's cached Value can be stale
+            // compared to the system Bluetooth settings panel.
+            let mut level: Option<i64> = None;
+            if let Some(out) = run_command(
+                &[
+                    "busctl",
+                    "call",
+                    "-j",
+                    "org.bluez",
+                    path,
+                    "org.bluez.GattCharacteristic1",
+                    "ReadValue",
+                    "a{sv}",
+                    "0",
+                ],
+                1,
+            ) {
+                if let Ok(v) = serde_json::from_str::<Value>(&out) {
+                    level = v
+                        .get("data")
+                        .and_then(|d| d.as_array())
+                        .and_then(|a| a.first())
+                        .and_then(|v| v.as_array())
+                        .and_then(|a| a.first())
+                        .and_then(|v| v.as_i64());
                 }
+            }
+
+            // Fall back to cached Value only if a live read fails.
+            if level.is_none() {
+                level = char_iface
+                    .get("Value")
+                    .and_then(|v| v.get("data"))
+                    .and_then(|v| v.as_array())
+                    .and_then(|a| a.first())
+                    .and_then(|v| v.as_i64());
             }
 
             if let Some(l) = level {
