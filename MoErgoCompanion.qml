@@ -293,7 +293,8 @@ Panel {
                         elide: Text.ElideMiddle
                         Layout.maximumWidth: Style.space(360)
                     }
-                    RowLayout {
+                    Flow {
+                        Layout.fillWidth: true
                         spacing: Style.space(4)
                         visible: root.parsedLayout && root.parsedLayout.tags && root.parsedLayout.tags.length > 0
 
