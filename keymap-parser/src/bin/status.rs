@@ -9,6 +9,10 @@ const LOW_PCT: i64 = 20;
 const CRITICAL_PCT: i64 = 10;
 const RECOVERY_MARGIN: i64 = 5;
 
+const CHILD_POLL_INTERVAL_MS: u64 = 50;
+const CMD_TIMEOUT_SHORT_S: u64 = 1;
+const CMD_TIMEOUT_MEDIUM_S: u64 = 2;
+
 #[derive(Debug, Default)]
 struct UsbState {
     left: bool,
@@ -65,6 +69,7 @@ fn run_command(args: &[&str], timeout_secs: u64) -> Option<String> {
     let pid = child.id();
     let timeout = std::time::Duration::from_secs(timeout_secs);
     let start = std::time::Instant::now();
+    let poll_interval = std::time::Duration::from_millis(CHILD_POLL_INTERVAL_MS);
 
     loop {
         match child.try_wait().ok()? {
@@ -86,7 +91,7 @@ fn run_command(args: &[&str], timeout_secs: u64) -> Option<String> {
                     }
                     return None;
                 }
-                std::thread::sleep(std::time::Duration::from_millis(50));
+                std::thread::sleep(poll_interval);
             }
         }
     }
@@ -116,7 +121,7 @@ fn get_device_info() -> DeviceInfo {
             "org.freedesktop.DBus.ObjectManager",
             "GetManagedObjects",
         ],
-        2,
+        CMD_TIMEOUT_MEDIUM_S,
     ) {
         Some(o) => o,
         None => return dev,
@@ -252,7 +257,7 @@ fn get_device_info() -> DeviceInfo {
                     "a{sv}",
                     "0",
                 ],
-                1,
+                CMD_TIMEOUT_SHORT_S,
             ) {
                 if let Ok(v) = serde_json::from_str::<Value>(&out) {
                     level = v
@@ -286,11 +291,11 @@ fn get_device_info() -> DeviceInfo {
 
     // Fallback to UPower.
     if dev.battery_levels.is_empty() {
-        if let Some(out) = run_command(&["upower", "-e"], 1) {
+        if let Some(out) = run_command(&["upower", "-e"], CMD_TIMEOUT_SHORT_S) {
             for line in out.lines() {
                 let line = line.trim();
                 if line.contains("keyboard") || line.contains("Glove80") {
-                    if let Some(info) = run_command(&["upower", "-i", line], 1) {
+                    if let Some(info) = run_command(&["upower", "-i", line], CMD_TIMEOUT_SHORT_S) {
                         if info.contains("Glove80") {
                             if let Some(pct) = info
                                 .lines()

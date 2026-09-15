@@ -23,6 +23,20 @@ Panel {
     readonly property real panelContentHeight: Style.space(560)
     readonly property real buttonHorizontalMargin: Style.space(6)
 
+    readonly property real panelMargin: Style.space(16)
+    readonly property real panelSpacing: Style.space(12)
+    readonly property real titleMaxWidth: Style.space(360)
+    readonly property real layerNameMinWidth: Style.space(120)
+
+    // Z-ordering constants
+    readonly property int tooltipZ: 100
+    readonly property int overlayZ: 999
+
+    // Opacity constants
+    readonly property real separatorOpacity: 0.35
+    readonly property real hintOpacity: 0.7
+    readonly property real positionLabelOpacity: 0.6
+
     // State
     property var parsedLayout: null
     property int currentLayerIndex: 0
@@ -278,8 +292,8 @@ Panel {
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: Style.space(16)
-            spacing: Style.space(12)
+                anchors.margins: root.panelMargin
+            spacing: root.panelSpacing
 
             RowLayout {
                 Layout.fillWidth: true

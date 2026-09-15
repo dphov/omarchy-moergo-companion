@@ -11,6 +11,37 @@ Shown with the **Glorious Engrammer** keymap from [sunaku/glove80-keymaps](https
 
 The plugin inherits the active Omarchy theme colors automatically.
 
+## Installation
+
+### From the Omarchy marketplace
+
+```bash
+omarchy plugin add https://github.com/dphov/omarchy-moergo-companion.git --enable
+omarchy-restart-shell
+```
+
+### From source
+
+```bash
+./install.sh
+omarchy-restart-shell
+```
+
+`install.sh` builds the Rust crate in release mode and places all helper
+binaries (`omarchy-moergo-keymap-parser`, `moergo-watcher`, `glove80-status`,
+`moergo-companion-settings`) in `bin/`. No separate `cargo` command is required.
+
+To build the helpers manually:
+
+```bash
+cd keymap-parser
+cargo build --release
+```
+
+The compiled binaries will be in `keymap-parser/target/release/`:
+`omarchy-moergo-keymap-parser`, `moergo-watcher`, `glove80-status`, and
+`moergo-companion-settings`.
+
 ## Features
 
 - **Live hardware monitor**: Real-time USB connection detection for both halves (`16c0:27db` Left, `16c0:27d9` Right) + Bluetooth battery percentage via UPower/BlueZ.
@@ -33,6 +64,7 @@ The plugin inherits the active Omarchy theme colors automatically.
   - `Tab` / `Shift+Tab`: Cycle forward/backward through layers.
   - `Left` / `Right` (or `h` / `l`): Navigate layer tabs.
   - `Esc`: Dismiss the panel.
+
 ## Architecture
 
 ```
@@ -72,41 +104,10 @@ The plugin inherits the active Omarchy theme colors automatically.
 
 ## Dependencies
 
-- Omarchy shell with bar-widget support
+- Omarchy with bar-widget support
 - Rust toolchain (`cargo`) to build the helper binaries
 - `upower`, `bluez` / `bluetoothctl` (hardware status and battery monitoring)
 - A local Glove80 ZMK keymap at `~/.dotfiles/zmk/config/glove80.keymap` (or edit the keymap path in the dashboard settings)
-
-## Installation
-
-### From the Omarchy marketplace
-
-```bash
-omarchy plugin add https://github.com/dphov/omarchy-moergo-companion.git --enable
-omarchy-restart-shell
-```
-
-### From source
-
-```bash
-./install.sh
-omarchy-restart-shell
-```
-
-`install.sh` builds the Rust crate in release mode and places all helper
-binaries (`omarchy-moergo-keymap-parser`, `moergo-watcher`, `glove80-status`,
-`moergo-companion-settings`) in `bin/`. No separate `cargo` command is required.
-
-To build the helpers manually:
-
-```bash
-cd keymap-parser
-cargo build --release
-```
-
-The compiled binaries will be in `keymap-parser/target/release/`:
-`omarchy-moergo-keymap-parser`, `moergo-watcher`, `glove80-status`, and
-`moergo-companion-settings`.
 
 ## Removal
 
