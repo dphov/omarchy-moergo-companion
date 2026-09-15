@@ -369,6 +369,7 @@ Panel {
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.topMargin: Style.space(12)
 
                 Components.Glove80Matrix {
                     id: matrix
