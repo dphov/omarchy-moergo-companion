@@ -11,6 +11,7 @@ Rectangle {
     property string keyText: ""
     property string keyTitle: ""
     property string keyDesc: ""
+    property string keyGlyph: ""
     property bool isActive: false
     property bool isTrans: false
     readonly property string normalizedKeyText: keyText.replace(/\s+/g, " ").trim()
@@ -63,6 +64,15 @@ Rectangle {
         }
     }
 
+    Image {
+        anchors.centerIn: parent
+        width: Math.min(parent.width * 0.48, 18)
+        height: width
+        source: root.keyGlyph !== "" ? Qt.resolvedUrl("../assets/key-glyphs/" + root.keyGlyph + ".svg") : ""
+        visible: root.keyGlyph !== ""
+        fillMode: Image.PreserveAspectFit
+    }
+
     Text {
         anchors.centerIn: parent
         text: root.keyText
@@ -76,8 +86,8 @@ Rectangle {
         horizontalAlignment: Text.AlignHCenter
         lineHeight: 1.0
         width: parent.width - Style.space(2)
+        visible: root.keyGlyph === ""
     }
-
     MouseArea {
         id: mouse
         anchors.fill: parent

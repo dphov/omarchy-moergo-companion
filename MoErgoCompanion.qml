@@ -12,7 +12,7 @@ Panel {
     moduleName: "dphov.omarchy-moergo-companion"
     ipcTarget: "dphov.omarchy-moergo-companion"
 
-    visible: root.isConnected && root.statusText !== ""
+    visible: root.statusText !== ""
     implicitWidth: visible ? button.implicitWidth : 0
     implicitHeight: visible ? button.implicitHeight : 0
 
@@ -59,16 +59,13 @@ Panel {
         try {
             var data = JSON.parse(raw);
             root.isConnected = !!data.connected;
-            root.statusText = data.text || (root.isConnected ? "Connected" : "Disconnected");
+            root.statusText = data.text || (root.isConnected ? "Connected" : " Off");
             root.statusTooltip = data.tooltip || "MoErgo Glove80";
             root.battery = (data.battery !== undefined) ? data.battery : null;
             root.charging = !!data.charging;
             root.usbLeft = !!data.usbLeft;
             root.usbRight = !!data.usbRight;
             root.deviceData = data.device || null;
-            if (!root.isConnected && root.opened) {
-                root.close();
-            }
         } catch (e) {
         }
     }
@@ -312,6 +309,14 @@ Panel {
                 opacity: 0.35
             }
 
+            Text {
+                text: "Layers"
+                color: Color.foreground
+                font.family: Style.font.family
+                font.pixelSize: Style.font.caption
+                opacity: 0.7
+            }
+
             // Layer Tabs
             Components.MoErgoCompanionLayerTabs {
                 id: layerTabs
@@ -349,7 +354,7 @@ Panel {
                     }
                 }
 
-                Components.Glove80Dashboard {
+                Components.MoErgoCompanionDashboard {
                     anchors.fill: parent
                     visible: root.showDashboard
                     device: root.deviceData

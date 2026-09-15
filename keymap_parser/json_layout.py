@@ -3,6 +3,7 @@
 import json
 
 from .descriptions import describe_key_code
+from .glyphs import glyph_for_key
 from .legends import humanize_key_code
 from .models import Key, Layer
 
@@ -46,6 +47,7 @@ def parse_layout_json(path: str) -> list[Layer]:
                     title=title,
                     desc=desc,
                     is_trans=(raw in ("&trans", "trans")),
+                    glyph=glyph_for_key(raw),
                 )
             )
         layers.append(Layer(name=name, keys=keys))

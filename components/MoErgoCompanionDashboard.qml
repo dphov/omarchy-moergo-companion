@@ -9,7 +9,10 @@ import qs.Ui
 Item {
     id: root
 
-    // Telemetry passed from Glove80.qml
+    property real contentMargin: Style.space(8)
+    property real sectionSpacing: Style.space(16)
+
+    // Telemetry passed from MoErgoCompanion.qml
     property var device: null
     property bool isConnected: false
     property bool isCharging: false
@@ -36,10 +39,24 @@ Item {
         }
     }
 
-    ColumnLayout {
+    Flickable {
+        id: dashboardScroll
         anchors.fill: parent
-        anchors.margins: Style.space(8)
-        spacing: Style.space(16)
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
+        contentWidth: width
+        contentHeight: dashboardColumn.implicitHeight + root.contentMargin * 2
+
+        Controls.ScrollBar.vertical: Controls.ScrollBar {
+            policy: Controls.ScrollBar.AsNeeded
+        }
+
+        ColumnLayout {
+            id: dashboardColumn
+            x: root.contentMargin
+            y: root.contentMargin
+            width: dashboardScroll.width - root.contentMargin * 2
+            spacing: root.sectionSpacing
 
         // Section 1: Device Status
         ColumnLayout {
@@ -346,5 +363,6 @@ Item {
         }
 
         Item { Layout.fillHeight: true }
+    }
     }
 }

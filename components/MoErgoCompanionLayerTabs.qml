@@ -11,6 +11,16 @@ RowLayout {
     property int currentIndex: 0
     property bool showDashboard: false
     property real tabSpacing: Style.space(6)
+    property string layerNamePrefix: "Layer "
+
+    function layerLabel(index, name) {
+        var rawName = String(name);
+        var displayName = rawName.startsWith(root.layerNamePrefix)
+            ? rawName.slice(root.layerNamePrefix.length)
+            : rawName;
+        return index + " " + displayName;
+    }
+
 
     signal layerClicked(int index)
     signal dashboardClicked()
@@ -40,7 +50,7 @@ RowLayout {
             Repeater {
                 model: root.layers
                 delegate: Button {
-                    text: modelData.name
+                    text: root.layerLabel(index, modelData.name)
                     selected: !root.showDashboard && root.currentIndex === index
                     onClicked: root.layerClicked(index)
                 }

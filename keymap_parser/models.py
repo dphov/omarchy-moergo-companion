@@ -10,6 +10,7 @@ class Key:
     title: str = ""
     desc: str = ""
     is_trans: bool = False
+    glyph: str = ""
 
 
 @dataclass

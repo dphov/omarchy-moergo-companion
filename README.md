@@ -30,7 +30,7 @@ MoErgo Glove80 visualizer and hardware status plugin for [Omarchy shell](https:/
 ├── manifest.json                   # Omarchy bar-widget plugin registration
 ├── MoErgoCompanion.qml             # Unified Panel: bar button + KeyboardPanel popup
 ├── components/
-│   ├── Glove80Dashboard.qml        # Hardware control center and device status
+│   ├── MoErgoCompanionDashboard.qml # Hardware control center and device status
 │   ├── Glove80Matrix.qml           # Physical key matrix positioning and geometry
 │   ├── KeyCap.qml                  # Keycap rendering, borders, tooltips, interaction
 │   └── MoErgoCompanionLayerTabs.qml # Dynamic paginated layer selector

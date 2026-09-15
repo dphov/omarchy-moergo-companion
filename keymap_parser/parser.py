@@ -4,6 +4,7 @@ import re
 
 from .behaviors import get_zmk_behavior_arity
 from .descriptions import describe_key_code
+from .glyphs import glyph_for_key
 from .json_layout import parse_layout_json
 from .layers import extract_layer_name
 from .legends import humanize_key_code
@@ -37,6 +38,7 @@ def parse_layer_bindings(bindings_string: str) -> list[Key]:
                 title=title,
                 desc=desc,
                 is_trans=(behavior in ("&trans", "trans")),
+                glyph=glyph_for_key(raw),
             )
         )
         i += 1

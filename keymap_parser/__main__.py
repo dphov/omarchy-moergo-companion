@@ -25,6 +25,7 @@ def main() -> None:
                         "title": key.title,
                         "desc": key.desc,
                         "trans": key.is_trans,
+                        "glyph": key.glyph,
                     }
                     for key in layer.keys
                 ],

@@ -272,7 +272,7 @@ def get_status():
     if not connected:
         return {
             "connected": False,
-            "text": "",
+            "text": " Off",
             "tooltip": "MoErgo Glove80: Disconnected",
             "battery": None,
             "batteryLevels": [],
