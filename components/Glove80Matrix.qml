@@ -6,16 +6,36 @@ Item {
     id: root
 
     property var keys: []
+
+    // Canonical Glove80 physical layout constants (in abstract units).
+    readonly property real naturalUnitSize: Style.space(42)
+    readonly property real keySizeRatio: 36 / 42
+    readonly property real matrixWidthUnits: 19.6
+    readonly property real matrixHeightUnits: 8.72
+
+    // Tooltip layout constants
+    readonly property real tooltipMaxWidth: Style.space(380)
+    readonly property real tooltipHorizontalPadding: Style.space(28)
+    readonly property real tooltipVerticalPadding: Style.space(22)
+    readonly property real tooltipContentMargin: Style.space(24)
+    readonly property real tooltipEdgeMargin: Style.space(12)
+    readonly property real tooltipGap: Style.space(14)
+    readonly property real tooltipFlipThreshold: Style.space(20)
+    readonly property real tooltipLineHeight: 1.15
+
     property real unitSize: {
-        var natural = Style.space(42);
         if (parent && parent.width > 0 && parent.height > 0) {
-            var scale = Math.min(parent.width / (19.6 * natural), parent.height / (8.72 * natural), 1.0);
-            return natural * scale;
+            var scale = Math.min(
+                parent.width / (matrixWidthUnits * naturalUnitSize),
+                parent.height / (matrixHeightUnits * naturalUnitSize),
+                1.0
+            );
+            return naturalUnitSize * scale;
         }
-        return natural;
+        return naturalUnitSize;
     }
-    property real keyWidth: unitSize * 36 / 42
-    property real keyHeight: unitSize * 36 / 42
+    property real keyWidth: unitSize * keySizeRatio
+    property real keyHeight: unitSize * keySizeRatio
     property string hoveredPosition: ""
     property string activeTitle: ""
     property string activeDesc: ""
@@ -53,8 +73,8 @@ Item {
         "RH C2R6", "RH C3R6", "RH C4R6", "RH C5R6", "RH C6R6"
     ]
 
-    implicitWidth: 19.6 * unitSize
-    implicitHeight: 8.72 * unitSize
+    implicitWidth: matrixWidthUnits * unitSize
+    implicitHeight: matrixHeightUnits * unitSize
 
     readonly property var keyDefs: [
         { "x": 0.50, "y": 1.00, "r": 0.0 },
@@ -199,18 +219,18 @@ Item {
         border.color: Color.muted
         border.width: 1
 
-        width: Math.min(contentColumn.implicitWidth + Style.space(28), Style.space(380))
-        height: contentColumn.implicitHeight + Style.space(22)
+        width: Math.min(contentColumn.implicitWidth + root.tooltipHorizontalPadding, root.tooltipMaxWidth)
+        height: contentColumn.implicitHeight + root.tooltipVerticalPadding
 
-        x: Math.max(Style.space(12), Math.min(root.width - width - Style.space(12), root.activeKeyX - width / 2))
-        y: (root.activeKeyY > height + Style.space(20))
-            ? (root.activeKeyY - height - Style.space(14))
-            : (root.activeKeyY + root.keyHeight + Style.space(14))
+        x: Math.max(root.tooltipEdgeMargin, Math.min(root.width - width - root.tooltipEdgeMargin, root.activeKeyX - width / 2))
+        y: (root.activeKeyY > height + root.tooltipFlipThreshold)
+            ? (root.activeKeyY - height - root.tooltipGap)
+            : (root.activeKeyY + root.keyHeight + root.tooltipGap)
 
         ColumnLayout {
             id: contentColumn
             anchors.centerIn: parent
-            width: parent.width - Style.space(24)
+            width: parent.width - root.tooltipContentMargin
             spacing: Style.space(4)
 
             Text {

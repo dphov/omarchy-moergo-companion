@@ -163,8 +163,15 @@ fn bt_profile_legend(raw: &str) -> String {
     format!("BT\n{}", profile + 1)
 }
 
+const NUMBER_ROW_DIGIT_INDEX: usize = 1;
+
 fn number_legend(key: &str) -> String {
-    let digit = key.chars().nth(1).unwrap().to_digit(10).unwrap() as usize;
+    let digit = key
+        .chars()
+        .nth(NUMBER_ROW_DIGIT_INDEX)
+        .unwrap()
+        .to_digit(10)
+        .unwrap() as usize;
     format!(
         "{}\n{}",
         NUMBER_SHIFT_SYMBOLS.chars().nth(digit).unwrap(),

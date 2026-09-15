@@ -14,6 +14,10 @@ RowLayout {
     property real tabSpacing: Style.space(12)
     property string layerNamePrefix: "Layer "
 
+    // Interaction constants
+    readonly property real scrollPageFactor: 0.8
+    readonly property real minimumTabHeight: Style.space(32)
+
     function layerLabel(index, name) {
         var rawName = String(name);
         var displayName = rawName.startsWith(root.layerNamePrefix)
@@ -34,13 +38,13 @@ RowLayout {
         text: "<"
         bordered: true
         enabled: listView.contentX > 0
-        onClicked: listView.contentX = Math.max(0, listView.contentX - listView.width * 0.8)
+        onClicked: listView.contentX = Math.max(0, listView.contentX - listView.width * root.scrollPageFactor)
     }
 
     ListView {
         id: listView
         Layout.fillWidth: true
-        Layout.preferredHeight: Math.max(contentItem.childrenRect.height, Style.space(32))
+        Layout.preferredHeight: Math.max(contentItem.childrenRect.height, root.minimumTabHeight)
         orientation: ListView.Horizontal
         spacing: root.tabSpacing
         model: root.layers
@@ -67,7 +71,7 @@ RowLayout {
         enabled: listView.contentX < listView.contentWidth - listView.width
         onClicked: listView.contentX = Math.min(
             listView.contentWidth - listView.width,
-            listView.contentX + listView.width * 0.8
+            listView.contentX + listView.width * root.scrollPageFactor
         )
     }
 

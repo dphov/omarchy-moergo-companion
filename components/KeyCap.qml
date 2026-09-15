@@ -8,7 +8,33 @@ import qs.Ui
 
 Rectangle {
     id: root
-    
+
+    // Keycap sizing and styling constants
+    readonly property real defaultKeySize: Style.space(36)
+    readonly property real keyRadius: Style.space(7)
+    readonly property real cornerGlyphSize: Style.space(10)
+    readonly property real cornerGlyphTopMargin: Style.space(2.5)
+    readonly property real cornerGlyphLeftMargin: Style.space(3)
+    readonly property real textSideMargin: Style.space(4)
+    readonly property real transparentHatchOpacity: 0.4
+
+    // Stroke alignment offset for crisp 1px borders drawn inside the rectangle.
+    readonly property real hairlineOffset: 0.5
+    readonly property int dashPatternOn: 5
+    readonly property int dashPatternOff: 4
+
+    // Standalone glyph (used when no key text is shown)
+    readonly property real standaloneGlyphMaxSize: Style.space(16)
+    readonly property real standaloneGlyphMaxRatio: 0.48
+
+    // ITU-R BT.601 luma coefficients for sRGB → luminance
+    readonly property real lumaRed: 0.299
+    readonly property real lumaGreen: 0.587
+    readonly property real lumaBlue: 0.114
+    readonly property real lightColorThreshold: 0.55
+
+    readonly property color tealLabel: "#4a9e9e"
+
     property string keyText: ""
     property string keyTitle: ""
     property string keyDesc: ""
@@ -35,10 +61,8 @@ Rectangle {
     readonly property bool isLightKeyColor: {
         if (!keyColor || keyColor === "") return false;
         var c = Qt.color(keyColor);
-        return (c.r * 0.299 + c.g * 0.587 + c.b * 0.114) > 0.55;
+        return (c.r * lumaRed + c.g * lumaGreen + c.b * lumaBlue) > lightColorThreshold;
     }
-
-    readonly property color tealLabel: "#4a9e9e"
 
     readonly property color resolvedTextColor: {
         if (root.isActive) return Color.background;
@@ -56,9 +80,9 @@ Rectangle {
     readonly property bool isHovered: mouse.containsMouse
     signal layerClicked(string targetLayer)
 
-    width: Style.space(36)
-    height: Style.space(36)
-    radius: Style.space(7)
+    width: defaultKeySize
+    height: defaultKeySize
+    radius: keyRadius
 
     color: isActive ? Color.accent : (isTrans ? "transparent" : (root.keyColor !== "" ? root.keyColor : Style.normalFill))
     border.color: (mouse.containsMouse && isLayerKey) ? Color.accent : (isActive ? Color.accent : (root.keyColor !== "" ? Qt.darker(root.keyColor, 1.25) : Color.muted))
@@ -73,19 +97,19 @@ Rectangle {
             strokeColor: Color.muted
             strokeWidth: 1
             strokeStyle: ShapePath.DashLine
-            dashPattern: [5, 4]
+            dashPattern: [root.dashPatternOn, root.dashPatternOff]
             fillColor: "transparent"
 
             startX: root.radius
-            startY: 0.5
-            PathLine { x: root.width - root.radius; y: 0.5 }
-            PathArc { x: root.width - 0.5; y: root.radius; radiusX: root.radius - 0.5; radiusY: root.radius - 0.5 }
-            PathLine { x: root.width - 0.5; y: root.height - root.radius }
-            PathArc { x: root.width - root.radius; y: root.height - 0.5; radiusX: root.radius - 0.5; radiusY: root.radius - 0.5 }
-            PathLine { x: root.radius; y: root.height - 0.5 }
-            PathArc { x: 0.5; y: root.height - root.radius; radiusX: root.radius - 0.5; radiusY: root.radius - 0.5 }
-            PathLine { x: 0.5; y: root.radius }
-            PathArc { x: root.radius; y: 0.5; radiusX: root.radius - 0.5; radiusY: root.radius - 0.5 }
+            startY: root.hairlineOffset
+            PathLine { x: root.width - root.radius; y: root.hairlineOffset }
+            PathArc { x: root.width - root.hairlineOffset; y: root.radius; radiusX: root.radius - root.hairlineOffset; radiusY: root.radius - root.hairlineOffset }
+            PathLine { x: root.width - root.hairlineOffset; y: root.height - root.radius }
+            PathArc { x: root.width - root.radius; y: root.height - root.hairlineOffset; radiusX: root.radius - root.hairlineOffset; radiusY: root.radius - root.hairlineOffset }
+            PathLine { x: root.radius; y: root.height - root.hairlineOffset }
+            PathArc { x: root.hairlineOffset; y: root.height - root.radius; radiusX: root.radius - root.hairlineOffset; radiusY: root.radius - root.hairlineOffset }
+            PathLine { x: root.hairlineOffset; y: root.radius }
+            PathArc { x: root.radius; y: root.hairlineOffset; radiusX: root.radius - root.hairlineOffset; radiusY: root.radius - root.hairlineOffset }
         }
     }
 
@@ -94,7 +118,13 @@ Rectangle {
         anchors.fill: parent
         visible: root.isTrans && !root.isActive
         layer.enabled: true
-        opacity: 0.4
+        opacity: root.transparentHatchOpacity
+
+        // Diagonal hatch line anchor ratios (start and end points as fractions of key size)
+        readonly property real hatchStart1: 0.35
+        readonly property real hatchStart2: 0.75
+        readonly property real hatchEnd1: 0.25
+        readonly property real hatchEnd2: 0.65
 
         ShapePath {
             strokeColor: Color.muted
@@ -103,8 +133,8 @@ Rectangle {
             fillColor: "transparent"
 
             startX: 0
-            startY: root.height * 0.35
-            PathLine { x: root.width * 0.35; y: 0 }
+            startY: parent.height * hatchStart1
+            PathLine { x: parent.width * hatchStart1; y: 0 }
         }
         ShapePath {
             strokeColor: Color.muted
@@ -113,8 +143,8 @@ Rectangle {
             fillColor: "transparent"
 
             startX: 0
-            startY: root.height * 0.75
-            PathLine { x: root.width * 0.75; y: 0 }
+            startY: parent.height * hatchStart2
+            PathLine { x: parent.width * hatchStart2; y: 0 }
         }
         ShapePath {
             strokeColor: Color.muted
@@ -122,9 +152,9 @@ Rectangle {
             strokeStyle: ShapePath.SolidLine
             fillColor: "transparent"
 
-            startX: root.width * 0.25
-            startY: root.height
-            PathLine { x: root.width; y: root.height * 0.25 }
+            startX: parent.width * hatchEnd1
+            startY: parent.height
+            PathLine { x: parent.width; y: parent.height * hatchEnd1 }
         }
         ShapePath {
             strokeColor: Color.muted
@@ -132,9 +162,9 @@ Rectangle {
             strokeStyle: ShapePath.SolidLine
             fillColor: "transparent"
 
-            startX: root.width * 0.65
-            startY: root.height
-            PathLine { x: root.width; y: root.height * 0.65 }
+            startX: parent.width * hatchEnd2
+            startY: parent.height
+            PathLine { x: parent.width; y: parent.height * hatchEnd2 }
         }
     }
 
@@ -143,9 +173,9 @@ Rectangle {
         id: cornerGlyph
         anchors.top: parent.top
         anchors.left: parent.left
-        anchors.topMargin: Style.space(2.5)
-        anchors.leftMargin: Style.space(3)
-        width: Style.space(10)
+        anchors.topMargin: root.cornerGlyphTopMargin
+        anchors.leftMargin: root.cornerGlyphLeftMargin
+        width: root.cornerGlyphSize
         height: width
         opacity: root.isTrans ? 0.75 : 1.0
         visible: root.keyGlyph !== "" && root.keyText !== ""
@@ -182,7 +212,7 @@ Rectangle {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         lineHeight: 1.0
-        width: parent.width - Style.space(4)
+        width: parent.width - root.textSideMargin * 2
         opacity: root.isTrans ? 0.75 : 1.0
         visible: root.keyText !== ""
     }
@@ -190,7 +220,7 @@ Rectangle {
     // 3. Standalone Glyph (when keyText is empty)
     Item {
         anchors.centerIn: parent
-        width: Math.min(parent.width * 0.48, Style.space(16))
+        width: Math.min(parent.width * root.standaloneGlyphMaxRatio, root.standaloneGlyphMaxSize)
         height: width
         opacity: root.isTrans ? 0.75 : 1.0
         visible: root.keyGlyph !== "" && root.keyText === ""

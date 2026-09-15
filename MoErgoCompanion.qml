@@ -16,6 +16,13 @@ Panel {
     implicitWidth: visible ? button.implicitWidth : 0
     implicitHeight: visible ? button.implicitHeight : 0
 
+    // Timing and layout constants
+    readonly property int hotplugDebounceIntervalMs: 250
+    readonly property int statusPollIntervalMs: 30000
+    readonly property real panelContentWidth: Style.space(900)
+    readonly property real panelContentHeight: Style.space(560)
+    readonly property real buttonHorizontalMargin: Style.space(6)
+
     // State
     property var parsedLayout: null
     property int currentLayerIndex: 0
@@ -177,14 +184,14 @@ Panel {
 
     Timer {
         id: hotplugDebounceTimer
-        interval: 250
+        interval: root.hotplugDebounceIntervalMs
         repeat: false
         onTriggered: root.refreshStatus()
     }
 
-    // Periodic polling every 30 seconds
+    // Periodic polling for hardware status
     Timer {
-        interval: 30000
+        interval: root.statusPollIntervalMs
         running: true
         repeat: true
         triggeredOnStart: true
@@ -220,7 +227,7 @@ Panel {
         bar: root.bar
         text: root.statusText
         fontSize: Style.font.caption
-        horizontalMargin: Style.space(6)
+        horizontalMargin: root.buttonHorizontalMargin
         tooltipText: root.statusTooltip + " — Click to view layout"
         onPressed: root.toggle()
     }
@@ -231,8 +238,8 @@ Panel {
         owner: root
         bar: root.bar
         open: root.opened
-        contentWidth: Style.space(900)
-        contentHeight: Style.space(560)
+        contentWidth: root.panelContentWidth
+        contentHeight: root.panelContentHeight
         focusTarget: keyCatcher
 
         PanelKeyCatcher {

@@ -16,6 +16,15 @@ Rectangle {
     property var layout: null
     property int currentTab: 0
 
+    // Layout constants
+    readonly property real contentMargin: Style.space(12)
+    readonly property real tabRowSpacing: Style.space(6)
+    readonly property real bodySpacing: Style.space(8)
+    readonly property real dividerHeight: 1
+    readonly property real dividerOpacity: 0.25
+    readonly property real codeLineHeight: 1.25
+    readonly property int firstLineNumber: 1
+
     function copyCurrentBody() {
         var key = root.tabs[root.currentTab] ? root.tabs[root.currentTab].key : "";
         var body = root.bodyFor(key);
@@ -49,13 +58,13 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: Style.space(12)
-        spacing: Style.space(12)
+        anchors.margins: root.contentMargin
+        spacing: root.contentMargin
 
         RowLayout {
             id: tabRow
             Layout.fillWidth: true
-            spacing: Style.space(6)
+            spacing: root.tabRowSpacing
 
             Repeater {
                 model: root.tabs
@@ -79,9 +88,9 @@ Rectangle {
 
         Rectangle {
             Layout.fillWidth: true
-            height: 1
+            height: root.dividerHeight
             color: Color.foreground
-            opacity: 0.25
+            opacity: root.dividerOpacity
         }
 
         Flickable {
@@ -96,7 +105,7 @@ Rectangle {
 
             Row {
                 id: bodyRow
-                spacing: Style.space(8)
+                spacing: root.bodySpacing
 
                 Text {
                     id: lineNumberText
@@ -104,7 +113,7 @@ Rectangle {
                         var body = root.bodyFor(root.tabs[root.currentTab] ? root.tabs[root.currentTab].key : "");
                         var count = body.split("\n").length;
                         var lines = [];
-                        for (var i = 1; i <= count; i++) {
+                        for (var i = root.firstLineNumber; i < root.firstLineNumber + count; i++) {
                             lines.push(i);
                         }
                         return lines.join("\n");
@@ -112,7 +121,7 @@ Rectangle {
                     font.family: Style.font.family
                     font.pixelSize: Style.font.bodySmall
                     color: Color.muted
-                    lineHeight: 1.25
+                    lineHeight: root.codeLineHeight
                     textFormat: Text.PlainText
                 }
 
@@ -123,7 +132,7 @@ Rectangle {
                     font.pixelSize: Style.font.bodySmall
                     color: Color.foreground
                     wrapMode: Text.NoWrap
-                    lineHeight: 1.25
+                    lineHeight: root.codeLineHeight
                     textFormat: Text.PlainText
                 }
             }

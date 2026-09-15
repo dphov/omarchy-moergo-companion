@@ -9,6 +9,9 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
+const UUID_LEN: usize = 36;
+const UUID_HYPHEN_INDICES: &[usize] = &[8, 13, 18, 23];
+
 fn default_title_from_path<P: AsRef<Path>>(path: P) -> String {
     let path = path.as_ref();
     let stem = path
@@ -21,15 +24,15 @@ fn default_title_from_path<P: AsRef<Path>>(path: P) -> String {
     let s = stem.trim();
     let after_uuid = s
         .char_indices()
-        .nth(36)
+        .nth(UUID_LEN)
         .and_then(|(pos, _c)| {
             let prefix = &s[..pos];
-            let is_uuid = prefix.len() == 36
+            let is_uuid = prefix.len() == UUID_LEN
                 && prefix.bytes().enumerate().all(|(i, b)| {
                     b.is_ascii_hexdigit()
-                        || (i == 8 || i == 13 || i == 18 || i == 23) && b == b'-'
+                        || UUID_HYPHEN_INDICES.contains(&i) && b == b'-'
                 })
-                && [8, 13, 18, 23].iter().all(|&i| prefix.as_bytes()[i] == b'-');
+                && UUID_HYPHEN_INDICES.iter().all(|&i| prefix.as_bytes()[i] == b'-');
             if is_uuid {
                 let rest = &s[pos..];
                 Some(rest.strip_prefix('_').or_else(|| rest.strip_prefix('-')).unwrap_or(rest).trim_start())
