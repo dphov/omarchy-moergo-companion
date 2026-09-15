@@ -37,7 +37,7 @@ def _write_empty(output_json: str) -> None:
 
 def _parse(keymap_file: str, output_json: str) -> bool:
     script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    parser_cmd = [sys.executable, "-m", "keymap_parser", keymap_file]
+    parser_cmd = [os.path.join(script_dir, "bin", "omarchy-moergo-keymap-parser"), keymap_file]
     tmp = f"{output_json}.tmp"
 
     data: dict = {"layers": []}

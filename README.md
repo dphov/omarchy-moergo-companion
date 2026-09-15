@@ -34,35 +34,40 @@ MoErgo Glove80 visualizer and hardware status plugin for [Omarchy shell](https:/
 │   ├── Glove80Matrix.qml           # Physical key matrix positioning and geometry
 │   ├── KeyCap.qml                  # Keycap rendering, borders, tooltips, interaction
 │   └── MoErgoCompanionLayerTabs.qml # Dynamic paginated layer selector
-├── keymap_parser/                  # Decoupled Python ZMK keymap parser
-│   ├── __init__.py
-│   ├── __main__.py                 # CLI entry point
-│   ├── behaviors.py                # ZMK behavior arity lookup
-│   ├── descriptions.py             # Tooltip title/description tables
-│   ├── layers.py                   # Layer name extraction/humanization
-│   ├── legends.py                  # Key legend mapping tables
-│   ├── models.py                   # Key/Layer dataclasses
-│   ├── parser.py                   # Keymap parsing orchestration
-│   ├── reader.py                   # File I/O and comment stripping
-│   ├── tokenizer.py                # Bindings tokenization
-│   └── transparency.py             # &trans fall-through resolution
+├── keymap-parser/                  # Rust ZMK keymap and Glove80 JSON parser
+│   ├── Cargo.toml
+│   ├── src/
+│   │   ├── main.rs                 # CLI entry point
+│   │   ├── lib.rs
+│   │   ├── parser.rs               # Keymap parsing orchestration
+│   │   ├── reader.rs               # File I/O and comment stripping
+│   │   ├── tokenizer.rs            # Bindings tokenization
+│   │   ├── behaviors.rs            # ZMK behavior arity lookup
+│   │   ├── legends.rs              # Key legend mapping tables
+│   │   ├── descriptions.rs         # Tooltip title/description tables
+│   │   ├── glyphs.rs               # SVG glyph category lookup
+│   │   ├── layers.rs               # Layer name extraction/humanization
+│   │   ├── json_layout.rs          # Glove80 layout-editor JSON adapter
+│   │   ├── transparency.rs         # &trans fall-through resolution
+│   │   └── models.rs               # Key/Layer data structures
+│   └── tests/fixtures/             # Golden JSON integration tests
 ├── bin/
 │   ├── moergo-companion-settings   # Plugin settings read/write helper with validation
 │   ├── glove80-status              # Python hardware monitor (USB sysfs + BlueZ/UPower)
-│   └── moergo-watcher              # Polls keymap/JSON file and streams layout JSON to QML
-├── parse_keymap.py                 # Thin CLI wrapper for the Python parser
-└── install.sh                      # Installs plugin
+│   ├── moergo-watcher              # Polls keymap/JSON file and streams layout JSON to QML
+│   └── omarchy-moergo-keymap-parser # Compiled native keymap parser (built by install.sh)
+└── install.sh                      # Builds Rust parser and installs plugin
 ```
 
-> Note: the previous `watcher.sh` was replaced by `bin/moergo-watcher` to avoid inotifywait fragility. The C parser was replaced by the decoupled Python `keymap_parser` package.
+> Note: the previous `watcher.sh` was replaced by `bin/moergo-watcher` to avoid inotifywait fragility. The keymap parser is now a Rust crate that compiles to the native `bin/omarchy-moergo-keymap-parser` binary. Python remains only for the hardware status and settings helpers.
 
 ## Dependencies
 
 - Omarchy shell with bar-widget support
-- `python3` with standard library (used by the keymap parser and `bin/glove80-status`)
-- `inotifywait` from `inotify-tools` (keymap file watcher)
+- Rust toolchain (`cargo`) to build the keymap parser
+- `python3` with standard library (used by `bin/glove80-status` and `bin/moergo-companion-settings`)
 - `upower`, `bluez` / `bluetoothctl`, `udevadm` (hardware status and battery monitoring)
-- A local Glove80 ZMK keymap at `~/.dotfiles/zmk/config/glove80.keymap` (or edit `Glove80.qml` to point elsewhere)
+- A local Glove80 ZMK keymap at `~/.dotfiles/zmk/config/glove80.keymap` (or edit the keymap path in the dashboard settings)
 
 ## Installation
 
@@ -80,7 +85,19 @@ omarchy-restart-shell
 omarchy-restart-shell
 ```
 
-The Python parser is invoked automatically by `watcher.sh`; no separate build step is required.
+`install.sh` builds the Rust keymap parser in release mode and places the
+resulting `bin/omarchy-moergo-keymap-parser` binary alongside the other helpers.
+No separate `cargo` command is required.
+
+To build the parser manually:
+
+```bash
+cd keymap-parser
+cargo build --release
+```
+
+The compiled binary will be at
+`keymap-parser/target/release/omarchy-moergo-keymap-parser`.
 
 ## Removal
 

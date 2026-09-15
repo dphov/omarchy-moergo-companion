@@ -1,0 +1,232 @@
+pub fn describe_key_code(raw: &str, humanized: &str) -> (String, String) {
+    if raw.is_empty() {
+        return (String::new(), String::new());
+    }
+
+    if let Some((title, desc)) = output_description(raw) {
+        return (title.into(), desc.into());
+    }
+
+    if raw.starts_with("&bt_") || raw.starts_with("bt_") {
+        let prefix_len = if raw.starts_with('&') { 4 } else { 3 };
+        let profile: usize = raw[prefix_len..].parse().unwrap_or(0);
+        return (
+            format!("Bluetooth Profile {}", profile + 1),
+            format!(
+                "Switches active Bluetooth connection to profile {}.",
+                profile + 1
+            ),
+        );
+    }
+
+    if let Some((title, desc)) = bt_description(raw) {
+        return (title.into(), desc.into());
+    }
+
+    if raw.starts_with("&magic") {
+        return (
+            "Magic Layer".into(),
+            "Momentary switch to Glove80 hardware configuration and pairing layer.".into(),
+        );
+    }
+    if raw == "&layer_td" {
+        return (
+            "Layer Tap-Dance".into(),
+            "Tap to toggle layer, hold to temporarily access the Lower layer.".into(),
+        );
+    }
+    if raw == "&to FACTORY_TEST" {
+        return (
+            "To Layer: Test".into(),
+            "Switches keyboard layer to the factory test layer.".into(),
+        );
+    }
+    if raw == "&to DEFAULT" {
+        return (
+            "To Layer: Base".into(),
+            "Switches keyboard layer back to the default Base layer.".into(),
+        );
+    }
+
+    if let Some((title, desc)) = firmware_description(raw) {
+        return (title.into(), desc.into());
+    }
+
+    if let Some(rgb) = raw.strip_prefix("&rgb_ug ") {
+        return rgb_description(rgb);
+    }
+    if let Some(rgb) = raw.strip_prefix("rgb_ug ") {
+        return rgb_description(rgb);
+    }
+
+    let key = raw.strip_prefix("&kp ").unwrap_or(raw);
+
+    if let Some((title, desc)) = key_description(key) {
+        return (title.into(), desc.into());
+    }
+
+    if key.len() > 4
+        && key.starts_with("KP_N")
+        && key
+            .chars()
+            .nth(4)
+            .map(|c| c.is_ascii_digit())
+            .unwrap_or(false)
+    {
+        let digit = key.chars().nth(4).unwrap();
+        return (
+            format!("Keypad {digit}"),
+            format!("Types keypad number {digit}."),
+        );
+    }
+
+    if !humanized.is_empty() {
+        let clean = humanized.replace('\n', " ");
+        return (format!("Key: {clean}"), String::new());
+    }
+
+    (String::new(), String::new())
+}
+
+fn output_description(raw: &str) -> Option<(&'static str, &'static str)> {
+    match raw {
+        "&out OUT_USB" | "out OUT_USB" => Some((
+            "Output Selection USB",
+            "Allows selecting whether keyboard output is sent to the USB or bluetooth connection when both are connected.",
+        )),
+        "&out OUT_BLE" | "out OUT_BLE" => Some((
+            "Output Selection BLE",
+            "Allows selecting whether keyboard output is sent to the USB or bluetooth connection when both are connected.",
+        )),
+        _ => None,
+    }
+}
+
+fn bt_description(raw: &str) -> Option<(&'static str, &'static str)> {
+    match raw {
+        "&bt BT_CLR" | "BT_CLR" => Some((
+            "Bluetooth Clear Profile",
+            "Clears the pairing record for the currently selected Bluetooth profile.",
+        )),
+        "&bt BT_CLR_ALL" | "BT_CLR_ALL" => Some((
+            "Bluetooth Clear All Profiles",
+            "Clears all saved Bluetooth pairing records on the keyboard.",
+        )),
+        _ => None,
+    }
+}
+
+fn firmware_description(raw: &str) -> Option<(&'static str, &'static str)> {
+    match raw {
+        "&bootloader" => Some((
+            "Bootloader Mode",
+            "Reboots keyboard into UF2 mass-storage bootloader mode for firmware flashing.",
+        )),
+        "&sys_reset" => Some((
+            "System Reset",
+            "Performs a hardware reset on the keyboard controller.",
+        )),
+        _ => None,
+    }
+}
+
+fn rgb_description(rgb: &str) -> (String, String) {
+    let (title, desc): (&str, &str) = match rgb {
+        "RGB_TOG" => (
+            "RGB Underglow Toggle",
+            "Toggles underglow RGB lighting on or off.",
+        ),
+        "RGB_EFF" => (
+            "RGB Underglow Effect",
+            "Cycles through underglow RGB animation effects.",
+        ),
+        "RGB_BRI" => ("RGB Brightness Up", "Increases underglow RGB brightness."),
+        "RGB_BRD" => ("RGB Brightness Down", "Decreases underglow RGB brightness."),
+        "RGB_HUI" => ("RGB Hue Up", "Increases underglow RGB color hue."),
+        "RGB_HUD" => ("RGB Hue Down", "Decreases underglow RGB color hue."),
+        "RGB_SAI" => (
+            "RGB Saturation Up",
+            "Increases underglow RGB color saturation.",
+        ),
+        "RGB_SAD" => (
+            "RGB Saturation Down",
+            "Decreases underglow RGB color saturation.",
+        ),
+        "RGB_SPI" => (
+            "RGB Speed Up",
+            "Increases animation speed of underglow RGB effects.",
+        ),
+        "RGB_SPD" => (
+            "RGB Speed Down",
+            "Decreases animation speed of underglow RGB effects.",
+        ),
+        _ => ("", ""),
+    };
+    if title.is_empty() {
+        (format!("RGB Underglow {rgb}"), desc.into())
+    } else {
+        (title.into(), desc.into())
+    }
+}
+
+fn key_description(key: &str) -> Option<(&'static str, &'static str)> {
+    match key {
+        "C_BRI_UP" => Some(("Brightness Up", "Increases display brightness.")),
+        "C_BRI_DN" => Some(("Brightness Down", "Decreases display brightness.")),
+        "C_VOL_UP" => Some(("Volume Up", "Increases audio output volume.")),
+        "C_VOL_DN" => Some(("Volume Down", "Decreases audio output volume.")),
+        "C_MUTE" => Some(("Mute Audio", "Mutes or unmutes audio output.")),
+        "C_PP" => Some(("Play / Pause", "Toggles media playback.")),
+        "C_NEXT" => Some(("Next Track", "Skips to the next media track.")),
+        "C_PREV" => Some(("Previous Track", "Skips to the previous media track.")),
+        "PSCRN" => Some(("Print Screen", "Captures screenshot of the screen.")),
+        "PAUSE_BREAK" => Some(("Pause / Break", "Sends standard Pause/Break scancode.")),
+        "SLCK" => Some(("Scroll Lock", "Toggles scroll lock.")),
+        "CAPS" => Some(("Caps Lock", "Toggles uppercase lock.")),
+        "INS" => Some(("Insert", "Toggles insert or overwrite mode.")),
+        "K_CMENU" => Some(("Context Menu", "Opens application context menu.")),
+        "BSPC" => Some(("Backspace", "Deletes character before the cursor.")),
+        "DEL" => Some(("Delete", "Deletes character after the cursor.")),
+        "RET" => Some(("Enter / Return", "Sends Return / Enter key.")),
+        "SPACE" => Some(("Space", "Inserts a space character.")),
+        "TAB" => Some(("Tab", "Advances focus or inserts tab space.")),
+        "ESC" => Some(("Escape", "Sends Escape key.")),
+        "PG_UP" => Some(("Page Up", "Scrolls up one page.")),
+        "PG_DN" => Some(("Page Down", "Scrolls down one page.")),
+        "HOME" => Some(("Home", "Moves cursor to the start of the line.")),
+        "END" => Some(("End", "Moves cursor to the end of the line.")),
+        "LEFT" => Some(("Left Arrow", "Moves cursor left.")),
+        "RIGHT" => Some(("Right Arrow", "Moves cursor right.")),
+        "UP" => Some(("Up Arrow", "Moves cursor up.")),
+        "DOWN" => Some(("Down Arrow", "Moves cursor down.")),
+        "LSHFT" => Some(("Shift Modifier", "Shift key modifier.")),
+        "RSHFT" => Some(("Shift Modifier", "Shift key modifier.")),
+        "LCTRL" => Some(("Control Modifier", "Control key modifier.")),
+        "RCTRL" => Some(("Control Modifier", "Control key modifier.")),
+        "LALT" => Some(("Alt Modifier", "Alt / Option key modifier.")),
+        "RALT" => Some(("Alt Modifier", "Alt / Option key modifier.")),
+        "LGUI" => Some(("GUI / Super", "Command / Windows / Super key.")),
+        "RGUI" => Some(("GUI / Super", "Command / Windows / Super key.")),
+        "KP_NUM" => Some(("Num Lock", "Toggles numeric keypad lock.")),
+        "KP_ENTER" => Some(("Keypad Enter", "Sends keypad Enter key.")),
+        _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn describes_bt_profile() {
+        let (title, desc) = describe_key_code("&bt_2", "BT\n3");
+        assert_eq!(title, "Bluetooth Profile 3");
+        assert!(desc.contains("profile 3"));
+    }
+
+    #[test]
+    fn describes_media_key() {
+        let (title, _) = describe_key_code("&kp C_PP", "Play");
+        assert_eq!(title, "Play / Pause");
+    }
+}

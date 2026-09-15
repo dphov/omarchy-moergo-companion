@@ -1,0 +1,41 @@
+/* Glove80 sample keymap for parser testing. */
+#include <behaviors.dtsi>
+
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+
+        default_layer {
+            bindings = <
+                &kp ESC   &kp N1    &kp N2    &kp N3
+                &kp TAB   &kp Q     &kp W     &kp E
+                &kp LSHFT &kp A     &kp S     &kp D
+                &kp LCTRL &kp Z     &kp X     &kp C
+                &kp LEFT  &kp RIGHT &kp UP    &kp DOWN
+                &none     &kp SPACE &kp BSPC  &kp RET
+            >;
+        };
+
+        lower_layer {
+            bindings = <
+                &trans    &kp F1    &kp F2    &kp F3
+                &trans    &kp EXCL  &kp AT    &kp HASH
+                &trans    &trans    &trans    &trans
+                &trans    &kp LPAR  &kp RPAR  &kp PRCNT
+                &kp HOME  &kp END   &kp PG_UP &kp PG_DN
+                &trans    &trans    &kp DEL   &trans
+            >;
+        };
+
+        magic_layer {
+            bindings = <
+                &bootloader &sys_reset &none     &none
+                &bt BT_CLR  &bt_0      &bt_1     &bt_2
+                &out OUT_USB &out OUT_BLE &rgb_ug RGB_TOG &rgb_ug RGB_EFF
+                &rgb_ug RGB_BRI &rgb_ug RGB_BRK &none &none
+                &none       &none      &none     &none
+                &to DEFAULT &to FACTORY_TEST &none &none
+            >;
+        };
+    };
+};

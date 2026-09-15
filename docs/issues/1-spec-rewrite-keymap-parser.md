@@ -15,20 +15,21 @@ Replace the Python `keymap_parser/` package with a Rust crate that produces a dr
 
 ## Implementation checklist
 
-- [ ] Scaffold Rust crate (`Cargo.toml`, `src/main.rs`, `src/lib.rs`).
-- [ ] Port comment stripping and `keymap { ... }` / `bindings = <...>` extraction.
-- [ ] Port behavior arity, legend, description, glyph, and layer-name lookup tables.
-- [ ] Port `.json` Glove80 layout-editor parser.
-- [ ] Port transparent-key (`&trans`) fall-through resolver.
-- [ ] Emit identical JSON output schema on stdout.
-- [ ] Update `bin/moergo-watcher` to call the Rust binary.
-- [ ] Wire Rust build into `install.sh`.
-- [ ] Remove Python `keymap_parser/` package and `parse_keymap.py`.
-- [ ] Add unit and golden JSON integration tests.
-- [ ] Update README to document the Rust build step.
+- [x] Scaffold Rust crate (`Cargo.toml`, `src/main.rs`, `src/lib.rs`).
+- [x] Port comment stripping and `keymap { ... }` / `bindings = <...>` extraction.
+- [x] Port behavior arity, legend, description, glyph, and layer-name lookup tables.
+- [x] Port `.json` Glove80 layout-editor parser.
+- [x] Port transparent-key (`&trans`) fall-through resolver.
+- [x] Emit identical JSON output schema on stdout.
+- [x] Update `bin/moergo-watcher` to call the Rust binary.
+- [x] Wire Rust build into `install.sh`.
+- [x] Remove Python `keymap_parser/` package and `parse_keymap.py`.
+- [x] Add unit and golden JSON integration tests.
+- [x] Update README to document the Rust build step.
 
 ## Notes
 
 - No QML changes.
 - No full C/DeviceTree preprocessor.
 - `bin/glove80-status` and `bin/moergo-companion-settings` stay Python for now.
+- `bin/moergo-companion-settings` was updated to validate keymap paths by invoking the new Rust binary instead of importing the removed Python `keymap_parser` package.

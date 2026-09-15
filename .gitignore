@@ -9,3 +9,9 @@ wheels/
 # Virtual environments
 .venv
 parser
+
+# Rust build artifacts
+keymap-parser/target/
+
+# Compiled native parser binary (rebuilt by install.sh)
+bin/omarchy-moergo-keymap-parser

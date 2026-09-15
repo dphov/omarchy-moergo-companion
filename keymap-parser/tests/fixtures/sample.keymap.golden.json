@@ -1,0 +1,523 @@
+{
+  "layers": [
+    {
+      "name": "Base",
+      "keys": [
+        {
+          "text": "Esc",
+          "title": "Escape",
+          "desc": "Sends Escape key.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "!\n1",
+          "title": "Key: ! 1",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "@\n2",
+          "title": "Key: @ 2",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "#\n3",
+          "title": "Key: # 3",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "Tab",
+          "title": "Tab",
+          "desc": "Advances focus or inserts tab space.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "Q",
+          "title": "Key: Q",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "W",
+          "title": "Key: W",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "E",
+          "title": "Key: E",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "Shift",
+          "title": "Shift Modifier",
+          "desc": "Shift key modifier.",
+          "trans": false,
+          "glyph": "modifier"
+        },
+        {
+          "text": "A",
+          "title": "Key: A",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "S",
+          "title": "Key: S",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "D",
+          "title": "Key: D",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "Control",
+          "title": "Control Modifier",
+          "desc": "Control key modifier.",
+          "trans": false,
+          "glyph": "modifier"
+        },
+        {
+          "text": "Z",
+          "title": "Key: Z",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "X",
+          "title": "Key: X",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "C",
+          "title": "Key: C",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "\u2190",
+          "title": "Left Arrow",
+          "desc": "Moves cursor left.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "\u2192",
+          "title": "Right Arrow",
+          "desc": "Moves cursor right.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "\u2191",
+          "title": "Up Arrow",
+          "desc": "Moves cursor up.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "\u2193",
+          "title": "Down Arrow",
+          "desc": "Moves cursor down.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "",
+          "title": "",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "Space",
+          "title": "Space",
+          "desc": "Inserts a space character.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "Bksp",
+          "title": "Backspace",
+          "desc": "Deletes character before the cursor.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "Enter",
+          "title": "Enter / Return",
+          "desc": "Sends Return / Enter key.",
+          "trans": false,
+          "glyph": ""
+        }
+      ]
+    },
+    {
+      "name": "Lower",
+      "keys": [
+        {
+          "text": "Esc",
+          "title": "Escape",
+          "desc": "Sends Escape key.",
+          "trans": true,
+          "glyph": ""
+        },
+        {
+          "text": "F1",
+          "title": "Key: F1",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "F2",
+          "title": "Key: F2",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "F3",
+          "title": "Key: F3",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "Tab",
+          "title": "Tab",
+          "desc": "Advances focus or inserts tab space.",
+          "trans": true,
+          "glyph": ""
+        },
+        {
+          "text": "EXCL",
+          "title": "Key: EXCL",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "AT",
+          "title": "Key: AT",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "HASH",
+          "title": "Key: HASH",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "Shift",
+          "title": "Shift Modifier",
+          "desc": "Shift key modifier.",
+          "trans": true,
+          "glyph": ""
+        },
+        {
+          "text": "A",
+          "title": "Key: A",
+          "desc": "",
+          "trans": true,
+          "glyph": ""
+        },
+        {
+          "text": "S",
+          "title": "Key: S",
+          "desc": "",
+          "trans": true,
+          "glyph": ""
+        },
+        {
+          "text": "D",
+          "title": "Key: D",
+          "desc": "",
+          "trans": true,
+          "glyph": ""
+        },
+        {
+          "text": "Control",
+          "title": "Control Modifier",
+          "desc": "Control key modifier.",
+          "trans": true,
+          "glyph": ""
+        },
+        {
+          "text": "(",
+          "title": "Key: (",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": ")",
+          "title": "Key: )",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "%",
+          "title": "Key: %",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "Home",
+          "title": "Home",
+          "desc": "Moves cursor to the start of the line.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "End",
+          "title": "End",
+          "desc": "Moves cursor to the end of the line.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "PgUp",
+          "title": "Page Up",
+          "desc": "Scrolls up one page.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "PgDn",
+          "title": "Page Down",
+          "desc": "Scrolls down one page.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "",
+          "title": "",
+          "desc": "",
+          "trans": true,
+          "glyph": ""
+        },
+        {
+          "text": "Space",
+          "title": "Space",
+          "desc": "Inserts a space character.",
+          "trans": true,
+          "glyph": ""
+        },
+        {
+          "text": "Delete",
+          "title": "Delete",
+          "desc": "Deletes character after the cursor.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "Enter",
+          "title": "Enter / Return",
+          "desc": "Sends Return / Enter key.",
+          "trans": true,
+          "glyph": ""
+        }
+      ]
+    },
+    {
+      "name": "Magic",
+      "keys": [
+        {
+          "text": "Boot",
+          "title": "Bootloader Mode",
+          "desc": "Reboots keyboard into UF2 mass-storage bootloader mode for firmware flashing.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "Reset",
+          "title": "System Reset",
+          "desc": "Performs a hardware reset on the keyboard controller.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "",
+          "title": "",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "",
+          "title": "",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "BT\nClr",
+          "title": "Bluetooth Clear Profile",
+          "desc": "Clears the pairing record for the currently selected Bluetooth profile.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "BT\n1",
+          "title": "Bluetooth Profile 1",
+          "desc": "Switches active Bluetooth connection to profile 1.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "BT\n2",
+          "title": "Bluetooth Profile 2",
+          "desc": "Switches active Bluetooth connection to profile 2.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "BT\n3",
+          "title": "Bluetooth Profile 3",
+          "desc": "Switches active Bluetooth connection to profile 3.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "USB",
+          "title": "Output Selection USB",
+          "desc": "Allows selecting whether keyboard output is sent to the USB or bluetooth connection when both are connected.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "BLE",
+          "title": "Output Selection BLE",
+          "desc": "Allows selecting whether keyboard output is sent to the USB or bluetooth connection when both are connected.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "RGB\nTog",
+          "title": "RGB Underglow Toggle",
+          "desc": "Toggles underglow RGB lighting on or off.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "RGB\nEff",
+          "title": "RGB Underglow Effect",
+          "desc": "Cycles through underglow RGB animation effects.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "RGB\nBri+",
+          "title": "RGB Brightness Up",
+          "desc": "Increases underglow RGB brightness.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "RGB\nRGB_BRK",
+          "title": "RGB Underglow RGB_BRK",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "",
+          "title": "",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "",
+          "title": "",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "",
+          "title": "",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "",
+          "title": "",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "",
+          "title": "",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "",
+          "title": "",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "Base",
+          "title": "To Layer: Base",
+          "desc": "Switches keyboard layer back to the default Base layer.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "Test",
+          "title": "To Layer: Test",
+          "desc": "Switches keyboard layer to the factory test layer.",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "",
+          "title": "",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        },
+        {
+          "text": "",
+          "title": "",
+          "desc": "",
+          "trans": false,
+          "glyph": ""
+        }
+      ]
+    }
+  ]
+}

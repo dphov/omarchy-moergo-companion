@@ -3,12 +3,8 @@
 
 import json
 import os
+import subprocess
 import sys
-
-# Allow running from both source tree and installed plugin directory.
-_plugin_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _plugin_dir not in sys.path:
-    sys.path.insert(0, _plugin_dir)
 
 SETTINGS_FILE = os.path.join(
     os.path.expanduser("~/.config/omarchy"),
@@ -32,21 +28,36 @@ def _save(settings: dict) -> None:
         json.dump(settings, f, indent=2)
 
 
-def _validate_keymap(path: str) -> tuple[bool, str]:
-    from keymap_parser.parser import parse_keymap
+def _parser_binary() -> str:
+    plugin_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(plugin_dir, "bin", "omarchy-moergo-keymap-parser")
 
+
+def _validate_keymap(path: str) -> tuple[bool, str]:
     expanded = os.path.expanduser(path)
     if not os.path.exists(expanded):
         return False, f"File not found: {path}"
     if not os.path.isfile(expanded):
         return False, f"Not a file: {path}"
+
+    result = subprocess.run(
+        [_parser_binary(), expanded],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if result.returncode != 0:
+        return False, f"Failed to parse keymap: {result.stderr.strip() or 'unknown error'}"
+
     try:
-        layers = parse_keymap(expanded)
-        if not layers or all(len(layer.keys) == 0 for layer in layers):
-            return False, "No valid keymap layers found in file"
-        return True, ""
-    except Exception as exc:
-        return False, f"Failed to parse keymap: {exc}"
+        output = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        return False, f"Failed to parse keymap output: {exc}"
+
+    layers = output.get("layers", [])
+    if not layers or all(len(layer.get("keys", [])) == 0 for layer in layers):
+        return False, "No valid keymap layers found in file"
+    return True, ""
 
 
 def main() -> None:

@@ -3,5 +3,5 @@ name = "omarchy-moergo-companion"
 version = "0.1.0"
 description = "MoErgo Glove80 visualizer and hardware status plugin for Omarchy shell"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.10"
 dependencies = []

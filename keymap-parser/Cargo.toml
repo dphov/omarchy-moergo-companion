@@ -1,0 +1,18 @@
+[package]
+name = "omarchy-moergo-keymap-parser"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+description = "ZMK keymap and Glove80 layout-editor JSON parser for Omarchy MoErgo Companion"
+license = "MIT"
+
+[[bin]]
+name = "omarchy-moergo-keymap-parser"
+path = "src/main.rs"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[dev-dependencies]
+serde_json = "1.0"
