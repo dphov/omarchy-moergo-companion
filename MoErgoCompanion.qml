@@ -451,6 +451,8 @@ Panel {
                     tooltipText: "Clear search"
                     bordered: true
                     visible: layerSearchField.text !== ""
+                    Layout.preferredWidth: visible ? implicitWidth : 0
+                    Layout.maximumWidth: visible ? implicitWidth : 0
                     onClicked: layerSearchField.text = ""
                 }
             }
