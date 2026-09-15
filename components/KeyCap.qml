@@ -174,7 +174,8 @@ Rectangle {
         visible: mouse.containsMouse && (root.keyTitle !== "" || root.keyDesc !== "" || root.isLayerKey)
         delay: 200
         padding: Style.space(12)
-
+        x: (root.width - implicitWidth) / 2
+        y: (root.y > root.height * 2.5) ? (-implicitHeight - Style.space(10)) : (root.height + Style.space(8))
         background: Rectangle {
             color: Color.background
             border.color: Color.muted
