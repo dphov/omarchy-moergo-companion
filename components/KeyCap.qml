@@ -16,6 +16,7 @@ Rectangle {
     property string keyColor: ""
     property bool isActive: false
     property bool isTrans: false
+    readonly property string normalizedKeyText: keyText.replace(/\s+/g, " ").trim()
     readonly property bool isLayerKey: {
         var k = normalizedKeyText.toLowerCase();
         return k === "layer" || k === "base" || k === "lower" || k === "magic" || k === "test";
