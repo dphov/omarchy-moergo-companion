@@ -87,50 +87,55 @@ Rectangle {
         }
     }
 
-    Row {
-        anchors.centerIn: parent
-        spacing: Style.space(2)
+    // 1. Behavior icon: pinned to upper-left corner (MoErgo canonical layout)
+    Item {
+        id: cornerGlyph
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.topMargin: Style.space(2.5)
+        anchors.leftMargin: Style.space(3)
+        width: Style.space(10)
+        height: width
         visible: root.keyGlyph !== "" && root.keyText !== ""
 
-        Item {
-            id: glyphContainer
-            width: Math.min(root.width * 0.28, Style.space(10))
-            height: width
-            anchors.verticalCenter: parent.verticalCenter
-
-            Image {
-                id: rowGlyphImg
-                anchors.fill: parent
-                source: root.keyGlyph !== "" ? Qt.resolvedUrl("../assets/key-glyphs/" + root.keyGlyph + ".svg") : ""
-                fillMode: Image.PreserveAspectFit
-                opacity: (root.keyColor !== "" || root.keyTextColor !== "") ? 0 : 1
-            }
-
-            MultiEffect {
-                anchors.fill: parent
-                source: rowGlyphImg
-                visible: root.keyColor !== "" || root.keyTextColor !== ""
-                colorization: 1.0
-                colorizationColor: root.resolvedIconColor
-            }
+        Image {
+            id: cornerGlyphImg
+            anchors.fill: parent
+            source: root.keyGlyph !== "" ? Qt.resolvedUrl("../assets/key-glyphs/" + root.keyGlyph + ".svg") : ""
+            fillMode: Image.PreserveAspectFit
+            opacity: (root.keyColor !== "" || root.keyTextColor !== "") ? 0 : 1
         }
 
-        Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: root.keyText
-            font.family: Style.font.family
-            font.pixelSize: Style.font.caption
-            fontSizeMode: Text.Fit
-            minimumPixelSize: 7
-            font.bold: true
-            color: root.resolvedTextColor
-            wrapMode: Text.NoWrap
-            horizontalAlignment: Text.AlignLeft
-            lineHeight: 1.0
-            width: Math.min(implicitWidth, root.width - glyphContainer.width - Style.space(6))
+        MultiEffect {
+            anchors.fill: parent
+            source: cornerGlyphImg
+            visible: root.keyColor !== "" || root.keyTextColor !== ""
+            colorization: 1.0
+            colorizationColor: root.resolvedIconColor
         }
     }
 
+    // 2. Center Keycode / Parameter (MoErgo canonical layout)
+    Text {
+        anchors.centerIn: parent
+        anchors.verticalCenterOffset: (root.keyGlyph !== "" && root.keyText.indexOf("\n") === -1) ? Style.space(2) : 0
+        text: root.keyText
+        font.family: Style.font.family
+        font.pixelSize: Style.font.caption
+        fontSizeMode: Text.Fit
+        minimumPixelSize: 7
+        font.bold: true
+        color: root.resolvedTextColor
+        wrapMode: root.keyText.indexOf("\n") !== -1 ? Text.Wrap : Text.WordWrap
+        maximumLineCount: 2
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        lineHeight: 0.92
+        width: parent.width - Style.space(4)
+        visible: root.keyText !== ""
+    }
+
+    // 3. Standalone Glyph (when keyText is empty)
     Item {
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.48, Style.space(16))
@@ -154,21 +159,6 @@ Rectangle {
         }
     }
 
-    Text {
-        anchors.centerIn: parent
-        text: root.keyText
-        font.family: Style.font.family
-        font.pixelSize: Style.font.caption
-        fontSizeMode: Text.Fit
-        minimumPixelSize: 8
-        font.bold: true
-        color: root.resolvedTextColor
-        wrapMode: root.keyText.indexOf("\n") !== -1 ? Text.Wrap : Text.NoWrap
-        horizontalAlignment: Text.AlignHCenter
-        lineHeight: 1.0
-        width: parent.width - Style.space(2)
-        visible: root.keyGlyph === "" && root.keyText !== ""
-    }
     MouseArea {
         id: mouse
         anchors.fill: parent

@@ -13,7 +13,7 @@ pub fn describe_key_code(raw: &str, humanized: &str) -> (String, String) {
         return (
             format!("Bluetooth Profile {}", profile + 1),
             format!(
-                "Switches active Bluetooth connection to profile {}.",
+                "Quick-tap to connect to profile {}; double-tap to explicitly disconnect.",
                 profile + 1
             ),
         );
@@ -38,7 +38,26 @@ pub fn describe_key_code(raw: &str, humanized: &str) -> (String, String) {
     if raw == "&lower" || raw == "lower" {
         return (
             "Lower Layer".into(),
-            "Switches keyboard layer to the Lower layer.".into(),
+            "Hold to momentarily switch to Lower layer; double-tap to toggle.".into(),
+        );
+    }
+    if let Some(rest) = raw.strip_prefix("&layer ") {
+        let target = rest.trim();
+        return (
+            format!("Layer: {target}"),
+            format!("Hold to momentarily switch to {target} layer; double-tap to toggle."),
+        );
+    }
+    if raw == "&cap_word" || raw == "&caps_word" {
+        return (
+            "Caps Word".into(),
+            "Capitalizes letters until space or punctuation.".into(),
+        );
+    }
+    if raw == "&key_repeat" {
+        return (
+            "Key Repeat".into(),
+            "Repeats the last pressed key.".into(),
         );
     }
     if raw == "&to FACTORY_TEST" {
@@ -116,7 +135,7 @@ fn bt_description(raw: &str) -> Option<(&'static str, &'static str)> {
         )),
         "&bt BT_CLR_ALL" | "BT_CLR_ALL" => Some((
             "Bluetooth Clear All Profiles",
-            "Clears all saved Bluetooth pairing records on the keyboard.",
+            "Clears all saved Bluetooth pairing records on the keyboard (excluding right hand).",
         )),
         _ => None,
     }

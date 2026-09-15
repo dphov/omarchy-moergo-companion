@@ -39,6 +39,83 @@ pub fn humanize_key_code(raw: &str) -> String {
                             if let Some(rest) = raw.strip_prefix("to ") {
                                 return rest.to_string();
                             }
+                            if let Some(rest) = raw.strip_prefix("&tog ") {
+                                return format!("Tog {rest}");
+                            }
+                            if let Some(rest) = raw.strip_prefix("&mt ") {
+                                let parts: Vec<&str> = rest.split_whitespace().collect();
+                                if parts.len() >= 2 {
+                                    return humanize_key_code(parts[1]);
+                                }
+                            }
+                            if let Some(rest) = raw.strip_prefix("&hm ") {
+                                let parts: Vec<&str> = rest.split_whitespace().collect();
+                                if parts.len() >= 2 {
+                                    return humanize_key_code(parts[1]);
+                                }
+                            }
+                            if let Some(rest) = raw.strip_prefix("&lt ") {
+                                let parts: Vec<&str> = rest.split_whitespace().collect();
+                                if parts.len() >= 2 {
+                                    return humanize_key_code(parts[1]);
+                                }
+                            }
+                            if let Some(paren_start) = raw.find('(') {
+                                if let Some(paren_end) = raw[paren_start..].find(')') {
+                                    let inside = &raw[paren_start + 1..paren_start + paren_end];
+                                    let key_part = inside.split(',').next().unwrap_or(inside).trim();
+                                    if !key_part.is_empty() {
+                                        return humanize_key_code(key_part);
+                                    }
+                                }
+                            }
+                            if let Some(rest) = raw.strip_prefix("&sticky_key_modtap ") {
+                                if rest.contains("RSFT") {
+                                    return "RShift".into();
+                                }
+                                return "Shift".into();
+                            }
+                            if let Some(rest) = raw.strip_prefix("&thumb ") {
+                                let parts: Vec<&str> = rest.split_whitespace().collect();
+                                if parts.len() >= 2 {
+                                    return humanize_key_code(parts[1]);
+                                }
+                            }
+                            if let Some(rest) = raw.strip_prefix("&space ") {
+                                let parts: Vec<&str> = rest.split_whitespace().collect();
+                                if parts.len() >= 2 {
+                                    return humanize_key_code(parts[1]);
+                                }
+                                return "Space".into();
+                            }
+                            if let Some(rest) = raw.strip_prefix("&stumb ") {
+                                if rest.contains("Emoji") {
+                                    return "Emoji".into();
+                                }
+                                let parts: Vec<&str> = rest.split_whitespace().collect();
+                                if parts.len() >= 2 {
+                                    return humanize_key_code(parts[1]);
+                                }
+                            }
+                            match raw {
+                                "&thums_up" => return "MousUp".into(),
+                                "&thums_down" => return "MousDn".into(),
+                                "&parang_left" => return "( <".into(),
+                                "&parang_right" => return ") >".into(),
+                                _ => {}
+                            }
+                            if raw.contains("_tap") {
+                                return "Tap".into();
+                            }
+                            if raw.contains("Middy") {
+                                return "Ctrl".into();
+                            }
+                            if raw.contains("Ringy") {
+                                return "Alt".into();
+                            }
+                            if raw.contains("Index") && (raw.contains("Pinky") || raw.contains("Ringy") || raw.contains("Middy")) {
+                                return "Shift".into();
+                            }
                             if let Some(rgb) = raw.strip_prefix("&rgb_ug ") {
                                 return rgb_legend(rgb);
                             }

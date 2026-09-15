@@ -140,17 +140,12 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Vec<Layer>> {
                     }
                 }
                 if let Some(ic) = &dec.icon {
-                    if ic.starts_with("fa-") && ic.len() == 4 && ic.as_bytes()[3].is_ascii_digit() {
-                        humanized = ic[3..].to_string();
+                    let trimmed = ic.trim();
+                    if trimmed.starts_with("fa-") && trimmed.len() == 4 && trimmed.as_bytes()[3].is_ascii_digit() {
+                        humanized = trimmed[3..].to_string();
                         glyph = String::new();
-                    } else if ic.starts_with("fa-align-") || ic.contains("angle") || ic.contains("arrow") {
-                        glyph = "modifier".into();
-                    } else if ic.contains("circle-dot") {
-                        glyph = "tap".into();
-                    } else if ic.contains("finger") || ic.contains("win") {
-                        glyph = "system".into();
-                    } else if dec.label.is_some() {
-                        glyph = String::new();
+                    } else if !trimmed.is_empty() {
+                        glyph = trimmed.to_string();
                     }
                 } else if dec.label.is_some() {
                     glyph = String::new();
@@ -186,7 +181,7 @@ mod tests {
         let layers = parse_layout_json(&tmp).unwrap();
         assert_eq!(layers.len(), 1);
         assert_eq!(layers[0].keys[0].text, "A");
-        assert_eq!(layers[0].keys[1].text, "&tog 1");
+        assert_eq!(layers[0].keys[1].text, "Tog 1");
         assert_eq!(layers[0].keys[2].text, "&mo 2");
         std::fs::remove_file(&tmp).unwrap();
     }

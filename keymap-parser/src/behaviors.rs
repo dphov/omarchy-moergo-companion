@@ -1,10 +1,17 @@
 pub fn behavior_arity(behavior: &str) -> usize {
+    if behavior.contains('(') {
+        return 0;
+    }
     match behavior {
         "&none" | "none" | "&trans" | "trans" | "&sys_reset" | "&bootloader" | "&studio_unlock"
-        | "&layer_td" | "&lower" | "lower" => 0,
-        "&magic" => 2,
+        | "&layer_td" | "&lower" | "lower" | "&thums_up" | "&thums_down" | "&parang_left"
+        | "&parang_right" | "&cap_word" | "&caps_word" | "&key_repeat" | "&reset" => 0,
+        "&magic" | "&sticky_key_modtap" | "&thumb" | "&space" | "&stumb" => 2,
         _ => {
             if behavior.starts_with("&bt_") || behavior.starts_with("bt_") {
+                return 0;
+            }
+            if behavior.starts_with("&Left") || behavior.starts_with("&Right") {
                 return 0;
             }
             if behavior.starts_with("&mt")

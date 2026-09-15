@@ -387,21 +387,21 @@
         {
           "text": "BT\n1",
           "title": "Bluetooth Profile 1",
-          "desc": "Switches active Bluetooth connection to profile 1.",
+          "desc": "Quick-tap to connect to profile 1; double-tap to explicitly disconnect.",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "BT\n2",
           "title": "Bluetooth Profile 2",
-          "desc": "Switches active Bluetooth connection to profile 2.",
+          "desc": "Quick-tap to connect to profile 2; double-tap to explicitly disconnect.",
           "trans": false,
           "glyph": ""
         },
         {
           "text": "BT\n3",
           "title": "Bluetooth Profile 3",
-          "desc": "Switches active Bluetooth connection to profile 3.",
+          "desc": "Quick-tap to connect to profile 3; double-tap to explicitly disconnect.",
           "trans": false,
           "glyph": ""
         },
@@ -506,7 +506,7 @@
         {
           "text": "Lower",
           "title": "Lower Layer",
-          "desc": "Switches keyboard layer to the Lower layer.",
+          "desc": "Hold to momentarily switch to Lower layer; double-tap to toggle.",
           "trans": false,
           "glyph": ""
         },
