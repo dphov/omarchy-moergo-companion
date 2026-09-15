@@ -159,7 +159,7 @@ Item {
                 if (isHovered) {
                     root.hoveredPosition = (root.keyPositions && root.keyPositions.length > index) ? root.keyPositions[index] : "";
                     if (keyTitle !== "" || keyDesc !== "" || isLayerKey) {
-                        root.activeTitle = keyTitle !== "" ? keyTitle : (isLayerKey ? ("Switch to " + targetLayer + " layer") : keyText);
+                        root.activeTitle = keyTitle !== "" ? keyTitle : (isLayerKey ? ("Switch to " + targetLayer + " layer") : "");
                         root.activeDesc = keyDesc !== "" ? keyDesc : (isLayerKey ? ("Click to switch active layer tab to " + targetLayer + ".") : "");
                         root.activeKeyX = modelData.x * root.unitSize;
                         root.activeKeyY = modelData.y * root.unitSize - root.keyHeight / 2;
