@@ -40,3 +40,14 @@ clean:
 # Watch for changes and reload (requires cargo-watch and just)
 dev:
     cd keymap-parser && cargo watch -s 'just reload'
+
+# Create a version tag and push to trigger GitHub Actions automated release
+release version: test lint
+    @if [ -n "$$(git status --porcelain)" ]; then \
+        echo "Error: Working directory has uncommitted changes. Commit or stash them before releasing."; \
+        exit 1; \
+    fi
+    git push origin HEAD
+    git tag {{version}}
+    git push origin {{version}}
+    @echo "Tagged {{version}} and pushed. GitHub Actions release workflow is running."
