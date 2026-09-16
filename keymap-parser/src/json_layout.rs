@@ -161,7 +161,10 @@ fn json_val_to_str(val: &Value) -> String {
 
 fn normalize_hex_color(hex: &str) -> String {
     let trimmed = hex.trim();
-    if trimmed.starts_with('#') && trimmed.len() == 9 {
+    if trimmed.starts_with('#')
+        && trimmed.len() == 9
+        && trimmed[1..].bytes().all(|b| b.is_ascii_hexdigit())
+    {
         let alpha = &trimmed[7..9];
         let rgb = &trimmed[1..7];
         if alpha.eq_ignore_ascii_case("ff") {
@@ -332,5 +335,12 @@ mod tests {
         assert_eq!(layout.layers[0].keys[1].text, "Tog 1");
         assert_eq!(layout.layers[0].keys[2].text, "&mo 2");
         std::fs::remove_file(&tmp).unwrap();
+    }
+
+    #[test]
+    fn normalize_hex_color_does_not_panic_on_non_ascii() {
+        assert_eq!(normalize_hex_color("#aaaaa€"), "#aaaaa€");
+        assert_eq!(normalize_hex_color("#123456ff"), "#123456");
+        assert_eq!(normalize_hex_color("#12345680"), "#80123456");
     }
 }

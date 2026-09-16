@@ -1,4 +1,5 @@
 use omarchy_moergo_keymap_parser::parse_and_resolve;
+use omarchy_moergo_keymap_parser::runtime;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::env;
@@ -28,7 +29,7 @@ fn save_settings(settings: &HashMap<String, Value>) -> io::Result<()> {
         fs::create_dir_all(parent)?;
     }
     let text = serde_json::to_string_pretty(settings)?;
-    fs::write(path, text)
+    runtime::atomic_write(path, text.as_bytes())
 }
 
 fn validate_keymap<P: AsRef<Path>>(path: P) -> Result<(), String> {

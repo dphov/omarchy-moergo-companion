@@ -65,8 +65,6 @@ fn run_command(args: &[&str], timeout_secs: u64) -> Option<String> {
         .stderr(Stdio::null())
         .spawn()
         .ok()?;
-
-    let pid = child.id();
     let timeout = std::time::Duration::from_secs(timeout_secs);
     let start = std::time::Instant::now();
     let poll_interval = std::time::Duration::from_millis(CHILD_POLL_INTERVAL_MS);
@@ -86,9 +84,8 @@ fn run_command(args: &[&str], timeout_secs: u64) -> Option<String> {
             }
             None => {
                 if start.elapsed() >= timeout {
-                    unsafe {
-                        libc::kill(pid as libc::pid_t, libc::SIGTERM);
-                    }
+                    let _ = child.kill();
+                    let _ = child.wait();
                     return None;
                 }
                 std::thread::sleep(poll_interval);

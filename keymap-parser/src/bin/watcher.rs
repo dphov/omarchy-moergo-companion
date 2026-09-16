@@ -24,6 +24,8 @@ fn acquire_lock() -> io::Result<(File, PathBuf)> {
     let file = runtime::open_nofollow(&pid_path, true, true, true)?;
 
     let fd = file.as_raw_fd();
+    // SAFETY: `fd` is a valid file descriptor obtained from `file`, which remains
+    // open in scope. `flock` operates on the open descriptor and does not mutate Rust memory.
     let ret = unsafe { libc::flock(fd, libc::LOCK_EX | libc::LOCK_NB) };
     if ret != 0 {
         return Err(io::Error::last_os_error());

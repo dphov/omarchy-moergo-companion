@@ -12,6 +12,7 @@ pub fn strip_comments(source: &str) -> String {
     let bytes = source.as_bytes();
     let mut i = 0;
     let n = bytes.len();
+    let mut slice_start = 0;
     let mut in_line_comment = false;
     let mut in_block_comment = false;
 
@@ -22,6 +23,7 @@ pub fn strip_comments(source: &str) -> String {
             && bytes[i] == b'/'
             && bytes[i + 1] == b'/'
         {
+            out.push_str(&source[slice_start..i]);
             in_line_comment = true;
             i += 2;
             continue;
@@ -32,22 +34,26 @@ pub fn strip_comments(source: &str) -> String {
             && bytes[i] == b'/'
             && bytes[i + 1] == b'*'
         {
+            out.push_str(&source[slice_start..i]);
             in_block_comment = true;
             i += 2;
             continue;
         }
         if in_line_comment && bytes[i] == b'\n' {
             in_line_comment = false;
+            slice_start = i;
         }
         if in_block_comment && i + 1 < n && bytes[i] == b'*' && bytes[i + 1] == b'/' {
             in_block_comment = false;
             i += 2;
+            slice_start = i;
             continue;
         }
-        if !in_line_comment && !in_block_comment {
-            out.push(bytes[i] as char);
-        }
         i += 1;
+    }
+
+    if !in_line_comment && !in_block_comment && slice_start < n {
+        out.push_str(&source[slice_start..n]);
     }
 
     out
@@ -70,5 +76,13 @@ mod tests {
     #[test]
     fn strips_nested_looking_comments() {
         assert_eq!(strip_comments("/* a /* b */ c */"), " c */");
+    }
+
+    #[test]
+    fn preserves_non_ascii_unicode() {
+        assert_eq!(
+            strip_comments("слой // комментарий\nкириллица /* блок */ ⌨️"),
+            "слой \nкириллица  ⌨️"
+        );
     }
 }

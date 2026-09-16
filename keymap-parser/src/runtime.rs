@@ -19,6 +19,8 @@ pub const NOTIFY_STATE_FILENAME: &str = "glove80_battery_notified.json";
 
 /// Returns the current process UID.
 pub fn current_uid() -> u32 {
+    // SAFETY: libc::getuid is always safe to call as it queries the kernel for the
+    // current process UID without preconditions or memory side-effects.
     unsafe { libc::getuid() }
 }
 
