@@ -7,7 +7,7 @@ TARGET_DIR="$HOME/.config/omarchy/plugins/$PLUGIN_ID"
 echo "Building Rust keymap parser..."
 (
   cd "$(dirname "$0")/keymap-parser"
-  cargo build --release
+  cargo build --release --locked
 )
 
 # Ensure the native parser and watcher are available alongside the other helpers.

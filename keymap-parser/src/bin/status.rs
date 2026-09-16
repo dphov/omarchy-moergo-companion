@@ -1,10 +1,10 @@
+use omarchy_moergo_keymap_parser::runtime;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::process::{Command, Stdio};
 
-const NOTIFY_STATE_FILE: &str = "/tmp/glove80_battery_notified.json";
 const LOW_PCT: i64 = 20;
 const CRITICAL_PCT: i64 = 10;
 const RECOVERY_MARGIN: i64 = 5;
@@ -108,8 +108,10 @@ struct DeviceInfo {
 }
 
 fn get_device_info() -> DeviceInfo {
-    let mut dev = DeviceInfo::default();
-    dev.name = "Glove80".to_string();
+    let mut dev = DeviceInfo {
+        name: "Glove80".to_string(),
+        ..Default::default()
+    };
 
     let output = match run_command(
         &[
@@ -319,21 +321,36 @@ fn get_device_info() -> DeviceInfo {
 
     dev
 }
+fn default_notify_state() -> HashMap<String, bool> {
+    let mut m = HashMap::new();
+    m.insert("low".to_string(), false);
+    m.insert("critical".to_string(), false);
+    m
+}
 
 fn read_notify_state() -> HashMap<String, bool> {
-    fs::read_to_string(NOTIFY_STATE_FILE)
+    let path = match runtime::get_notify_state_path() {
+        Ok(p) => p,
+        Err(_) => return default_notify_state(),
+    };
+    if let Ok(meta) = fs::symlink_metadata(&path) {
+        if meta.file_type().is_symlink() {
+            eprintln!("Security violation: refusing to read notify state from symlink");
+            return default_notify_state();
+        }
+    }
+    fs::read_to_string(&path)
         .ok()
         .and_then(|s| serde_json::from_str(&s).ok())
-        .unwrap_or_else(|| {
-            let mut m = HashMap::new();
-            m.insert("low".to_string(), false);
-            m.insert("critical".to_string(), false);
-            m
-        })
+        .unwrap_or_else(default_notify_state)
 }
 
 fn save_notify_state(state: &HashMap<String, bool>) {
-    let _ = fs::write(NOTIFY_STATE_FILE, serde_json::to_string(state).unwrap_or_default());
+    if let Ok(path) = runtime::get_notify_state_path() {
+        if let Ok(json) = serde_json::to_string(state) {
+            let _ = runtime::atomic_write(&path, json.as_bytes());
+        }
+    }
 }
 
 fn send_notification(urgency: &str, icon: &str, title: &str, body: &str) {
@@ -346,11 +363,16 @@ fn send_notification(urgency: &str, icon: &str, title: &str, body: &str) {
 
 fn check_low_battery_notifications(battery: Option<i64>, charging: bool) {
     if battery.is_none() || charging {
-        let _ = fs::remove_file(NOTIFY_STATE_FILE);
+        if let Ok(path) = runtime::get_notify_state_path() {
+            if let Ok(meta) = fs::symlink_metadata(&path) {
+                if !meta.file_type().is_symlink() {
+                    let _ = fs::remove_file(path);
+                }
+            }
+        }
         return;
     }
     let battery = battery.unwrap();
-
     let mut state = read_notify_state();
 
     if battery >= LOW_PCT + RECOVERY_MARGIN {
@@ -472,11 +494,17 @@ fn get_status() -> Value {
     let text = if levels.len() >= 2 {
         format!("{icon}{l_str} {r_str}").trim().to_string()
     } else if usb.left && usb.right {
-        pct.map_or(format!("{icon}\u{26a1} USB"), |p| format!("{icon}\u{26a1} {p}%"))
+        pct.map_or(format!("{icon}\u{26a1} USB"), |p| {
+            format!("{icon}\u{26a1} {p}%")
+        })
     } else if usb.left {
-        pct.map_or(format!("{icon}\u{26a1} USB"), |p| format!("{icon}\u{26a1} {p}%"))
+        pct.map_or(format!("{icon}\u{26a1} USB"), |p| {
+            format!("{icon}\u{26a1} {p}%")
+        })
     } else if usb.right {
-        pct.map_or(format!("{icon}R\u{26a1}"), |p| format!("{icon}{p}% R\u{26a1}"))
+        pct.map_or(format!("{icon}R\u{26a1}"), |p| {
+            format!("{icon}{p}% R\u{26a1}")
+        })
     } else if let Some(p) = pct {
         format!("{icon}{p}%")
     } else if bt_conn {
@@ -496,7 +524,10 @@ fn get_status() -> Value {
     };
 
     let tooltip = if levels.len() >= 2 {
-        format!("MoErgo Glove80: Left {}%, Right {}% ({conn_mode})", levels[0], levels[1])
+        format!(
+            "MoErgo Glove80: Left {}%, Right {}% ({conn_mode})",
+            levels[0], levels[1]
+        )
     } else if let Some(p) = pct {
         format!("MoErgo Glove80: {p}% ({conn_mode})")
     } else {
@@ -527,11 +558,17 @@ fn main() {
         ) {
             let result = execute_action(action);
             println!("{}", serde_json::to_string(&result).unwrap_or_default());
-            std::process::exit(if result.get("success").and_then(|v| v.as_bool()).unwrap_or(false) {
-                0
-            } else {
-                1
-            });
+            std::process::exit(
+                if result
+                    .get("success")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false)
+                {
+                    0
+                } else {
+                    1
+                },
+            );
         }
     }
 

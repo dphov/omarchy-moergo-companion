@@ -5,9 +5,14 @@ set shell := ["bash", "-c"]
 # Default recipe: build, install, and restart the Omarchy shell
 default: install restart
 
-# Build the Rust keymap parser and watcher in release mode
+# Build the Rust keymap parser and helpers in release mode from locked source
 build:
-    cd keymap-parser && cargo build --release
+    cd keymap-parser && cargo build --release --locked
+    mkdir -p bin
+    cp keymap-parser/target/release/omarchy-moergo-keymap-parser bin/
+    cp keymap-parser/target/release/moergo-watcher bin/
+    cp keymap-parser/target/release/moergo-companion-settings bin/
+    cp keymap-parser/target/release/glove80-status bin/
 
 # Run all Rust parser tests
 test:

@@ -1,7 +1,7 @@
 use crate::behaviors::behavior_arity;
 use crate::descriptions::describe_key_code;
-use crate::glyphs::glyph_for_key;
 use crate::descriptions::extract_custom_behavior_names;
+use crate::glyphs::glyph_for_key;
 use crate::layers::extract_layer_name;
 use crate::legends::humanize_key_code;
 use crate::models::{Key, Layer, Layout};

@@ -13,5 +13,5 @@ parser
 # Rust build artifacts
 keymap-parser/target/
 
-# Compiled native parser binary (rebuilt by install.sh)
-bin/omarchy-moergo-keymap-parser
+# Compiled native binaries (rebuilt from locked source by install.sh / just build)
+bin/

@@ -10,8 +10,15 @@ Item {
 
     readonly property int hotplugDebounceIntervalMs: 250
     readonly property int statusPollIntervalMs: 30000
-    readonly property string jsonFile: "/tmp/glove80_layout.json"
-
+    readonly property string runtimeDir: {
+        var xdg = Quickshell.env("XDG_RUNTIME_DIR");
+        if (xdg && xdg.length > 0) {
+            return xdg + "/omarchy-moergo-companion";
+        }
+        var user = Quickshell.env("USER") || "user";
+        return "/tmp/omarchy-moergo-" + user;
+    }
+    readonly property string jsonFile: root.runtimeDir + "/glove80_layout.json"
     readonly property string helperScript: {
         var resolved = String(Qt.resolvedUrl("bin/glove80-status"))
         return decodeURIComponent(resolved.replace(/^file:\/\//, ""))

@@ -7,6 +7,7 @@ pub mod legends;
 pub mod models;
 pub mod parser;
 pub mod reader;
+pub mod runtime;
 pub mod tokenizer;
 pub mod transparency;
 

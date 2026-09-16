@@ -166,7 +166,7 @@ The file is validated before being saved. Both ZMK `.keymap` files and Glove80 l
 ## Troubleshooting
 
 - **No layers appear** — check that `keymapFile` points to a valid `.keymap` or `.json` file and that the path is saved in `~/.config/omarchy/glove80-plugin-settings.json`.
-- **Old watcher still running** — `moergo-watcher` uses a PID lock at `/tmp/glove80_watcher.pid`; kill any stale process if the shell reloads leave multiple watchers running.
+- **Old watcher still running** — `moergo-watcher` uses a PID lock in `$XDG_RUNTIME_DIR/omarchy-moergo-companion/glove80_watcher.pid` (or `/tmp/omarchy-moergo-$UID/`); kill any stale process if shell reloads leave multiple watchers running.
 - **Battery shows unknown** — ensure `upower` and BlueZ are running and the Glove80 halves are paired.
 - **Check shell logs** — `journalctl --user -u omarchy-shell -n 100` or `journalctl --user -n 100` for QML/Rust errors.
 

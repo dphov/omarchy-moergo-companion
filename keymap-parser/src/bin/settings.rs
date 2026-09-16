@@ -42,12 +42,7 @@ fn validate_keymap<P: AsRef<Path>>(path: P) -> Result<(), String> {
 
     let layout = parse_and_resolve(path).map_err(|e| format!("Failed to parse keymap: {e}"))?;
 
-    if layout.layers.is_empty()
-        || layout
-            .layers
-            .iter()
-            .all(|layer| layer.keys.is_empty())
-    {
+    if layout.layers.is_empty() || layout.layers.iter().all(|layer| layer.keys.is_empty()) {
         return Err("No valid keymap layers found in file".to_string());
     }
 
@@ -60,7 +55,10 @@ fn print_usage(program: &str) {
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let program = args.first().map(|s| s.as_str()).unwrap_or("moergo-companion-settings");
+    let program = args
+        .first()
+        .map(|s| s.as_str())
+        .unwrap_or("moergo-companion-settings");
 
     if args.len() < 2 || args[1] == "-h" || args[1] == "--help" {
         print_usage(program);
@@ -80,7 +78,10 @@ fn main() {
                 process::exit(1);
             }
             let key = &args[2];
-            let value = settings.get(key).cloned().unwrap_or(Value::String(String::new()));
+            let value = settings
+                .get(key)
+                .cloned()
+                .unwrap_or(Value::String(String::new()));
             println!("{}", value.as_str().unwrap_or(""));
         }
         "--set" => {
@@ -126,7 +127,10 @@ fn main() {
             for (k, v) in &settings {
                 output.insert(k.clone(), v.clone());
             }
-            println!("{}", serde_json::to_string(&Value::Object(output)).unwrap_or_default());
+            println!(
+                "{}",
+                serde_json::to_string(&Value::Object(output)).unwrap_or_default()
+            );
         }
         _ => {
             eprintln!("Unknown command: {cmd}");

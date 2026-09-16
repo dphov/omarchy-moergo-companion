@@ -22,25 +22,58 @@ pub fn extract_custom_behavior_names(text: &str) -> Vec<String> {
 
 fn is_behavior_identifier(s: &str) -> bool {
     !s.is_empty()
-        && s.chars().next().map(|c| c.is_ascii_alphabetic() || c == '_').unwrap_or(false)
+        && s.chars()
+            .next()
+            .map(|c| c.is_ascii_alphabetic() || c == '_')
+            .unwrap_or(false)
         && s.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
 }
 
 fn is_standard_behavior(name: &str) -> bool {
     const STANDARD: &[&str] = &[
-        "kp", "sk", "sl", "mo", "to", "mt", "lt", "lm", "td", "trans", "none", "out", "bt",
-        "rgb_ug", "bootloader", "sys_reset", "magic", "layer_td", "lower", "key_repeat",
-        "caps_word", "cap_word", "studio_unlock", "studio_lock",
+        "kp",
+        "sk",
+        "sl",
+        "mo",
+        "to",
+        "mt",
+        "lt",
+        "lm",
+        "td",
+        "trans",
+        "none",
+        "out",
+        "bt",
+        "rgb_ug",
+        "bootloader",
+        "sys_reset",
+        "magic",
+        "layer_td",
+        "lower",
+        "key_repeat",
+        "caps_word",
+        "cap_word",
+        "studio_unlock",
+        "studio_lock",
     ];
-    STANDARD.iter().any(|s| *s == name)
+    STANDARD.contains(&name)
 }
 
-pub fn describe_key_code(raw: &str, humanized: &str, custom_behaviors: &[String]) -> (String, String) {
+pub fn describe_key_code(
+    raw: &str,
+    humanized: &str,
+    custom_behaviors: &[String],
+) -> (String, String) {
     if raw.is_empty() {
         return (String::new(), String::new());
     }
 
-    let behavior_name = raw.strip_prefix('&').unwrap_or(raw).split_whitespace().next().unwrap_or(raw);
+    let behavior_name = raw
+        .strip_prefix('&')
+        .unwrap_or(raw)
+        .split_whitespace()
+        .next()
+        .unwrap_or(raw);
     if custom_behaviors.iter().any(|n| n == behavior_name) {
         let display = if humanized.trim().is_empty() {
             behavior_name
@@ -124,10 +157,7 @@ pub fn describe_key_code(raw: &str, humanized: &str, custom_behaviors: &[String]
         );
     }
     if raw == "&key_repeat" {
-        return (
-            "Key Repeat".into(),
-            "Repeats the last pressed key.".into(),
-        );
+        return ("Key Repeat".into(), "Repeats the last pressed key.".into());
     }
     if raw == "&to FACTORY_TEST" {
         return (

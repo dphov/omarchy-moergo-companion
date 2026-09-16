@@ -5,7 +5,9 @@ pub fn tokenize(bindings: &str) -> Vec<&str> {
     let mut i = 0;
 
     while i < n {
-        while i < n && (bytes[i] == b' ' || bytes[i] == b'\t' || bytes[i] == b'\n' || bytes[i] == b'\r') {
+        while i < n
+            && (bytes[i] == b' ' || bytes[i] == b'\t' || bytes[i] == b'\n' || bytes[i] == b'\r')
+        {
             i += 1;
         }
         if i >= n {
@@ -22,9 +24,16 @@ pub fn tokenize(bindings: &str) -> Vec<&str> {
                 if paren_depth > 0 {
                     paren_depth -= 1;
                 }
-            } else if paren_depth == 0 && (bytes[i] == b' ' || bytes[i] == b'\t' || bytes[i] == b'\n' || bytes[i] == b'\r') {
+            } else if paren_depth == 0
+                && (bytes[i] == b' ' || bytes[i] == b'\t' || bytes[i] == b'\n' || bytes[i] == b'\r')
+            {
                 let mut peek = i;
-                while peek < n && (bytes[peek] == b' ' || bytes[peek] == b'\t' || bytes[peek] == b'\n' || bytes[peek] == b'\r') {
+                while peek < n
+                    && (bytes[peek] == b' '
+                        || bytes[peek] == b'\t'
+                        || bytes[peek] == b'\n'
+                        || bytes[peek] == b'\r')
+                {
                     peek += 1;
                 }
                 if peek < n && bytes[peek] == b'(' {

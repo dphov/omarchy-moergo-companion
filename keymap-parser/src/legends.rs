@@ -63,7 +63,8 @@ pub fn humanize_key_code(raw: &str) -> String {
                             if let Some(paren_start) = raw.find('(') {
                                 if let Some(paren_end) = raw[paren_start..].find(')') {
                                     let inside = &raw[paren_start + 1..paren_start + paren_end];
-                                    let key_part = inside.split(',').next().unwrap_or(inside).trim();
+                                    let key_part =
+                                        inside.split(',').next().unwrap_or(inside).trim();
                                     if !key_part.is_empty() {
                                         return humanize_key_code(key_part);
                                     }
@@ -113,7 +114,11 @@ pub fn humanize_key_code(raw: &str) -> String {
                             if raw.contains("Ringy") {
                                 return "Alt".into();
                             }
-                            if raw.contains("Index") && (raw.contains("Pinky") || raw.contains("Ringy") || raw.contains("Middy")) {
+                            if raw.contains("Index")
+                                && (raw.contains("Pinky")
+                                    || raw.contains("Ringy")
+                                    || raw.contains("Middy"))
+                            {
                                 return "Shift".into();
                             }
                             if let Some(rgb) = raw.strip_prefix("&rgb_ug ") {

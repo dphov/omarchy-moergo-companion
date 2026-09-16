@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build & Publish Release Binaries
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run test suite
+        run: |
+          cd keymap-parser
+          cargo test --locked --verbose
+
+      - name: Compile release binaries from locked source
+        run: |
+          cd keymap-parser
+          cargo build --release --locked
+
+      - name: Stage release artifacts & generate SHA-256 checksums
+        run: |
+          mkdir -p release-assets
+          cp keymap-parser/target/release/omarchy-moergo-keymap-parser release-assets/
+          cp keymap-parser/target/release/moergo-watcher release-assets/
+          cp keymap-parser/target/release/moergo-companion-settings release-assets/
+          cp keymap-parser/target/release/glove80-status release-assets/
+
+          # Package archive for offline distribution
+          tar -czvf "omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz" -C release-assets .
+          mv "omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz" release-assets/
+
+          # Generate SHA-256 sums for all release assets
+          cd release-assets
+          sha256sum * > SHA256SUMS
+          sha256sum -c SHA256SUMS
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-assets/*
+          generate_release_notes: true
+          body: |
+            ### Verifying Binary Provenance
+
+            All release binaries are compiled directly from the reviewed, locked Rust source (`Cargo.lock`) on GitHub Actions.
+            To verify that your downloaded binaries mathematically match the published release assets:
+
+            ```bash
+            sha256sum -c SHA256SUMS
+            ```

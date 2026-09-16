@@ -31,7 +31,10 @@ const MODIFIER_CODES: &[&str] = &["LSHFT", "RSHFT", "LCTRL", "RCTRL", "LALT", "R
 const SYSTEM_CODES: &[&str] = &["LGUI", "RGUI"];
 
 pub fn glyph_for_key(raw: &str) -> String {
-    let key_code = raw.strip_prefix("&kp ").or_else(|| raw.strip_prefix("&kt ")).unwrap_or(raw);
+    let key_code = raw
+        .strip_prefix("&kp ")
+        .or_else(|| raw.strip_prefix("&kt "))
+        .unwrap_or(raw);
     if SYSTEM_CODES.contains(&key_code) {
         return "system".into();
     }

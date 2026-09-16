@@ -29,13 +29,19 @@ fn default_title_from_path<P: AsRef<Path>>(path: P) -> String {
             let prefix = &s[..pos];
             let is_uuid = prefix.len() == UUID_LEN
                 && prefix.bytes().enumerate().all(|(i, b)| {
-                    b.is_ascii_hexdigit()
-                        || UUID_HYPHEN_INDICES.contains(&i) && b == b'-'
+                    b.is_ascii_hexdigit() || UUID_HYPHEN_INDICES.contains(&i) && b == b'-'
                 })
-                && UUID_HYPHEN_INDICES.iter().all(|&i| prefix.as_bytes()[i] == b'-');
+                && UUID_HYPHEN_INDICES
+                    .iter()
+                    .all(|&i| prefix.as_bytes()[i] == b'-');
             if is_uuid {
                 let rest = &s[pos..];
-                Some(rest.strip_prefix('_').or_else(|| rest.strip_prefix('-')).unwrap_or(rest).trim_start())
+                Some(
+                    rest.strip_prefix('_')
+                        .or_else(|| rest.strip_prefix('-'))
+                        .unwrap_or(rest)
+                        .trim_start(),
+                )
             } else {
                 None
             }
@@ -122,7 +128,11 @@ fn format_config_params(value: &Option<Value>) -> String {
                 .clone()
                 .or_else(|| param.param_name_alt.clone())
                 .filter(|s| !s.is_empty())?;
-            let value = param.value.as_ref().map(json_val_to_str).unwrap_or_default();
+            let value = param
+                .value
+                .as_ref()
+                .map(json_val_to_str)
+                .unwrap_or_default();
             if value.is_empty() {
                 Some(name)
             } else {
@@ -241,9 +251,7 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Layout> {
                             title = format!("Custom Behavior {raw}");
                         }
                         let generic = "Specify the key behavior by text input, to be used in conjunction with Custom Defined Behaviors.";
-                        if desc.trim() == trimmed {
-                            desc = format!("{generic}\n\n{trimmed}");
-                        } else if !desc.contains(generic) {
+                        if desc.trim() == trimmed || !desc.contains(generic) {
                             desc = format!("{generic}\n\n{trimmed}");
                         } else {
                             desc = format!("{desc}\n\n{trimmed}");
@@ -264,7 +272,10 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Layout> {
                 }
                 if let Some(ic) = &dec.icon {
                     let trimmed = ic.trim();
-                    if trimmed.starts_with("fa-") && trimmed.len() == 4 && trimmed.as_bytes()[3].is_ascii_digit() {
+                    if trimmed.starts_with("fa-")
+                        && trimmed.len() == 4
+                        && trimmed.as_bytes()[3].is_ascii_digit()
+                    {
                         humanized = trimmed[3..].to_string();
                         glyph = String::new();
                     } else if !trimmed.is_empty() {
@@ -275,7 +286,9 @@ pub fn parse_layout_json<P: AsRef<Path>>(path: P) -> io::Result<Layout> {
                 }
             }
 
-            keys.push(Key::with_details(&raw, humanized, title, desc, glyph, color, text_color));
+            keys.push(Key::with_details(
+                &raw, humanized, title, desc, glyph, color, text_color,
+            ));
         }
         layers.push(Layer { name, keys });
     }
