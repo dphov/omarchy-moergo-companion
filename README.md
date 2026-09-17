@@ -11,32 +11,25 @@ The plugin inherits the active Omarchy theme colors automatically.
 
 ## Installation
 
+### From source (recommended)
+
+```bash
+git clone https://github.com/dphov/omarchy-moergo-companion.git
+cd omarchy-moergo-companion
+just install
+```
+
+This compiles all native Rust helpers in release mode from locked dependencies (`Cargo.lock`) and installs the plugin to `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/`.
+
 ### From the Omarchy marketplace
 
 ```bash
 omarchy plugin add https://github.com/dphov/omarchy-moergo-companion.git --enable
+cd ~/.config/omarchy/plugins/dphov.omarchy-moergo-companion && just build
 omarchy-restart-shell
 ```
 
-### From source
-
-```bash
-just install
-```
-
-This builds the Rust helpers in release mode and copies the plugin to `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/`.
-
-To build manually:
-
-```bash
-just build
-```
-
-Then restart the Omarchy shell:
-
-```bash
-omarchy-restart-shell
-```
+Alternatively, download the pre-built binaries and `SHA256SUMS` from the [GitHub Releases](https://github.com/dphov/omarchy-moergo-companion/releases) page, verify their integrity (`sha256sum -c SHA256SUMS`), and place them in the plugin's `bin/` directory.
 
 ## Usage
 
@@ -120,6 +113,23 @@ The plugin is split into a **service** and a **bar widget**, so background work 
 | `moergo-watcher` | Watch a keymap/JSON file and emit the latest layout JSON on stdout whenever the file changes. |
 | `glove80-status` | Read USB/Bluetooth/battery state and execute BLE connect/disconnect/trust/forget actions. |
 | `moergo-companion-settings` | Load, get, or set plugin settings with keymap path validation. |
+
+## Security & Binary Provenance
+
+To prevent supply chain risks, symlink attacks, and execution of untrusted pre-built code:
+
+1. **Zero committed binary blobs**: All precompiled ELF binaries are excluded from version control (`bin/` is gitignored).
+2. **Locked source compilation**: Helpers are compiled directly from the reviewed Rust source in `keymap-parser/` using `cargo build --release --locked`. The `--locked` flag strictly verifies that all dependency versions and cryptographic hashes match `Cargo.lock`.
+3. **User-private runtime directory**: Runtime state (`glove80_layout.json`, `glove80_watcher.pid`, `glove80_battery_notified.json`) is stored in `$XDG_RUNTIME_DIR/omarchy-moergo-companion` with a mode-`0700` fallback (`/tmp/omarchy-moergo-$UID`).
+4. **Symlink defense & safe PID locking**: The watcher opens PID files using `libc::O_NOFOLLOW` without premature truncation, verifies ownership, and acquires an exclusive `flock` before writing.
+5. **Atomic file replacement**: State and layout files are written to mode-`0600` temporary files within the private runtime directory and atomically renamed to prevent partial reads or symlink injection.
+6. **Reproducible CI releases**: Every version tag (`v*`) triggers automated GitHub Actions builds in an isolated container from locked dependencies. Each release publishes standalone binaries, an offline distribution archive, and a `SHA256SUMS` manifest.
+
+To verify published binaries against the cryptographic manifest:
+
+```bash
+sha256sum -c SHA256SUMS
+```
 
 ## Development
 
