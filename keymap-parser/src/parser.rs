@@ -126,11 +126,7 @@ fn title_from_keymap_source<P: AsRef<Path>>(source: &str, path: P) -> String {
         }
     }
 
-    path.file_stem()
-        .and_then(|s| s.to_str())
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(|| "Glove80 Layout".to_string())
+    crate::json_layout::default_title_from_path(path)
 }
 
 fn language_from_keymap_source(source: &str) -> String {

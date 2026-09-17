@@ -1,13 +1,31 @@
 pub fn humanize_layer_name(raw: &str) -> String {
-    match raw {
-        "default_layer" | "default" => "Base".into(),
-        "lower_layer" | "lower" => "Lower".into(),
-        "magic_layer" | "magic" => "Magic".into(),
-        "factory_test_layer" | "factory_test" => "Test".into(),
-        _ => {
-            let without_suffix = raw.strip_suffix("_layer").unwrap_or(raw);
-            title_case_first(&without_suffix.replace('_', " "))
-        }
+    let s = raw.trim();
+    // Strip "layer_" or "layer-" prefix if present
+    let s = s
+        .strip_prefix("layer_")
+        .or_else(|| s.strip_prefix("layer-"))
+        .or_else(|| s.strip_prefix("Layer_"))
+        .or_else(|| s.strip_prefix("Layer-"))
+        .or_else(|| s.strip_prefix("layer "))
+        .or_else(|| s.strip_prefix("Layer "))
+        .unwrap_or(s);
+
+    // Strip "_layer" or "-layer" suffix if present
+    let s = s
+        .strip_suffix("_layer")
+        .or_else(|| s.strip_suffix("-layer"))
+        .or_else(|| s.strip_suffix("_Layer"))
+        .or_else(|| s.strip_suffix("-Layer"))
+        .or_else(|| s.strip_suffix(" layer"))
+        .or_else(|| s.strip_suffix(" Layer"))
+        .unwrap_or(s);
+
+    match s.to_ascii_lowercase().as_str() {
+        "default" => "Base".into(),
+        "lower" => "Lower".into(),
+        "magic" => "Magic".into(),
+        "factory_test" | "factory test" => "Test".into(),
+        _ => title_case_first(&s.replace('_', " ")),
     }
 }
 
@@ -64,6 +82,10 @@ mod tests {
         assert_eq!(humanize_layer_name("default_layer"), "Base");
         assert_eq!(humanize_layer_name("lower"), "Lower");
         assert_eq!(humanize_layer_name("factory_test"), "Test");
+        assert_eq!(humanize_layer_name("layer_Factory"), "Factory");
+        assert_eq!(humanize_layer_name("layer_Base"), "Base");
+        assert_eq!(humanize_layer_name("layer_Lower"), "Lower");
+        assert_eq!(humanize_layer_name("layer_Magic"), "Magic");
     }
 
     #[test]

@@ -12,7 +12,7 @@ use std::path::Path;
 const UUID_LEN: usize = 36;
 const UUID_HYPHEN_INDICES: &[usize] = &[8, 13, 18, 23];
 
-fn default_title_from_path<P: AsRef<Path>>(path: P) -> String {
+pub fn default_title_from_path<P: AsRef<Path>>(path: P) -> String {
     let path = path.as_ref();
     let stem = path
         .file_stem()

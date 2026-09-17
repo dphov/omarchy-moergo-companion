@@ -205,11 +205,13 @@ Rectangle {
         font.family: Style.font.family
         font.pixelSize: Style.font.caption
         fontSizeMode: Text.Fit
-        minimumPixelSize: 9
+        minimumPixelSize: 7
         font.bold: true
         color: root.resolvedTextColor
-        wrapMode: root.keyText.indexOf("\n") !== -1 ? Text.Wrap : Text.WordWrap
+        wrapMode: root.keyText.indexOf("\n") !== -1 ? Text.Wrap : Text.WrapAnywhere
         maximumLineCount: 2
+        elide: Text.ElideRight
+        clip: true
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         lineHeight: 1.0

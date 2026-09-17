@@ -205,7 +205,7 @@ fn key_legend(key: &str) -> Option<&'static str> {
     match key {
         "KP_NUM" => Some("NumLk"),
         "KP_EQUAL" => Some("="),
-        "KP_DIVIDE" => Some("/"),
+        "KP_DIVIDE" | "KP_SLASH" => Some("/"),
         "KP_MULTIPLY" => Some("*"),
         "KP_MINUS" => Some("-"),
         "KP_PLUS" => Some("+"),
@@ -219,12 +219,12 @@ fn key_legend(key: &str) -> Option<&'static str> {
         "C_MUTE" => Some("Mute"),
         "C_VOL_DN" => Some("Vol -"),
         "C_VOL_UP" => Some("Vol +"),
-        "PAUSE_BREAK" => Some("Pause"),
-        "PSCRN" => Some("PrtSc"),
-        "SLCK" => Some("ScrLk"),
+        "PAUSE_BREAK" | "PAUSE" => Some("Pause"),
+        "PSCRN" | "PRINTSCREEN" | "PRINT_SCREEN" => Some("PrtSc"),
+        "SLCK" | "SCROLLLOCK" | "SCROLL_LOCK" => Some("ScrLk"),
         "CAPS" => Some("Caps"),
-        "INS" => Some("Ins"),
-        "K_CMENU" => Some("Menu"),
+        "INS" | "INSERT" => Some("Ins"),
+        "K_CMENU" | "K_APP" | "K_APPLICATION" => Some("Menu"),
         "LPAR" => Some("("),
         "RPAR" => Some(")"),
         "PRCNT" => Some("%"),
@@ -247,18 +247,18 @@ fn key_legend(key: &str) -> Option<&'static str> {
         "RALT" => Some("Alt"),
         "LGUI" => Some("Win"),
         "RGUI" => Some("Win"),
-        "BSPC" => Some("Bksp"),
-        "DEL" => Some("Delete"),
-        "RET" => Some("Enter"),
+        "BSPC" | "BACKSPACE" => Some("Bksp"),
+        "DEL" | "DELETE" => Some("Delete"),
+        "RET" | "RETURN" => Some("Enter"),
         "SPACE" => Some("Space"),
         "TAB" => Some("Tab"),
-        "ESC" => Some("Esc"),
-        "PG_UP" => Some("PgUp"),
-        "PG_DN" => Some("PgDn"),
-        "LEFT" => Some("←"),
-        "RIGHT" => Some("→"),
-        "UP" => Some("↑"),
-        "DOWN" => Some("↓"),
+        "ESC" | "ESCAPE" => Some("Esc"),
+        "PG_UP" | "PGUP" | "PAGE_UP" => Some("PgUp"),
+        "PG_DN" | "PGDN" | "PAGE_DOWN" => Some("PgDn"),
+        "LEFT" | "LEFT_ARROW" => Some("←"),
+        "RIGHT" | "RIGHT_ARROW" => Some("→"),
+        "UP" | "UP_ARROW" => Some("↑"),
+        "DOWN" | "DOWN_ARROW" => Some("↓"),
         "HOME" => Some("Home"),
         "END" => Some("End"),
         _ => None,
@@ -292,5 +292,13 @@ mod tests {
     #[test]
     fn arrow_legends() {
         assert_eq!(humanize_key_code("&kp LEFT"), "←");
+        assert_eq!(humanize_key_code("&kp LEFT_ARROW"), "←");
+        assert_eq!(humanize_key_code("&kp UP_ARROW"), "↑");
+        assert_eq!(humanize_key_code("&kp DOWN_ARROW"), "↓");
+        assert_eq!(humanize_key_code("&kp RIGHT_ARROW"), "→");
+        assert_eq!(humanize_key_code("&kp KP_SLASH"), "/");
+        assert_eq!(humanize_key_code("&kp PRINTSCREEN"), "PrtSc");
+        assert_eq!(humanize_key_code("&kp SCROLLLOCK"), "ScrLk");
+        assert_eq!(humanize_key_code("&kp K_APP"), "Menu");
     }
 }
