@@ -66,6 +66,30 @@ dry-run-release: build
     @echo "Dry-run release assets staged in release-assets/:"
     @cat release-assets/SHA256SUMS
 
+# Compute and perform a semantic-version release (patch|minor|major)
+release-bump bump='patch': test lint
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -n "$(git status --porcelain)" ]; then
+        echo "Error: Working directory has uncommitted changes. Commit or stash them before releasing."
+        exit 1
+    fi
+    latest=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+    latest=${latest:-v0.0.0}
+    current=${latest#v}
+    IFS='.' read -r major minor patchnum <<< "$current"
+    case "{{bump}}" in
+        major) major=$((major + 1)); minor=0; patchnum=0 ;;
+        minor) minor=$((minor + 1)); patchnum=0 ;;
+        patch) patchnum=$((patchnum + 1)) ;;
+        *) echo "Usage: just release-bump [patch|minor|major]"; exit 1 ;;
+    esac
+    version="v${major}.${minor}.${patchnum}"
+    git push origin HEAD
+    git tag "$version"
+    git push origin "$version"
+    echo "Tagged $version and pushed. GitHub Actions release workflow is running."
+
 # Create a version tag and push to trigger GitHub Actions automated release
 release version: test lint
     @if [ -n "$(git status --porcelain)" ]; then \
