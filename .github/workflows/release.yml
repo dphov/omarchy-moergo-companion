@@ -21,15 +21,16 @@ jobs:
         working-directory: bin
         run: sha256sum -c SHA256SUMS
 
-      - name: Copy binaries and recompute checksums
+      - name: Copy binaries and package release assets
         id: checksum
         working-directory: bin
         run: |
-          cp omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status SHA256SUMS ../release-assets/
+          mkdir -p ../release-assets
+          cp omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status ../release-assets/
           cd ../release-assets
           tar -czvf "omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz" \
-            omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status SHA256SUMS
-          sha256sum * > SHA256SUMS
+            omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status
+          sha256sum omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status "omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz" > SHA256SUMS
           sha256sum -c SHA256SUMS
           {
             echo 'body<<EOF'

@@ -51,6 +51,21 @@ clean:
 dev:
     cargo watch --watch-when-idle -w keymap-parser/src -w components -s 'just reload'
 
+# Simulate the GitHub Actions release packaging step locally (no tag, no push)
+dry-run-release: build
+    @mkdir -p release-assets
+    cp bin/omarchy-moergo-keymap-parser release-assets/
+    cp bin/moergo-watcher release-assets/
+    cp bin/moergo-companion-settings release-assets/
+    cp bin/glove80-status release-assets/
+    cd release-assets \
+        && tar -czvf "omarchy-moergo-companion-binaries-dryrun.tar.gz" \
+            omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status \
+        && sha256sum omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status omarchy-moergo-companion-binaries-dryrun.tar.gz > SHA256SUMS \
+        && sha256sum -c SHA256SUMS
+    @echo "Dry-run release assets staged in release-assets/:"
+    @cat release-assets/SHA256SUMS
+
 # Create a version tag and push to trigger GitHub Actions automated release
 release version: test lint
     @if [ -n "$(git status --porcelain)" ]; then \
