@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-09-17
+Security focused release for passing the omarchy plugin team validation
+
+### Added
+
+- feat: harden runtime paths with mode-0700 symlink defense and add automated tag-based release workflow
+- feat(justfile): add sha and verify-sha recipes for binary integrity
+- feat(justfile): auto-generate categorized CHANGELOG.md on release-bump
+- feat(justfile): add release-bump-dry to preview next changelog
+
+### Changed
+
+- chore: add release recipe to justfile
+- chore: remove internal docs and specifications
+- ci: enforce GitHub Actions as sole verified binary builder with local bin ignore
+- chore(justfile): use --locked in tests, decouple install from build, fix dev watcher
+- ci(release): embed SHA-256 checksums in release body and keep SHA256SUMS asset
+- ci(release): simplify checksum/archive step with working-directory
+- ci: split CI/build/release responsibilities
+- chore(justfile): add dry-run-release recipe and fix self-checksum bug
+- chore(justfile): add semantic-version release-bump helper
+- ci(release): inject matching CHANGELOG.md section into release body
+- refactor(justfile): simplify release workflow to hybrid changelog
+
+### Fixed
+
+- fix(security): prevent non-ASCII slice panic, preserve UTF-8, and reap child processes
+- fix(parser): strip layer_ prefix from layer names, map ZMK keycode aliases, and strip UUID from title
+- fix(ui): increase button size, enable dynamic matrix scaling, and prevent single-word wrap
+
+### Documentation
+
+- docs: document binary provenance, locked-source builds, and SHA-256 verification
+- docs: prioritize ./install.sh and omarchy plugin installer for end users, just for developers
+
 ## [1.0.0] - 2026-09-16
 
 ### Added
