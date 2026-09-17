@@ -33,25 +33,34 @@ pub fn humanize_key_code(raw: &str) -> String {
                         "&to FACTORY_TEST" | "to FACTORY_TEST" => "Test".into(),
                         "&to DEFAULT" | "to DEFAULT" => "Base".into(),
                         _ => {
-                            if let Some(rest) = raw.strip_prefix("&to ").or_else(|| raw.strip_prefix("to ")) {
+                            if let Some(rest) =
+                                raw.strip_prefix("&to ").or_else(|| raw.strip_prefix("to "))
+                            {
                                 if rest.chars().all(|c| c.is_ascii_digit()) {
                                     return rest.to_string();
                                 }
                                 return crate::layers::humanize_layer_name(rest);
                             }
-                            if let Some(rest) = raw.strip_prefix("&mo ").or_else(|| raw.strip_prefix("mo ")) {
+                            if let Some(rest) =
+                                raw.strip_prefix("&mo ").or_else(|| raw.strip_prefix("mo "))
+                            {
                                 if rest.chars().all(|c| c.is_ascii_digit()) {
                                     return format!("&mo {rest}");
                                 }
                                 return crate::layers::humanize_layer_name(rest);
                             }
-                            if let Some(rest) = raw.strip_prefix("&tog ").or_else(|| raw.strip_prefix("tog ")) {
+                            if let Some(rest) = raw
+                                .strip_prefix("&tog ")
+                                .or_else(|| raw.strip_prefix("tog "))
+                            {
                                 if rest.chars().all(|c| c.is_ascii_digit()) {
                                     return format!("Tog {rest}");
                                 }
                                 return format!("Tog {}", crate::layers::humanize_layer_name(rest));
                             }
-                            if let Some(rest) = raw.strip_prefix("&sl ").or_else(|| raw.strip_prefix("sl ")) {
+                            if let Some(rest) =
+                                raw.strip_prefix("&sl ").or_else(|| raw.strip_prefix("sl "))
+                            {
                                 if rest.chars().all(|c| c.is_ascii_digit()) {
                                     return format!("Sl {rest}");
                                 }

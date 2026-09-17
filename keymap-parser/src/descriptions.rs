@@ -306,12 +306,16 @@ fn key_description(key: &str) -> Option<(&'static str, &'static str)> {
         "C_PP" => Some(("Play / Pause", "Toggles media playback.")),
         "C_NEXT" => Some(("Next Track", "Skips to the next media track.")),
         "C_PREV" => Some(("Previous Track", "Skips to the previous media track.")),
-        "PSCRN" | "PRINTSCREEN" | "PRINT_SCREEN" => Some(("Print Screen", "Captures screenshot of the screen.")),
+        "PSCRN" | "PRINTSCREEN" | "PRINT_SCREEN" => {
+            Some(("Print Screen", "Captures screenshot of the screen."))
+        }
         "PAUSE_BREAK" | "PAUSE" => Some(("Pause / Break", "Sends standard Pause/Break scancode.")),
         "SLCK" | "SCROLLLOCK" | "SCROLL_LOCK" => Some(("Scroll Lock", "Toggles scroll lock.")),
         "CAPS" => Some(("Caps Lock", "Toggles uppercase lock.")),
         "INS" | "INSERT" => Some(("Insert", "Toggles insert or overwrite mode.")),
-        "K_CMENU" | "K_APP" | "K_APPLICATION" => Some(("Context Menu", "Opens application context menu.")),
+        "K_CMENU" | "K_APP" | "K_APPLICATION" => {
+            Some(("Context Menu", "Opens application context menu."))
+        }
         "BSPC" => Some(("Backspace", "Deletes character before the cursor.")),
         "DEL" => Some(("Delete", "Deletes character after the cursor.")),
         "RET" => Some(("Enter / Return", "Sends Return / Enter key.")),
