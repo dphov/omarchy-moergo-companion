@@ -24,6 +24,7 @@ sha:
 # Verify binary integrity against bin/SHA256SUMS
 verify-sha:
     cd bin && sha256sum -c SHA256SUMS
+
 # Run all Rust parser tests (locked to committed Cargo.lock)
 test:
     cd keymap-parser && cargo test --locked
@@ -31,6 +32,18 @@ test:
 # Lint all QML files
 lint:
     qmllint *.qml components/*.qml
+
+# Run all code-quality checks (format, clippy, tests, qmllint)
+check:
+    cd keymap-parser && cargo fmt --check
+    cd keymap-parser && cargo clippy --locked --all-targets -- -D warnings
+    cd keymap-parser && cargo test --locked
+    qmllint *.qml components/*.qml
+
+# Run checks and commit with the provided message
+commit message: check
+    git add -A
+    git commit -m "{{message}}"
 
 # Install the plugin to ~/.config/omarchy/plugins/ (uses prebuilt bin/ if present)
 install:
@@ -47,24 +60,12 @@ reload: build install restart
 clean:
     cd keymap-parser && cargo clean
 
-# Run all code-quality checks (format, clippy, tests, qmllint)
-check:
-    cd keymap-parser && cargo fmt --check
-    cd keymap-parser && cargo clippy --locked --all-targets -- -D warnings
-    cd keymap-parser && cargo test --locked
-    qmllint *.qml components/*.qml
-
-# Run checks and commit with the provided message
-commit message: check
-    git add -A
-    git commit -m "{{message}}"
-
 # Watch for changes and reload (requires cargo-watch and just)
 dev:
     cargo watch --watch-when-idle -w keymap-parser/src -w components -s 'just reload'
 
 # Draft a CHANGELOG.md section from commits since the last tag (no side effects)
-release-draft bump='patch':
+changelog-draft bump='patch':
     #!/usr/bin/env bash
     set -euo pipefail
     latest=$(git tag --list 'v*' --sort=-v:refname | head -n1)
@@ -75,7 +76,7 @@ release-draft bump='patch':
         major) major=$((major + 1)); minor=0; patchnum=0 ;;
         minor) minor=$((minor + 1)); patchnum=0 ;;
         patch) patchnum=$((patchnum + 1)) ;;
-        *) echo "Usage: just release-draft [patch|minor|major]"; exit 1 ;;
+        *) echo "Usage: just changelog-draft [patch|minor|major]"; exit 1 ;;
     esac
     version="v${major}.${minor}.${patchnum}"
     date=$(date +%Y-%m-%d)
@@ -136,7 +137,7 @@ release-preview version:
     echo "SHA-256 values will be inserted here by the release workflow."
 
 # Create a version tag and push to trigger GitHub Actions automated release
-release version: test lint
+release version: check
     #!/usr/bin/env bash
     set -euo pipefail
     if [ -n "$(git status --porcelain)" ]; then
@@ -159,4 +160,16 @@ release version: test lint
     echo "Tagged {{version}} and pushed. GitHub Actions release workflow is running."
 
 # Simulate the GitHub Actions release packaging step locally (no tag, no push)
-dry-run-release: build
+release-dry: build
+    @mkdir -p release-assets
+    cp bin/omarchy-moergo-keymap-parser release-assets/
+    cp bin/moergo-watcher release-assets/
+    cp bin/moergo-companion-settings release-assets/
+    cp bin/glove80-status release-assets/
+    cd release-assets \
+        && tar -czvf "omarchy-moergo-companion-binaries-dryrun.tar.gz" \
+            omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status \
+        && sha256sum omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status omarchy-moergo-companion-binaries-dryrun.tar.gz > SHA256SUMS \
+        && sha256sum -c SHA256SUMS
+    @echo "Dry-run release assets staged in release-assets/:"
+    @cat release-assets/SHA256SUMS
