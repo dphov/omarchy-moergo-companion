@@ -51,6 +51,74 @@ clean:
 dev:
     cargo watch --watch-when-idle -w keymap-parser/src -w components -s 'just reload'
 
+# Preview the next release changelog without committing, tagging, or pushing
+release-bump-dry bump='patch': test lint
+    #!/usr/bin/env bash
+    set -euo pipefail
+    latest=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+    latest=${latest:-v0.0.0}
+    current=${latest#v}
+    IFS='.' read -r major minor patchnum <<< "$current"
+    case "{{bump}}" in
+        major) major=$((major + 1)); minor=0; patchnum=0 ;;
+        minor) minor=$((minor + 1)); patchnum=0 ;;
+        patch) patchnum=$((patchnum + 1)) ;;
+        *) echo "Usage: just release-bump-dry [patch|minor|major]"; exit 1 ;;
+    esac
+    version="v${major}.${minor}.${patchnum}"
+    date=$(date +%Y-%m-%d)
+
+    if git rev-parse "$latest" >/dev/null 2>&1; then
+        log=$(git log "$latest"..HEAD --pretty=format:'%s' --reverse | grep -Ev '^chore\(ci\): update release binaries|skip ci')
+    else
+        log=$(git log --pretty=format:'%s' --reverse | grep -Ev '^chore\(ci\): update release binaries|skip ci')
+    fi
+    if [ -z "$log" ]; then
+        log="No changes since $latest."
+    fi
+
+    added=$(echo "$log" | grep -E '^feat(\(.+\))?:' | sed 's/^/- /' || true)
+    changed=$(echo "$log" | grep -E '^chore(\(.+\))?:|^refactor(\(.+\))?:|^perf(\(.+\))?:|^style(\(.+\))?:|^build(\(.+\))?:|^ci(\(.+\))?:' | sed 's/^/- /' || true)
+    fixed=$(echo "$log" | grep -E '^fix(\(.+\))?:|^security(\(.+\))?:' | sed 's/^/- /' || true)
+    docs=$(echo "$log" | grep -E '^docs(\(.+\))?:' | sed 's/^/- /' || true)
+    other=$(echo "$log" | grep -Ev '^(feat|chore|refactor|perf|style|build|ci|fix|security|docs)(\(.+\))?:' | sed 's/^/- /' || true)
+
+    echo "Next version: $version"
+    echo "Date: $date"
+    echo ""
+    echo "## [${version#v}] - $date"
+    echo ""
+    if [ -n "$added" ]; then
+        echo "### Added"
+        echo ""
+        echo "$added"
+        echo ""
+    fi
+    if [ -n "$changed" ]; then
+        echo "### Changed"
+        echo ""
+        echo "$changed"
+        echo ""
+    fi
+    if [ -n "$fixed" ]; then
+        echo "### Fixed"
+        echo ""
+        echo "$fixed"
+        echo ""
+    fi
+    if [ -n "$docs" ]; then
+        echo "### Documentation"
+        echo ""
+        echo "$docs"
+        echo ""
+    fi
+    if [ -n "$other" ]; then
+        echo "### Other"
+        echo ""
+        echo "$other"
+        echo ""
+    fi
+
 # Simulate the GitHub Actions release packaging step locally (no tag, no push)
 dry-run-release: build
     @mkdir -p release-assets
