@@ -31,6 +31,7 @@ jobs:
           cargo build --release --locked
 
       - name: Stage release artifacts & generate SHA-256 checksums
+        id: checksum
         run: |
           mkdir -p release-assets
           cp keymap-parser/target/release/omarchy-moergo-keymap-parser release-assets/
@@ -38,14 +39,26 @@ jobs:
           cp keymap-parser/target/release/moergo-companion-settings release-assets/
           cp keymap-parser/target/release/glove80-status release-assets/
 
+          # Generate SHA-256 sums for binaries (before packaging the archive)
+          cd release-assets
+          sha256sum omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status > SHA256SUMS
+
           # Package archive for offline distribution
-          tar -czvf "omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz" -C release-assets .
+          cd ..
+          tar -czvf "omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz" -C release-assets omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status SHA256SUMS
           mv "omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz" release-assets/
 
-          # Generate SHA-256 sums for all release assets
+          # Recompute SHA-256 sums for all final assets and verify
           cd release-assets
           sha256sum * > SHA256SUMS
           sha256sum -c SHA256SUMS
+
+          # Prepare checksum block for release body
+          {
+            echo 'body<<EOF'
+            cat SHA256SUMS
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -62,3 +75,9 @@ jobs:
             ```bash
             sha256sum -c SHA256SUMS
             ```
+
+            ### Checksums
+
+            SHA-256 values for the binaries in this release are listed below and also bundled in the attached `SHA256SUMS` file.
+
+            ${{ steps.checksum.outputs.body }}
