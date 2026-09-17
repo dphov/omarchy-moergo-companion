@@ -24,16 +24,16 @@ sha:
 # Verify binary integrity against bin/SHA256SUMS
 verify-sha:
     cd bin && sha256sum -c SHA256SUMS
-# Run all Rust parser tests
+# Run all Rust parser tests (locked to committed Cargo.lock)
 test:
-    cd keymap-parser && cargo test
+    cd keymap-parser && cargo test --locked
 
 # Lint all QML files
 lint:
     qmllint *.qml components/*.qml
 
-# Install the plugin to ~/.config/omarchy/plugins/
-install: build
+# Install the plugin to ~/.config/omarchy/plugins/ (uses prebuilt bin/ if present)
+install:
     ./install.sh
 
 # Restart the Omarchy shell to reload the plugin
@@ -41,7 +41,7 @@ restart:
     omarchy-restart-shell
 
 # Build, install, and restart (full reload)
-reload: install restart
+reload: build install restart
 
 # Clean Rust build artifacts
 clean:
@@ -49,11 +49,11 @@ clean:
 
 # Watch for changes and reload (requires cargo-watch and just)
 dev:
-    cd keymap-parser && cargo watch -s 'just reload'
+    cargo watch --watch-when-idle -w keymap-parser/src -w components -s 'just reload'
 
 # Create a version tag and push to trigger GitHub Actions automated release
 release version: test lint
-    @if [ -n "$$(git status --porcelain)" ]; then \
+    @if [ -n "$(git status --porcelain)" ]; then \
         echo "Error: Working directory has uncommitted changes. Commit or stash them before releasing."; \
         exit 1; \
     fi
