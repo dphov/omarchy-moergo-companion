@@ -139,7 +139,9 @@ For developers contributing or iterating on the plugin, a `justfile` provides da
 ```bash
 just install          # Compile native helpers and install to ~/.config/omarchy/plugins/
 just reload           # Build, install, and restart the Omarchy shell (full reload)
-just build            # Compile release binaries locally into bin/
+just build            # Compile release binaries locally into bin/ and generate SHA256SUMS
+just sha              # Compute and display SHA-256 checksums of bin/
+just verify-sha       # Verify binary integrity against bin/SHA256SUMS
 just test             # Run all Rust unit, integration, and security tests
 just lint             # Validate QML syntax across all files with qmllint
 just dev              # Live-reload development mode using cargo-watch

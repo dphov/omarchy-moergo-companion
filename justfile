@@ -13,7 +13,17 @@ build:
     cp keymap-parser/target/release/moergo-watcher bin/
     cp keymap-parser/target/release/moergo-companion-settings bin/
     cp keymap-parser/target/release/glove80-status bin/
+    cd bin && sha256sum glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser > SHA256SUMS
 
+# Generate and display SHA-256 checksums for binaries in bin/
+sha:
+    @mkdir -p bin
+    cd bin && sha256sum glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser > SHA256SUMS
+    @cat bin/SHA256SUMS
+
+# Verify binary integrity against bin/SHA256SUMS
+verify-sha:
+    cd bin && sha256sum -c SHA256SUMS
 # Run all Rust parser tests
 test:
     cd keymap-parser && cargo test
