@@ -1,4 +1,4 @@
-name: CI & Build Verification
+name: CI
 
 on:
   push:
@@ -7,9 +7,10 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
-    name: Test & Verifiable Build
+  rust:
+    name: Lint & Test Rust parser
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,38 +20,11 @@ jobs:
         with:
           components: clippy, rustfmt
 
-      - name: Verify formatting
-        run: |
-          cd keymap-parser
-          cargo fmt --check
+      - name: Check formatting
+        run: cd keymap-parser && cargo fmt --check
 
       - name: Run clippy
-        run: |
-          cd keymap-parser
-          cargo clippy --locked --all-targets -- -D warnings
+        run: cd keymap-parser && cargo clippy --locked --all-targets -- -D warnings
 
       - name: Run test suite
-        run: |
-          cd keymap-parser
-          cargo test --locked --verbose
-
-      - name: Build release binaries from locked source
-        run: |
-          cd keymap-parser
-          cargo build --release --locked
-
-      - name: Generate SHA-256 binary provenance checksums
-        run: |
-          mkdir -p bin
-          cp keymap-parser/target/release/omarchy-moergo-keymap-parser bin/
-          cp keymap-parser/target/release/moergo-watcher bin/
-          cp keymap-parser/target/release/moergo-companion-settings bin/
-          cp keymap-parser/target/release/glove80-status bin/
-          cd bin
-          sha256sum * | tee SHA256SUMS
-
-      - name: Upload SHA256SUMS artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: binary-checksums
-          path: bin/SHA256SUMS
+        run: cd keymap-parser && cargo test --locked --verbose

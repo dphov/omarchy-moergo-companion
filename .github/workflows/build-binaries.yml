@@ -1,13 +1,13 @@
-name: Build & Verify Binaries
+name: Build & Commit Binaries
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
     paths:
       - 'keymap-parser/**'
       - '.github/workflows/build-binaries.yml'
   pull_request:
-    branches: [main]
+    branches: [ main ]
     paths:
       - 'keymap-parser/**'
       - '.github/workflows/build-binaries.yml'
@@ -26,20 +26,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Run test suite
+      - name: Build release binaries from locked source
         run: |
           cd keymap-parser
-          cargo test --locked --verbose
-
-      - name: Build release binaries with deterministic paths
-        run: |
-          cd keymap-parser
-          RUSTFLAGS="--remap-path-prefix=$GITHUB_WORKSPACE=/build --remap-path-prefix=$HOME=/home" cargo build --release --locked
+          RUSTFLAGS="--remap-path-prefix=$GITHUB_WORKSPACE=/build --remap-path-prefix=$HOME=/home" \
+            cargo build --release --locked
 
       - name: Stage binaries into bin/
         run: |
@@ -65,7 +60,7 @@ jobs:
             exit 1
           fi
 
-      - name: Commit and push verified binaries (push to main or manual dispatch)
+      - name: Commit and push verified binaries
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
         run: |
           git add -f bin/
