@@ -85,10 +85,77 @@ release-bump bump='patch': test lint
         *) echo "Usage: just release-bump [patch|minor|major]"; exit 1 ;;
     esac
     version="v${major}.${minor}.${patchnum}"
+    date=$(date +%Y-%m-%d)
+
+    # Generate changelog section from commits since the last tag
+    if git rev-parse "$latest" >/dev/null 2>&1; then
+        log=$(git log "$latest"..HEAD --pretty=format:'%s' --reverse | grep -Ev '^chore\(ci\): update release binaries|skip ci')
+    else
+        log=$(git log --pretty=format:'%s' --reverse | grep -Ev '^chore\(ci\): update release binaries|skip ci')
+    fi
+    if [ -z "$log" ]; then
+        log="No changes since $latest."
+    fi
+
+    # Categorize commits by conventional prefix
+    added=$(echo "$log" | grep -E '^feat(\(.+\))?:' | sed 's/^/- /' || true)
+    changed=$(echo "$log" | grep -E '^chore(\(.+\))?:|^refactor(\(.+\))?:|^perf(\(.+\))?:|^style(\(.+\))?:|^build(\(.+\))?:|^ci(\(.+\))?:' | sed 's/^/- /' || true)
+    fixed=$(echo "$log" | grep -E '^fix(\(.+\))?:|^security(\(.+\))?:' | sed 's/^/- /' || true)
+    docs=$(echo "$log" | grep -E '^docs(\(.+\))?:' | sed 's/^/- /' || true)
+    other=$(echo "$log" | grep -Ev '^(feat|chore|refactor|perf|style|build|ci|fix|security|docs)(\(.+\))?:' | sed 's/^/- /' || true)
+
+    # Prepend new section to CHANGELOG.md
+    tmp=$(mktemp)
+    {
+        echo "# Changelog"
+        echo ""
+        echo "All notable changes to this project will be documented in this file."
+        echo ""
+        echo "The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),"
+        echo "and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)."
+        echo ""
+        echo "## [${version#v}] - $date"
+        echo ""
+        if [ -n "$added" ]; then
+            echo "### Added"
+            echo ""
+            echo "$added"
+            echo ""
+        fi
+        if [ -n "$changed" ]; then
+            echo "### Changed"
+            echo ""
+            echo "$changed"
+            echo ""
+        fi
+        if [ -n "$fixed" ]; then
+            echo "### Fixed"
+            echo ""
+            echo "$fixed"
+            echo ""
+        fi
+        if [ -n "$docs" ]; then
+            echo "### Documentation"
+            echo ""
+            echo "$docs"
+            echo ""
+        fi
+        if [ -n "$other" ]; then
+            echo "### Other"
+            echo ""
+            echo "$other"
+            echo ""
+        fi
+    } > "$tmp"
+    awk 'NR==1{found=0} /^## \[/{if(!found){found=1; next}} found' CHANGELOG.md >> "$tmp"
+    mv "$tmp" CHANGELOG.md
+
+    git add CHANGELOG.md
+    git commit -m "chore(release): update changelog for $version"
     git push origin HEAD
     git tag "$version"
     git push origin "$version"
-    echo "Tagged $version and pushed. GitHub Actions release workflow is running."
+    echo "Tagged $version, updated CHANGELOG.md, and pushed. GitHub Actions release workflow is running."
 
 # Create a version tag and push to trigger GitHub Actions automated release
 release version: test lint
