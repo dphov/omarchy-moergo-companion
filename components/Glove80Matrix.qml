@@ -9,7 +9,7 @@ Item {
 
     // Canonical Glove80 physical layout constants (in abstract units).
     readonly property real naturalUnitSize: Style.space(42)
-    readonly property real keySizeRatio: 36 / 42
+    readonly property real keySizeRatio: 38.5 / 42
     readonly property real matrixWidthUnits: 19.6
     readonly property real matrixHeightUnits: 8.72
 
@@ -28,10 +28,9 @@ Item {
         if (parent && parent.width > 0 && parent.height > 0) {
             var scale = Math.min(
                 parent.width / (matrixWidthUnits * naturalUnitSize),
-                parent.height / (matrixHeightUnits * naturalUnitSize),
-                1.0
+                parent.height / (matrixHeightUnits * naturalUnitSize)
             );
-            return naturalUnitSize * scale;
+            return naturalUnitSize * Math.max(scale, 0.4);
         }
         return naturalUnitSize;
     }

@@ -15,7 +15,7 @@ Rectangle {
     readonly property real cornerGlyphSize: Style.space(10)
     readonly property real cornerGlyphTopMargin: Style.space(2.5)
     readonly property real cornerGlyphLeftMargin: Style.space(3)
-    readonly property real textSideMargin: Style.space(4)
+    readonly property real textSideMargin: Style.space(2)
     readonly property real transparentHatchOpacity: 0.4
     readonly property real translucentOpacity: 0.75
 
@@ -205,16 +205,14 @@ Rectangle {
         font.family: Style.font.family
         font.pixelSize: Style.font.caption
         fontSizeMode: Text.Fit
-        minimumPixelSize: 7
+        minimumPixelSize: 6
         font.bold: true
         color: root.resolvedTextColor
-        wrapMode: root.keyText.indexOf("\n") !== -1 ? Text.Wrap : Text.WrapAnywhere
-        maximumLineCount: 2
-        elide: Text.ElideRight
-        clip: true
+        wrapMode: root.keyText.indexOf("\n") !== -1 ? Text.Wrap : Text.NoWrap
+        maximumLineCount: root.keyText.indexOf("\n") !== -1 ? 2 : 1
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        lineHeight: 1.0
+        lineHeight: 0.95
         width: parent.width - root.textSideMargin * 2
         opacity: root.isTrans ? root.translucentOpacity : 1.0
         visible: root.keyText !== ""

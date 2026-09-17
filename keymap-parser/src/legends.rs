@@ -33,14 +33,29 @@ pub fn humanize_key_code(raw: &str) -> String {
                         "&to FACTORY_TEST" | "to FACTORY_TEST" => "Test".into(),
                         "&to DEFAULT" | "to DEFAULT" => "Base".into(),
                         _ => {
-                            if let Some(rest) = raw.strip_prefix("&to ") {
-                                return rest.to_string();
+                            if let Some(rest) = raw.strip_prefix("&to ").or_else(|| raw.strip_prefix("to ")) {
+                                if rest.chars().all(|c| c.is_ascii_digit()) {
+                                    return rest.to_string();
+                                }
+                                return crate::layers::humanize_layer_name(rest);
                             }
-                            if let Some(rest) = raw.strip_prefix("to ") {
-                                return rest.to_string();
+                            if let Some(rest) = raw.strip_prefix("&mo ").or_else(|| raw.strip_prefix("mo ")) {
+                                if rest.chars().all(|c| c.is_ascii_digit()) {
+                                    return format!("&mo {rest}");
+                                }
+                                return crate::layers::humanize_layer_name(rest);
                             }
-                            if let Some(rest) = raw.strip_prefix("&tog ") {
-                                return format!("Tog {rest}");
+                            if let Some(rest) = raw.strip_prefix("&tog ").or_else(|| raw.strip_prefix("tog ")) {
+                                if rest.chars().all(|c| c.is_ascii_digit()) {
+                                    return format!("Tog {rest}");
+                                }
+                                return format!("Tog {}", crate::layers::humanize_layer_name(rest));
+                            }
+                            if let Some(rest) = raw.strip_prefix("&sl ").or_else(|| raw.strip_prefix("sl ")) {
+                                if rest.chars().all(|c| c.is_ascii_digit()) {
+                                    return format!("Sl {rest}");
+                                }
+                                return format!("Sl {}", crate::layers::humanize_layer_name(rest));
                             }
                             if let Some(rest) = raw.strip_prefix("&mt ") {
                                 let parts: Vec<&str> = rest.split_whitespace().collect();
@@ -300,5 +315,13 @@ mod tests {
         assert_eq!(humanize_key_code("&kp PRINTSCREEN"), "PrtSc");
         assert_eq!(humanize_key_code("&kp SCROLLLOCK"), "ScrLk");
         assert_eq!(humanize_key_code("&kp K_APP"), "Menu");
+    }
+
+    #[test]
+    fn layer_switch_legends() {
+        assert_eq!(humanize_key_code("&to LAYER_Base"), "Base");
+        assert_eq!(humanize_key_code("&mo LAYER_Lower"), "Lower");
+        assert_eq!(humanize_key_code("&to LAYER_Factory"), "Factory");
+        assert_eq!(humanize_key_code("&tog LAYER_Magic"), "Tog Magic");
     }
 }

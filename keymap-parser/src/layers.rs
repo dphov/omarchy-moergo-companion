@@ -1,25 +1,27 @@
 pub fn humanize_layer_name(raw: &str) -> String {
-    let s = raw.trim();
-    // Strip "layer_" or "layer-" prefix if present
-    let s = s
-        .strip_prefix("layer_")
-        .or_else(|| s.strip_prefix("layer-"))
-        .or_else(|| s.strip_prefix("Layer_"))
-        .or_else(|| s.strip_prefix("Layer-"))
-        .or_else(|| s.strip_prefix("layer "))
-        .or_else(|| s.strip_prefix("Layer "))
-        .unwrap_or(s);
+    let mut s = raw.trim();
 
-    // Strip "_layer" or "-layer" suffix if present
-    let s = s
-        .strip_suffix("_layer")
-        .or_else(|| s.strip_suffix("-layer"))
-        .or_else(|| s.strip_suffix("_Layer"))
-        .or_else(|| s.strip_suffix("-Layer"))
-        .or_else(|| s.strip_suffix(" layer"))
-        .or_else(|| s.strip_suffix(" Layer"))
-        .unwrap_or(s);
+    // Case-insensitive prefix stripping for "layer_", "layer-", "layer "
+    if s.len() >= 6 {
+        let prefix = &s[..6];
+        if prefix.eq_ignore_ascii_case("layer_")
+            || prefix.eq_ignore_ascii_case("layer-")
+            || prefix.eq_ignore_ascii_case("layer ")
+        {
+            s = s[6..].trim();
+        }
+    }
 
+    // Case-insensitive suffix stripping for "_layer", "-layer", " layer"
+    if s.len() >= 6 {
+        let suffix = &s[s.len() - 6..];
+        if suffix.eq_ignore_ascii_case("_layer")
+            || suffix.eq_ignore_ascii_case("-layer")
+            || suffix.eq_ignore_ascii_case(" layer")
+        {
+            s = s[..s.len() - 6].trim();
+        }
+    }
     match s.to_ascii_lowercase().as_str() {
         "default" => "Base".into(),
         "lower" => "Lower".into(),
@@ -86,6 +88,10 @@ mod tests {
         assert_eq!(humanize_layer_name("layer_Base"), "Base");
         assert_eq!(humanize_layer_name("layer_Lower"), "Lower");
         assert_eq!(humanize_layer_name("layer_Magic"), "Magic");
+        assert_eq!(humanize_layer_name("LAYER_Base"), "Base");
+        assert_eq!(humanize_layer_name("LAYER_Lower"), "Lower");
+        assert_eq!(humanize_layer_name("LAYER_Magic"), "Magic");
+        assert_eq!(humanize_layer_name("LAYER_Factory"), "Factory");
     }
 
     #[test]
