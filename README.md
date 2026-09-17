@@ -11,26 +11,26 @@ The plugin inherits the active Omarchy theme colors automatically.
 
 ## Installation
 
-### From source (recommended)
+### Via the Omarchy plugin installer (recommended for Omarchy users)
+
+```bash
+omarchy plugin add https://github.com/dphov/omarchy-moergo-companion.git --enable
+~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/install.sh
+omarchy-restart-shell
+```
+
+### From source using `./install.sh` (standalone for end users)
 
 ```bash
 git clone https://github.com/dphov/omarchy-moergo-companion.git
 cd omarchy-moergo-companion
-just install
-```
-
-This compiles all native Rust helpers in release mode from locked dependencies (`Cargo.lock`) and installs the plugin to `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/`.
-
-### From the Omarchy marketplace
-
-```bash
-omarchy plugin add https://github.com/dphov/omarchy-moergo-companion.git --enable
-cd ~/.config/omarchy/plugins/dphov.omarchy-moergo-companion && just build
+./install.sh
 omarchy-restart-shell
 ```
 
-Alternatively, download the pre-built binaries and `SHA256SUMS` from the [GitHub Releases](https://github.com/dphov/omarchy-moergo-companion/releases) page, verify their integrity (`sha256sum -c SHA256SUMS`), and place them in the plugin's `bin/` directory.
+`./install.sh` is a self-contained bash script that checks for `cargo`, compiles all native helpers from locked dependencies (`Cargo.lock`), and deploys the plugin to `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/`. No developer tools (such as `just`) are required.
 
+*(Alternatively, pre-compiled binaries and `SHA256SUMS` can be downloaded from [GitHub Releases](https://github.com/dphov/omarchy-moergo-companion/releases), verified with `sha256sum -c SHA256SUMS`, and placed into `bin/`).*
 ## Usage
 
 Click the Glove80 bar item to open the panel. Inside the panel you can:
@@ -133,19 +133,18 @@ sha256sum -c SHA256SUMS
 
 ## Development
 
-Common tasks are in `justfile`:
+For developers contributing or iterating on the plugin, a `justfile` provides daily workflow commands:
 
 ```bash
-just build      # cargo build --release
-just test       # cargo test
-just lint       # qmllint *.qml components/*.qml
-just install    # build + install to ~/.config/omarchy/plugins/
-just restart    # omarchy-restart-shell
-just reload     # install + restart
-just clean      # cargo clean
-just dev        # cargo watch with auto-reload
+just install          # Compile native helpers and install to ~/.config/omarchy/plugins/
+just reload           # Build, install, and restart the Omarchy shell (full reload)
+just build            # Compile release binaries locally into bin/
+just test             # Run all Rust unit, integration, and security tests
+just lint             # Validate QML syntax across all files with qmllint
+just dev              # Live-reload development mode using cargo-watch
+just clean            # Remove Rust build artifacts
+just release <tag>    # Verify clean git state, run test & lint, tag, and push release
 ```
-
 ## Configuration
 
 The plugin reads the keymap path from `~/.config/omarchy/glove80-plugin-settings.json`. On first run it defaults to:
