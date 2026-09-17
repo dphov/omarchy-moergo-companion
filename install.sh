@@ -5,24 +5,35 @@ PLUGIN_ID="dphov.omarchy-moergo-companion"
 TARGET_DIR="$HOME/.config/omarchy/plugins/$PLUGIN_ID"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if ! command -v cargo >/dev/null 2>&1; then
-  echo "Error: 'cargo' is not installed or not in PATH." >&2
-  echo "Please install Rust (https://rustup.rs) to build the native helpers from source." >&2
-  exit 1
+have_binaries=true
+for b in omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status; do
+  if [[ ! -x "$SCRIPT_DIR/bin/$b" ]]; then
+    have_binaries=false
+    break
+  fi
+done
+
+if [[ "$have_binaries" == false || "${1:-}" == "--rebuild" ]]; then
+  if ! command -v cargo >/dev/null 2>&1; then
+    echo "Error: 'cargo' is not installed or not in PATH." >&2
+    echo "Please install Rust (https://rustup.rs) to build the native helpers from source." >&2
+    exit 1
+  fi
+
+  echo "Building native Rust helpers from locked source..."
+  (
+    cd "$SCRIPT_DIR/keymap-parser"
+    cargo build --release --locked
+  )
+
+  mkdir -p "$SCRIPT_DIR/bin"
+  cp "$SCRIPT_DIR/keymap-parser/target/release/omarchy-moergo-keymap-parser" "$SCRIPT_DIR/bin/"
+  cp "$SCRIPT_DIR/keymap-parser/target/release/moergo-watcher" "$SCRIPT_DIR/bin/"
+  cp "$SCRIPT_DIR/keymap-parser/target/release/moergo-companion-settings" "$SCRIPT_DIR/bin/"
+  cp "$SCRIPT_DIR/keymap-parser/target/release/glove80-status" "$SCRIPT_DIR/bin/"
+else
+  echo "Using verified native helpers in bin/."
 fi
-
-echo "Building native Rust helpers from locked source..."
-(
-  cd "$SCRIPT_DIR/keymap-parser"
-  cargo build --release --locked
-)
-
-mkdir -p "$SCRIPT_DIR/bin"
-cp "$SCRIPT_DIR/keymap-parser/target/release/omarchy-moergo-keymap-parser" "$SCRIPT_DIR/bin/"
-cp "$SCRIPT_DIR/keymap-parser/target/release/moergo-watcher" "$SCRIPT_DIR/bin/"
-cp "$SCRIPT_DIR/keymap-parser/target/release/moergo-companion-settings" "$SCRIPT_DIR/bin/"
-cp "$SCRIPT_DIR/keymap-parser/target/release/glove80-status" "$SCRIPT_DIR/bin/"
-
 # If executed outside the Omarchy plugins directory, sync files to target
 if [[ "$SCRIPT_DIR" != "$TARGET_DIR" ]]; then
   echo "Installing $PLUGIN_ID to $TARGET_DIR..."

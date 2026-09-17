@@ -11,26 +11,27 @@ The plugin inherits the active Omarchy theme colors automatically.
 
 ## Installation
 
-### Via the Omarchy plugin installer (recommended for Omarchy users)
+### Via the Omarchy plugin installer (recommended)
 
 ```bash
 omarchy plugin add https://github.com/dphov/omarchy-moergo-companion.git --enable
-~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/install.sh
 omarchy-restart-shell
 ```
 
-### From source using `./install.sh` (standalone for end users)
+The plugin comes with verified native helpers compiled automatically by GitHub Actions from the reviewed Rust source. No manual build steps are required.
+
+### From source using `./install.sh`
+
+For users who prefer to build directly from source on their own machine:
 
 ```bash
 git clone https://github.com/dphov/omarchy-moergo-companion.git
 cd omarchy-moergo-companion
-./install.sh
+./install.sh --rebuild
 omarchy-restart-shell
 ```
 
-`./install.sh` is a self-contained bash script that checks for `cargo`, compiles all native helpers from locked dependencies (`Cargo.lock`), and deploys the plugin to `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/`. No developer tools (such as `just`) are required.
-
-*(Alternatively, pre-compiled binaries and `SHA256SUMS` can be downloaded from [GitHub Releases](https://github.com/dphov/omarchy-moergo-companion/releases), verified with `sha256sum -c SHA256SUMS`, and placed into `bin/`).*
+`./install.sh` is a self-contained script that compiles all native helpers from locked dependencies (`Cargo.lock`) and deploys to `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/`.
 ## Usage
 
 Click the Glove80 bar item to open the panel. Inside the panel you can:
@@ -116,19 +117,19 @@ The plugin is split into a **service** and a **bar widget**, so background work 
 
 ## Security & Binary Provenance
 
-To prevent supply chain risks, symlink attacks, and execution of untrusted pre-built code:
+To prevent supply chain risks, symlink attacks, and untrusted local binaries:
 
-1. **Zero committed binary blobs**: All precompiled ELF binaries are excluded from version control (`bin/` is gitignored).
-2. **Locked source compilation**: Helpers are compiled directly from the reviewed Rust source in `keymap-parser/` using `cargo build --release --locked`. The `--locked` flag strictly verifies that all dependency versions and cryptographic hashes match `Cargo.lock`.
-3. **User-private runtime directory**: Runtime state (`glove80_layout.json`, `glove80_watcher.pid`, `glove80_battery_notified.json`) is stored in `$XDG_RUNTIME_DIR/omarchy-moergo-companion` with a mode-`0700` fallback (`/tmp/omarchy-moergo-$UID`).
-4. **Symlink defense & safe PID locking**: The watcher opens PID files using `libc::O_NOFOLLOW` without premature truncation, verifies ownership, and acquires an exclusive `flock` before writing.
-5. **Atomic file replacement**: State and layout files are written to mode-`0600` temporary files within the private runtime directory and atomically renamed to prevent partial reads or symlink injection.
-6. **Reproducible CI releases**: Every version tag (`v*`) triggers automated GitHub Actions builds in an isolated container from locked dependencies. Each release publishes standalone binaries, an offline distribution archive, and a `SHA256SUMS` manifest.
+1. **Local binaries strictly ignored**: `bin/` is gitignored on local machines. Developers never commit or push locally compiled binaries to version control.
+2. **Sole verified builder (GitHub Actions)**: Native helpers are compiled exclusively by GitHub Actions in a clean, isolated container directly from reviewed source code and locked dependencies (`Cargo.lock`).
+3. **Verifiable commit provenance**: Each automated binary update on GitHub Actions publishes an updated `SHA256SUMS` manifest tied to the specific GitHub Actions run ID.
+4. **User-private runtime directory**: Runtime state (`glove80_layout.json`, `glove80_watcher.pid`, `glove80_battery_notified.json`) is stored in `$XDG_RUNTIME_DIR/omarchy-moergo-companion` with a mode-`0700` fallback (`/tmp/omarchy-moergo-$UID`).
+5. **Symlink defense & safe PID locking**: The watcher opens PID files using `libc::O_NOFOLLOW` without premature truncation, verifies ownership, and acquires an exclusive `flock` before writing.
+6. **Atomic file replacement**: State and layout files are written to mode-`0600` temporary files within the private runtime directory and atomically renamed to prevent partial reads or symlink injection.
 
-To verify published binaries against the cryptographic manifest:
+To verify binaries against the cryptographic manifest:
 
 ```bash
-sha256sum -c SHA256SUMS
+sha256sum -c bin/SHA256SUMS
 ```
 
 ## Development

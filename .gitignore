@@ -13,5 +13,6 @@ parser
 # Rust build artifacts
 keymap-parser/target/
 
-# Compiled native binaries (rebuilt from locked source by install.sh / just build)
+# Native binaries (built on GitHub Actions or locally for testing - NEVER committed locally)
 bin/
+

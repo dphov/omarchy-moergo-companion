@@ -1,0 +1,80 @@
+name: Build & Verify Binaries
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'keymap-parser/**'
+      - '.github/workflows/build-binaries.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'keymap-parser/**'
+      - '.github/workflows/build-binaries.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-verify:
+    name: Build & Verify Binaries
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run test suite
+        run: |
+          cd keymap-parser
+          cargo test --locked --verbose
+
+      - name: Build release binaries with deterministic paths
+        run: |
+          cd keymap-parser
+          RUSTFLAGS="--remap-path-prefix=$GITHUB_WORKSPACE=/build --remap-path-prefix=$HOME=/home" cargo build --release --locked
+
+      - name: Stage binaries into bin/
+        run: |
+          mkdir -p bin
+          cp keymap-parser/target/release/omarchy-moergo-keymap-parser bin/
+          cp keymap-parser/target/release/moergo-watcher bin/
+          cp keymap-parser/target/release/moergo-companion-settings bin/
+          cp keymap-parser/target/release/glove80-status bin/
+
+      - name: Generate and verify SHA-256 manifest
+        run: |
+          cd bin
+          sha256sum glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser > SHA256SUMS
+          sha256sum -c SHA256SUMS
+
+      - name: Verify binaries match in Pull Requests
+        if: github.event_name == 'pull_request'
+        run: |
+          git add -f bin/
+          if ! git diff --cached --quiet; then
+            echo "::error::The committed binaries in bin/ do not match the compiled output from keymap-parser/."
+            git diff --cached bin/
+            exit 1
+          fi
+
+      - name: Commit and push verified binaries (push to main or manual dispatch)
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+        run: |
+          git add -f bin/
+          if git diff --cached --quiet; then
+            echo "Binaries in bin/ are already up-to-date and match source."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore(ci): update release binaries [skip ci]" \
+              -m "Cryptographic build provenance: compiled on GitHub Actions run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} from commit ${{ github.sha }}"
+            git push
+          fi
