@@ -47,6 +47,18 @@ reload: build install restart
 clean:
     cd keymap-parser && cargo clean
 
+# Run all code-quality checks (format, clippy, tests, qmllint)
+check:
+    cd keymap-parser && cargo fmt --check
+    cd keymap-parser && cargo clippy --locked --all-targets -- -D warnings
+    cd keymap-parser && cargo test --locked
+    qmllint *.qml components/*.qml
+
+# Run checks and commit with the provided message
+commit message: check
+    git add -A
+    git commit -m "{{message}}"
+
 # Watch for changes and reload (requires cargo-watch and just)
 dev:
     cargo watch --watch-when-idle -w keymap-parser/src -w components -s 'just reload'
