@@ -21,6 +21,9 @@ jobs:
         working-directory: bin
         run: sha256sum -c SHA256SUMS
 
+      - name: Ensure CHANGELOG.md is present
+        run: test -f CHANGELOG.md
+
       - name: Copy binaries and package release assets
         id: checksum
         working-directory: bin
@@ -38,6 +41,21 @@ jobs:
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
+      - name: Extract changelog section for this release
+        id: changelog
+        run: |
+          version="${{ github.ref_name }}"
+          version="${version#v}"
+          section=$(awk '/^## \['"$version"'\]/{flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md)
+          if [ -z "$section" ]; then
+            section="_No CHANGELOG.md entry found for ${{ github.ref_name }}._"
+          fi
+          {
+            echo 'body<<EOF'
+            echo "$section"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -45,6 +63,8 @@ jobs:
             release-assets/*
           generate_release_notes: true
           body: |
+            ${{ steps.changelog.outputs.body }}
+
             ### Verifying Binary Provenance
 
             All release binaries are compiled directly from the reviewed, locked Rust source (`Cargo.lock`) on GitHub Actions and committed to `bin/` on every source change.
