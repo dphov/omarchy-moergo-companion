@@ -32,24 +32,20 @@ jobs:
 
       - name: Stage release artifacts & generate SHA-256 checksums
         id: checksum
+        working-directory: release-assets
         run: |
-          mkdir -p release-assets
-          cp keymap-parser/target/release/omarchy-moergo-keymap-parser release-assets/
-          cp keymap-parser/target/release/moergo-watcher release-assets/
-          cp keymap-parser/target/release/moergo-companion-settings release-assets/
-          cp keymap-parser/target/release/glove80-status release-assets/
+          cp ../keymap-parser/target/release/omarchy-moergo-keymap-parser .
+          cp ../keymap-parser/target/release/moergo-watcher .
+          cp ../keymap-parser/target/release/moergo-companion-settings .
+          cp ../keymap-parser/target/release/glove80-status .
 
-          # Generate SHA-256 sums for binaries (before packaging the archive)
-          cd release-assets
+          # Generate SHA-256 sums for the binaries
           sha256sum omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status > SHA256SUMS
 
-          # Package archive for offline distribution
-          cd ..
-          tar -czvf "omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz" -C release-assets omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status SHA256SUMS
-          mv "omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz" release-assets/
+          # Package archive for offline distribution (includes binaries + checksums)
+          tar -czvf "omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz" omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status SHA256SUMS
 
-          # Recompute SHA-256 sums for all final assets and verify
-          cd release-assets
+          # Verify all final assets (binaries, archive, and SHA256SUMS) match
           sha256sum * > SHA256SUMS
           sha256sum -c SHA256SUMS
 
