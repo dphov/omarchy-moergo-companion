@@ -125,11 +125,12 @@ release-preview version:
     echo ""
     echo "### Verifying Binary Provenance"
     echo ""
-    echo "All release binaries are compiled directly from the reviewed, locked Rust source (\`Cargo.lock\`) on GitHub Actions and committed to \`bin/\` on every source change."
-    echo "To verify that your downloaded binaries match the published release assets:"
+    echo "All release binaries are compiled directly from the reviewed, locked Rust source (\`keymap-parser/Cargo.lock\`) on GitHub Actions and distributed as release assets."
+    echo "To verify that your downloaded binaries match the attested build:"
     echo ""
     echo '```bash'
     echo "sha256sum -c SHA256SUMS"
+    echo "gh attestation verify --owner dphov --predicate-type https://slsa.dev/provenance/v1 omarchy-moergo-keymap-parser"
     echo '```'
     echo ""
     echo "### Checksums"
@@ -154,7 +155,14 @@ release version: check
         echo "Error: No CHANGELOG.md section found for {{version}}."
         exit 1
     fi
-    git push origin HEAD
+    # Sync manifest.json version with the release tag
+    sed -i -E 's/("version"[[:space:]]*:[[:space:]]*")[^"]+(".*)/\1'"$bare"'\2/' manifest.json
+    if [ -n "$(git status --porcelain manifest.json)" ]; then
+        git add manifest.json
+        git commit -m "chore(release): bump manifest.json to {{version}}"
+        git push origin HEAD
+    fi
+
     git tag {{version}}
     git push origin {{version}}
     echo "Tagged {{version}} and pushed. GitHub Actions release workflow is running."

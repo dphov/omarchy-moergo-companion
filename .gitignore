@@ -13,7 +13,8 @@ parser
 # Rust build artifacts
 keymap-parser/target/
 
-# Native binaries (built on GitHub Actions or locally for testing - NEVER committed locally)
+# Native binaries are built by GitHub Actions and distributed via release assets only;
+# they are never committed to the source tree.
 bin/
 
 # Agent authorization rules are repository-local and must not be distributed
