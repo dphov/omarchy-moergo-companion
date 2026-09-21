@@ -40,12 +40,6 @@ jobs:
           sha256sum omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status > SHA256SUMS
           sha256sum -c SHA256SUMS
 
-      - name: Attest release binaries
-        uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
-        with:
-          subject-path: dist/bin/*
-          show-summary: true
-
       - name: Ensure CHANGELOG.md is present
         run: test -f CHANGELOG.md
 
@@ -63,6 +57,14 @@ jobs:
             cat dist/bin/SHA256SUMS
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
+
+      - name: Attest release assets
+        uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
+        with:
+          subject-path: |
+            omarchy-moergo-companion-binaries-*.tar.gz
+            SHA256SUMS
+          show-summary: true
 
       - name: Extract changelog section for this release
         id: changelog
