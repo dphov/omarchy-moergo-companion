@@ -130,13 +130,13 @@ Item {
     function updateStatus(raw) {
         try {
             var data = JSON.parse(raw);
-            root.isConnected = !!data.connected;
+            root.isConnected = Boolean(data.connected);
             root.statusText = data.text || (root.isConnected ? "Connected" : "\uf11c Off");
             root.statusTooltip = data.tooltip || "MoErgo Glove80";
             root.battery = (data.battery !== undefined) ? data.battery : null;
-            root.charging = !!data.charging;
-            root.usbLeft = !!data.usbLeft;
-            root.usbRight = !!data.usbRight;
+            root.charging = Boolean(data.charging);
+            root.usbLeft = Boolean(data.usbLeft);
+            root.usbRight = Boolean(data.usbRight);
             root.deviceData = data.device || null;
         } catch (e) {
         }

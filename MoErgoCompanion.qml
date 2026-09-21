@@ -128,11 +128,11 @@ Panel {
                         Flow {
                             Layout.fillWidth: true
                             spacing: Style.space(4)
-                            visible: (!!root.parsedLayout && !!root.parsedLayout.language)
-                                || (!!(root.parsedLayout && root.parsedLayout.tags) && root.parsedLayout.tags.length > 0)
+                            visible: (root.parsedLayout !== null && root.parsedLayout.language !== undefined && root.parsedLayout.language !== "")
+                                || ((root.parsedLayout !== null && root.parsedLayout.tags !== undefined) && root.parsedLayout.tags.length > 0)
 
                             Rectangle {
-                                visible: !!(root.parsedLayout && root.parsedLayout.language)
+                                visible: root.parsedLayout !== null && root.parsedLayout.language !== undefined && root.parsedLayout.language !== ""
                                 color: "transparent"
                                 radius: Style.cornerRadius
                                 border.color: Color.muted

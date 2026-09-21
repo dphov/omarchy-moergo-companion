@@ -174,7 +174,7 @@ Item {
             keyGlyph: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.glyph || "") : ""
             keyColor: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.color || "") : ""
             keyTextColor: (typeof currentKey === "object" && currentKey !== null) ? (currentKey.text_color || "") : ""
-            isTrans: (typeof currentKey === "object" && currentKey !== null) ? !!currentKey.trans : false
+            isTrans: (typeof currentKey === "object" && currentKey !== null) ? Boolean(currentKey.trans) : false
             onIsHoveredChanged: {
                 if (isHovered) {
                     root.hoveredPosition = (root.keyPositions && root.keyPositions.length > index) ? root.keyPositions[index] : "";
