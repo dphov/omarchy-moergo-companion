@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.4] - 2026-09-21
+
+### Fixed
+
+- fix(ci): package release tarball with `bin/` subdirectory to avoid `SHA256SUMS` name collision
+- fix(ci): verify downloaded release binaries against internal `bin/SHA256SUMS`
+- docs: update README and release notes for unambiguous two-step tarball verification
+
 ## [1.1.3] - 2026-09-21
 
 ### Changed
