@@ -15,8 +15,12 @@ Item {
         if (xdg && xdg.length > 0) {
             return xdg + "/omarchy-moergo-companion";
         }
-        var user = Quickshell.env("USER") || "user";
-        return "/tmp/omarchy-moergo-" + user;
+        var uid = Quickshell.env("UID");
+        if (!uid || uid === "") {
+            uid = "1000";
+            console.warn("XDG_RUNTIME_DIR and UID are unset; falling back to uid 1000");
+        }
+        return "/tmp/omarchy-moergo-" + uid;
     }
     readonly property string jsonFile: root.runtimeDir + "/glove80_layout.json"
     readonly property string pluginDir: {
