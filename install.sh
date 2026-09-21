@@ -7,13 +7,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="dphov/omarchy-moergo-companion"
 BIN_DIR="$SCRIPT_DIR/bin"
 
-ensure_command() {
-  if ! command -v "$1" >/dev/null 2>&1; then
-    echo "Error: required command '$1' is not installed or not in PATH." >&2
-    return 1
-  fi
-}
-
 get_manifest_version() {
   local manifest="$SCRIPT_DIR/manifest.json"
   if [ ! -f "$manifest" ]; then
@@ -23,25 +16,45 @@ get_manifest_version() {
   grep -m1 '"version"' "$manifest" | sed -E 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/'
 }
 
+supported_platform() {
+  local arch os
+  arch="$(uname -m)"
+  os="$(uname -s)"
+  if [[ "$os" != "Linux" ]] || [[ "$arch" != "x86_64" ]]; then
+    echo "Prebuilt release binaries are only available for Linux x86_64 (current: $os $arch)." >&2
+    return 1
+  fi
+  return 0
+}
+
 download_release_binaries() {
   local version="$1"
   local tag="v${version}"
+  local tarball="omarchy-moergo-companion-binaries-${tag}.tar.gz"
   local base_url="https://github.com/${REPO}/releases/download/${tag}"
 
+  if ! supported_platform; then
+    return 1
+  fi
+
   mkdir -p "$BIN_DIR"
+  rm -f "$BIN_DIR"/*
 
   echo "Downloading verified native helpers from release ${tag}..."
-  for binary in omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status; do
-    curl -fsSL -o "$BIN_DIR/$binary" "${base_url}/${binary}" || return 1
-    chmod +x "$BIN_DIR/$binary"
-  done
-
+  curl -fsSL -o "$BIN_DIR/${tarball}" "${base_url}/${tarball}" || return 1
   curl -fsSL -o "$BIN_DIR/SHA256SUMS" "${base_url}/SHA256SUMS" || return 1
 
   (
     cd "$BIN_DIR"
+    # Verify the tarball against the top-level release manifest
+    sha256sum -c SHA256SUMS
+    # Extract and verify the internal binary checksums
+    tar -xzf "$tarball"
     sha256sum -c SHA256SUMS
   )
+
+  # Clean up: keep only the extracted binaries, not the tarball
+  rm -f "$BIN_DIR/${tarball}" "$BIN_DIR/SHA256SUMS"
 
   echo "Release binaries verified successfully."
 }
@@ -60,6 +73,7 @@ build_from_source() {
   )
 
   mkdir -p "$BIN_DIR"
+  rm -f "$BIN_DIR"/*
   cp "$SCRIPT_DIR/keymap-parser/target/release/omarchy-moergo-keymap-parser" "$BIN_DIR/"
   cp "$SCRIPT_DIR/keymap-parser/target/release/moergo-watcher" "$BIN_DIR/"
   cp "$SCRIPT_DIR/keymap-parser/target/release/moergo-companion-settings" "$BIN_DIR/"
@@ -67,7 +81,7 @@ build_from_source() {
 
   (
     cd "$BIN_DIR"
-    sha256sum glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser > SHA256SUMS
+    sha256sum omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status > SHA256SUMS
   )
 }
 

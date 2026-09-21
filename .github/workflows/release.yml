@@ -29,40 +29,39 @@ jobs:
           RUSTFLAGS="--remap-path-prefix=$GITHUB_WORKSPACE=/build --remap-path-prefix=$HOME=/home" \
             cargo build --release --locked
 
-      - name: Stage binaries and generate SHA-256 manifest
+      - name: Stage binaries and generate internal SHA-256 manifest
         run: |
-          mkdir -p bin
-          cp keymap-parser/target/release/omarchy-moergo-keymap-parser bin/
-          cp keymap-parser/target/release/moergo-watcher bin/
-          cp keymap-parser/target/release/moergo-companion-settings bin/
-          cp keymap-parser/target/release/glove80-status bin/
-          cd bin
-          sha256sum glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser > SHA256SUMS
+          mkdir -p dist
+          cp keymap-parser/target/release/omarchy-moergo-keymap-parser dist/
+          cp keymap-parser/target/release/moergo-watcher dist/
+          cp keymap-parser/target/release/moergo-companion-settings dist/
+          cp keymap-parser/target/release/glove80-status dist/
+          cd dist
+          sha256sum omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status > SHA256SUMS
           sha256sum -c SHA256SUMS
 
       - name: Attest release binaries
         uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
         with:
-          subject-path: bin/*
+          subject-path: dist/*
           show-summary: true
 
       - name: Ensure CHANGELOG.md is present
         run: test -f CHANGELOG.md
 
-      - name: Package release assets
+      - name: Package release tarball
         id: checksum
         run: |
-          mkdir -p release-assets
-          cp bin/omarchy-moergo-keymap-parser bin/moergo-watcher bin/moergo-companion-settings bin/glove80-status release-assets/
-          cp bin/SHA256SUMS release-assets/SHA256SUMS-source-binaries
-          cd release-assets
-          tar -czvf "omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz" \
-            omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status
-          sha256sum omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status "omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz" > SHA256SUMS
+          tarball="omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz"
+          cd dist
+          tar -czvf "../$tarball" \
+            omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status SHA256SUMS
+          cd ..
+          sha256sum "$tarball" > SHA256SUMS
           sha256sum -c SHA256SUMS
           {
             echo 'body<<EOF'
-            cat SHA256SUMS
+            cat dist/SHA256SUMS
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
@@ -85,32 +84,35 @@ jobs:
         uses: softprops/action-gh-release@e7a8f85e1c67a31e6ed99a94b41bd0b71bbee6b8 # v2.0.9
         with:
           files: |
-            release-assets/*
+            omarchy-moergo-companion-binaries-*.tar.gz
+            SHA256SUMS
           generate_release_notes: true
           body: |
             ${{ steps.changelog.outputs.body }}
 
             ### Verifying Binary Provenance
 
-            All release binaries are compiled directly from the reviewed, locked Rust source (`keymap-parser/Cargo.lock`) on GitHub Actions. Each release produces signed Sigstore-compatible attestations stored by GitHub.
+            All release binaries are compiled directly from the reviewed, locked Rust source (`keymap-parser/Cargo.lock`) on GitHub Actions and packaged as a single tarball with an internal `SHA256SUMS` manifest. Each release produces signed Sigstore-compatible attestations stored by GitHub.
 
-            To verify that a downloaded binary matches the attested build:
+            To download and verify the tarball:
 
             ```bash
-            gh attestation verify --owner ${{ github.repository_owner }} --predicate-type https://slsa.dev/provenance/v1 omarchy-moergo-keymap-parser
-            gh attestation verify --owner ${{ github.repository_owner }} --predicate-type https://slsa.dev/provenance/v1 moergo-watcher
-            gh attestation verify --owner ${{ github.repository_owner }} --predicate-type https://slsa.dev/provenance/v1 moergo-companion-settings
-            gh attestation verify --owner ${{ github.repository_owner }} --predicate-type https://slsa.dev/provenance/v1 glove80-status
+            tag=${{ github.ref_name }}
+            curl -fsSL -O "https://github.com/${{ github.repository }}/releases/download/${tag}/omarchy-moergo-companion-binaries-${tag}.tar.gz"
+            curl -fsSL -O "https://github.com/${{ github.repository }}/releases/download/${tag}/SHA256SUMS"
+            sha256sum -c SHA256SUMS
+            tar -xzf "omarchy-moergo-companion-binaries-${tag}.tar.gz"
+            sha256sum -c SHA256SUMS
             ```
 
-            You can also verify the local checksums with:
+            To verify signed build provenance for the tarball:
 
             ```bash
-            sha256sum -c SHA256SUMS
+            gh attestation verify --owner ${{ github.repository_owner }} --predicate-type https://slsa.dev/provenance/v1 omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz
             ```
 
             ### Checksums
 
-            SHA-256 values for the assets in this release are listed below and also bundled in the attached `SHA256SUMS` file.
+            SHA-256 values for the binaries inside the tarball are listed below and also bundled in the tarball's `SHA256SUMS` file.
 
             ${{ steps.checksum.outputs.body }}
