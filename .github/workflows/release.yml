@@ -5,21 +5,28 @@ on:
     tags:
       - 'v*'
 
-permissions:
-  contents: write
-
 jobs:
   build-release:
     name: Build & Publish Release Binaries
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
 
       - name: Verify committed binaries match SHA256SUMS
         working-directory: bin
         run: sha256sum -c SHA256SUMS
+
+      - name: Attest release binaries
+        uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
+        with:
+          subject-path: bin/*
+          show-summary: true
 
       - name: Ensure CHANGELOG.md is present
         run: test -f CHANGELOG.md
@@ -48,7 +55,7 @@ jobs:
           version="${version#v}"
           section=$(awk '/^## \['"$version"'\]/{flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md)
           if [ -z "$section" ]; then
-            section="_No CHANGELOG.md entry found for ${{ github.ref_name }}._"
+            section="_No CHANGELOG.md entry found for ${{ github.ref_name }}."
           fi
           {
             echo 'body<<EOF'
@@ -57,7 +64,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@e7a8f85e1c67a31e6ed99a94b41bd0b71bbee6b8 # v2.0.9
         with:
           files: |
             release-assets/*
@@ -67,8 +74,18 @@ jobs:
 
             ### Verifying Binary Provenance
 
-            All release binaries are compiled directly from the reviewed, locked Rust source (`Cargo.lock`) on GitHub Actions and committed to `bin/` on every source change.
-            To verify that your downloaded binaries match the published release assets:
+            All release binaries are compiled directly from the reviewed, locked Rust source (`keymap-parser/Cargo.lock`) on GitHub Actions and committed to `bin/` on every source change. Each build and release produces signed Sigstore-compatible attestations stored by GitHub.
+
+            To verify that a downloaded binary matches the attested build:
+
+            ```bash
+            gh attestation verify --owner ${{ github.repository_owner }} --predicate-type https://slsa.dev/provenance/v1 omarchy-moergo-keymap-parser
+            gh attestation verify --owner ${{ github.repository_owner }} --predicate-type https://slsa.dev/provenance/v1 moergo-watcher
+            gh attestation verify --owner ${{ github.repository_owner }} --predicate-type https://slsa.dev/provenance/v1 moergo-companion-settings
+            gh attestation verify --owner ${{ github.repository_owner }} --predicate-type https://slsa.dev/provenance/v1 glove80-status
+            ```
+
+            You can also verify the local checksums with:
 
             ```bash
             sha256sum -c SHA256SUMS

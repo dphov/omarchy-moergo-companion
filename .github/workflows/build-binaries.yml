@@ -13,22 +13,25 @@ on:
       - '.github/workflows/build-binaries.yml'
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   build-and-verify:
     name: Build & Verify Binaries
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # stable
+        with:
+          toolchain: 1.98.1
 
       - name: Build release binaries from locked source
         run: |
@@ -50,6 +53,12 @@ jobs:
           sha256sum glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser > SHA256SUMS
           sha256sum -c SHA256SUMS
 
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
+        with:
+          subject-path: bin/*
+          show-summary: true
+
       - name: Verify binaries match in Pull Requests
         if: github.event_name == 'pull_request'
         run: |
@@ -70,6 +79,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git commit -m "chore(ci): update release binaries [skip ci]" \
-              -m "Cryptographic build provenance: compiled on GitHub Actions run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} from commit ${{ github.sha }}"
+              -m "Build provenance: compiled on GitHub Actions run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} from locked source at commit ${{ github.sha }}." \
+              -m "Verify with: gh attestation verify --owner ${{ github.repository_owner }} --predicate-type https://slsa.dev/provenance/v1 bin/<binary>"
             git push
           fi

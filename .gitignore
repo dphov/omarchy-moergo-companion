@@ -16,3 +16,6 @@ keymap-parser/target/
 # Native binaries (built on GitHub Actions or locally for testing - NEVER committed locally)
 bin/
 
+# Agent authorization rules are repository-local and must not be distributed
+AGENTS.md
+

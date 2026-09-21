@@ -41,6 +41,7 @@ if [[ "$SCRIPT_DIR" != "$TARGET_DIR" ]]; then
   rsync -av --delete \
     --exclude=".git" \
     --exclude="keymap-parser/target" \
+    --exclude="AGENTS.md" \
     "$SCRIPT_DIR/" "$TARGET_DIR/"
 fi
 

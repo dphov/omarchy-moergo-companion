@@ -120,16 +120,21 @@ The plugin is split into a **service** and a **bar widget**, so background work 
 To prevent supply chain risks, symlink attacks, and untrusted local binaries:
 
 1. **Local binaries strictly ignored**: `bin/` is gitignored on local machines. Developers never commit or push locally compiled binaries to version control.
-2. **Sole verified builder (GitHub Actions)**: Native helpers are compiled exclusively by GitHub Actions in a clean, isolated container directly from reviewed source code and locked dependencies (`Cargo.lock`).
-3. **Verifiable commit provenance**: Each automated binary update on GitHub Actions publishes an updated `SHA256SUMS` manifest tied to the specific GitHub Actions run ID.
-4. **User-private runtime directory**: Runtime state (`glove80_layout.json`, `glove80_watcher.pid`, `glove80_battery_notified.json`) is stored in `$XDG_RUNTIME_DIR/omarchy-moergo-companion` with a mode-`0700` fallback (`/tmp/omarchy-moergo-$UID`).
-5. **Symlink defense & safe PID locking**: The watcher opens PID files using `libc::O_NOFOLLOW` without premature truncation, verifies ownership, and acquires an exclusive `flock` before writing.
-6. **Atomic file replacement**: State and layout files are written to mode-`0600` temporary files within the private runtime directory and atomically renamed to prevent partial reads or symlink injection.
+2. **Sole verified builder (GitHub Actions)**: Native helpers are compiled exclusively by GitHub Actions in a clean, isolated container directly from reviewed source code and locked dependencies (`keymap-parser/Cargo.lock`).
+3. **Immutable supply chain**: Every third-party action, the Rust toolchain, and the `install.sh` source sync exclude list use reviewed immutable identifiers. All mutable action tags and branch refs have been replaced with full commit SHAs, and workflow permissions are set at the job level with least privilege.
+4. **Verifiable signed provenance**: Each automated build and release produces a GitHub artifact attestation (`actions/attest-build-provenance`) that cryptographically ties the exact committed binary hashes to the reviewed locked source and the specific GitHub Actions run. Release notes include `gh attestation verify` instructions.
+5. **User-private runtime directory**: Runtime state (`glove80_layout.json`, `glove80_watcher.pid`, `glove80_battery_notified.json`) is stored in `$XDG_RUNTIME_DIR/omarchy-moergo-companion` with a mode-`0700` fallback (`/tmp/omarchy-moergo-$UID`).
+6. **Symlink defense & safe PID locking**: The watcher opens PID files using `libc::O_NOFOLLOW` without premature truncation, verifies ownership, and acquires an exclusive `flock` before writing.
+7. **Atomic file replacement**: State and layout files are written to mode-`0600` temporary files within the private runtime directory and atomically renamed to prevent partial reads or symlink injection.
 
-To verify binaries against the cryptographic manifest:
+To verify binaries:
 
 ```bash
+# Verify checksums against the committed manifest
 sha256sum -c bin/SHA256SUMS
+
+# Verify signed build provenance (requires GitHub CLI)
+gh attestation verify --owner dphov --predicate-type https://slsa.dev/provenance/v1 bin/omarchy-moergo-keymap-parser
 ```
 
 ## Development
