@@ -19,18 +19,18 @@ Item {
         return "/tmp/omarchy-moergo-" + user;
     }
     readonly property string jsonFile: root.runtimeDir + "/glove80_layout.json"
-    readonly property string helperScript: {
-        var resolved = String(Qt.resolvedUrl("bin/glove80-status"))
-        return decodeURIComponent(resolved.replace(/^file:\/\//, ""))
+    readonly property string pluginDir: {
+        var resolved = String(Qt.resolvedUrl("."));
+        return decodeURIComponent(resolved.replace(/^file:\/\//, ""));
     }
-    readonly property string watcherScript: {
-        var resolved = String(Qt.resolvedUrl("bin/moergo-watcher"))
-        return decodeURIComponent(resolved.replace(/^file:\/\//, ""))
-    }
-    readonly property string settingsScript: {
-        var resolved = String(Qt.resolvedUrl("bin/moergo-companion-settings"))
-        return decodeURIComponent(resolved.replace(/^file:\/\//, ""))
-    }
+    readonly property string helperScript: root.pluginDir + "/bin/glove80-status"
+    readonly property string watcherScript: root.pluginDir + "/bin/moergo-watcher"
+    readonly property string settingsScript: root.pluginDir + "/bin/moergo-companion-settings"
+    readonly property string installScript: root.pluginDir + "/install.sh"
+
+    // Bootstrap state
+    property bool binariesReady: false
+    property bool bootstrapFailed: false
 
     // Keymap/layout state
     property var parsedLayout: null
@@ -50,6 +50,32 @@ Item {
 
     onParsedLayoutChanged: {
         root.currentLayerIndex = 0;
+    }
+
+    function fileExists(path) {
+        try {
+            var req = new XMLHttpRequest();
+            req.open("HEAD", "file://" + path, false);
+            req.send(null);
+            return req.status === 200;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function checkBinaries() {
+        return fileExists(root.helperScript) &&
+               fileExists(root.watcherScript) &&
+               fileExists(root.settingsScript);
+    }
+
+    function startServices() {
+        root.binariesReady = true;
+        settingsProc.command = [root.settingsScript, "--load"];
+        settingsProc.running = true;
+        watcherProcess.command = [root.watcherScript, root.keymapFile, root.jsonFile];
+        watcherProcess.running = true;
+        statusPollTimer.running = true;
     }
 
     function setLayer(index) {
@@ -80,19 +106,19 @@ Item {
     }
 
     function refreshStatus() {
-        if (!statusProc.running) {
+        if (!root.binariesReady || !statusProc.running) {
             statusProc.running = true;
         }
     }
 
     function runAction(action) {
-        if (actionProc.running) return;
+        if (!root.binariesReady || actionProc.running) return;
         actionProc.command = [root.helperScript, action];
         actionProc.running = true;
     }
 
     function saveKeymapFile(path) {
-        if (!path || path === "") return;
+        if (!root.binariesReady || !path || path === "") return;
         saveSettingsProc.command = [root.settingsScript, "--set", "keymapFile", path];
         saveSettingsProc.running = true;
     }
@@ -111,6 +137,7 @@ Item {
     }
 
     function restartWatcher() {
+        if (!root.binariesReady) return;
         watcherProcess.running = false;
         watcherProcess.command = [root.watcherScript, root.keymapFile, root.jsonFile];
         watcherProcess.running = true;
@@ -132,8 +159,35 @@ Item {
     }
 
     Process {
+        id: bootstrapProc
+        command: ["bash", root.installScript]
+        running: false
+        stdout: SplitParser {
+            onRead: function(line) {
+                console.log("[bootstrap]", line);
+            }
+        }
+        stderr: SplitParser {
+            onRead: function(line) {
+                console.error("[bootstrap]", line);
+            }
+        }
+        onExited: function(exitCode, exitStatus) {
+            if (exitCode === 0 && root.checkBinaries()) {
+                root.startServices();
+            } else {
+                root.bootstrapFailed = true;
+                root.statusText = "No binaries";
+                root.statusTooltip = "Run ~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/install.sh manually";
+                console.error("Bootstrap failed; install.sh exited with code", exitCode);
+            }
+        }
+    }
+
+    Process {
         id: statusProc
         command: [root.helperScript]
+        running: false
         stdout: StdioCollector {
             waitForEnd: true
             onStreamFinished: root.updateStatus(text)
@@ -142,6 +196,7 @@ Item {
 
     Process {
         id: actionProc
+        running: false
         stdout: StdioCollector {
             waitForEnd: true
             onStreamFinished: root.refreshStatus()
@@ -150,6 +205,7 @@ Item {
 
     Process {
         id: settingsProc
+        running: false
         stdout: StdioCollector {
             waitForEnd: true
             onStreamFinished: {
@@ -164,6 +220,7 @@ Item {
 
     Process {
         id: saveSettingsProc
+        running: false
         stdout: StdioCollector {
             waitForEnd: true
             onStreamFinished: {
@@ -213,22 +270,28 @@ Item {
     }
 
     Timer {
+        id: statusPollTimer
         interval: root.statusPollIntervalMs
-        running: true
+        running: false
         repeat: true
         triggeredOnStart: true
         onTriggered: root.refreshStatus()
     }
 
     Component.onCompleted: {
-        settingsProc.command = [root.settingsScript, "--load"];
-        settingsProc.running = true;
+        if (root.checkBinaries()) {
+            root.startServices();
+        } else {
+            root.statusText = "Installing…";
+            root.statusTooltip = "Downloading or building native helpers for the first time";
+            bootstrapProc.running = true;
+        }
     }
 
     Process {
         id: watcherProcess
+        running: false
         command: [root.watcherScript, root.keymapFile, root.jsonFile]
-        running: true
         stdout: SplitParser {
             onRead: function(line) {
                 line = String(line).trim();

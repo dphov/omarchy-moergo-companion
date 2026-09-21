@@ -18,17 +18,16 @@ omarchy plugin add https://github.com/dphov/omarchy-moergo-companion.git --enabl
 omarchy-restart-shell
 ```
 
-The installer downloads verified native helpers from the matching GitHub release. No manual build steps are required if a release exists.
+The plugin automatically downloads verified native helpers from the matching GitHub release on first run. If no release exists or the platform is unsupported, it builds the helpers from source. No manual steps are required.
 
-### From source using `./install.sh`
+### Manual install / rebuild
 
-For users who prefer to build directly from source on their own machine:
+For users who want to run the install script manually (e.g., after `omarchy plugin add` or in a standalone clone):
 
 ```bash
-git clone https://github.com/dphov/omarchy-moergo-companion.git
-cd omarchy-moergo-companion
-./install.sh          # downloads release binaries, or builds from source if no release matches
-omarchy-restart-shell
+~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/install.sh
+# or, from a standalone clone:
+./install.sh --rebuild
 ```
 
 `./install.sh --rebuild` is a self-contained script that compiles all native helpers from locked dependencies (`keymap-parser/Cargo.lock`) and deploys to `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/`. Without `--rebuild`, it first checks for Linux x86_64, then downloads the matching release tarball, verifies it against the top-level `SHA256SUMS`, extracts it, and verifies the binaries against the internal `bin/SHA256SUMS`.
