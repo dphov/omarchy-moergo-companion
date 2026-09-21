@@ -90,8 +90,7 @@ pub fn ensure_private_dir(dir: &Path) -> io::Result<()> {
 ///
 /// Priority:
 /// 1. `$XDG_RUNTIME_DIR/omarchy-moergo-companion`
-/// 2. `/tmp/omarchy-moergo-{uid}` (with mode 0700 and symlink rejection)
-/// 3. `~/.cache/omarchy/moergo-companion/runtime`
+/// 2. `~/.cache/omarchy/moergo-companion/runtime`
 pub fn get_runtime_dir() -> io::Result<PathBuf> {
     let uid = current_uid();
 
@@ -111,13 +110,7 @@ pub fn get_runtime_dir() -> io::Result<PathBuf> {
         }
     }
 
-    // 2. Fallback to /tmp/omarchy-moergo-{uid}
-    let tmp_fallback = PathBuf::from(format!("/tmp/omarchy-moergo-{}", uid));
-    if ensure_private_dir(&tmp_fallback).is_ok() {
-        return Ok(tmp_fallback);
-    }
-
-    // 3. Fallback to ~/.cache/omarchy/moergo-companion/runtime
+    // 2. Fallback to ~/.cache/omarchy/moergo-companion/runtime
     if let Some(home) = env::var_os("HOME") {
         let cache_fallback = PathBuf::from(home)
             .join(".cache")

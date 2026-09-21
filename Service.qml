@@ -15,14 +15,10 @@ Item {
         if (xdg && xdg.length > 0) {
             return xdg + "/omarchy-moergo-companion";
         }
-        var uid = Quickshell.env("UID");
-        if (!uid || uid === "") {
-            uid = "1000";
-            console.warn("XDG_RUNTIME_DIR and UID are unset; falling back to uid 1000");
-        }
-        return "/tmp/omarchy-moergo-" + uid;
+        console.error("FATAL: XDG_RUNTIME_DIR is not set; cannot create a secure runtime directory.");
+        return "";
     }
-    readonly property string jsonFile: root.runtimeDir + "/glove80_layout.json"
+    readonly property string jsonFile: root.runtimeDir !== "" ? root.runtimeDir + "/glove80_layout.json" : ""
     readonly property string pluginDir: {
         var resolved = String(Qt.resolvedUrl("."));
         return decodeURIComponent(resolved.replace(/^file:\/\//, ""));
