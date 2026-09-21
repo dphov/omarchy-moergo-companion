@@ -10,15 +10,6 @@ Item {
 
     readonly property int hotplugDebounceIntervalMs: 250
     readonly property int statusPollIntervalMs: 30000
-    readonly property string runtimeDir: {
-        var xdg = Quickshell.env("XDG_RUNTIME_DIR");
-        if (xdg && xdg.length > 0) {
-            return xdg + "/omarchy-moergo-companion";
-        }
-        console.error("FATAL: XDG_RUNTIME_DIR is not set; cannot create a secure runtime directory.");
-        return "";
-    }
-    readonly property string jsonFile: root.runtimeDir !== "" ? root.runtimeDir + "/glove80_layout.json" : ""
     readonly property string pluginDir: {
         var resolved = String(Qt.resolvedUrl("."));
         return decodeURIComponent(resolved.replace(/^file:\/\//, ""));
@@ -57,7 +48,7 @@ Item {
         root.binariesReady = true;
         settingsProc.command = [root.settingsScript, "--load"];
         settingsProc.running = true;
-        watcherProcess.command = [root.watcherScript, root.keymapFile, root.jsonFile];
+        watcherProcess.command = [root.watcherScript, root.keymapFile];
         watcherProcess.running = true;
         statusPollTimer.running = true;
     }
@@ -123,7 +114,7 @@ Item {
     function restartWatcher() {
         if (!root.binariesReady) return;
         watcherProcess.running = false;
-        watcherProcess.command = [root.watcherScript, root.keymapFile, root.jsonFile];
+        watcherProcess.command = [root.watcherScript, root.keymapFile];
         watcherProcess.running = true;
     }
 
@@ -276,7 +267,7 @@ Item {
     Process {
         id: watcherProcess
         running: false
-        command: [root.watcherScript, root.keymapFile, root.jsonFile]
+        command: [root.watcherScript, root.keymapFile]
         stdout: SplitParser {
             onRead: function(line) {
                 line = String(line).trim();

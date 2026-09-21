@@ -96,21 +96,17 @@ fn emit_file<P: AsRef<Path>>(path: P) {
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    if args.len() < 2 {
-        eprintln!("Usage: {} <keymap_file> [output_json]", args[0]);
+
+    if args.len() != 2 {
+        eprintln!("Usage: {} <keymap_file>", args[0]);
         process::exit(1);
     }
 
     let keymap_file = &args[1];
-    let default_output = runtime::get_layout_path().unwrap_or_else(|e| {
+    let output_json = runtime::get_layout_path().unwrap_or_else(|e| {
         eprintln!("Failed to resolve secure layout path: {e}");
         process::exit(1);
     });
-    let output_json = if args.len() >= 3 {
-        PathBuf::from(&args[2])
-    } else {
-        default_output
-    };
 
     let (mut _lock, _pid_path) = match acquire_lock() {
         Ok(res) => res,
