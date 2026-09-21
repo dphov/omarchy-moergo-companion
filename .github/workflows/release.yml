@@ -31,19 +31,19 @@ jobs:
 
       - name: Stage binaries and generate internal SHA-256 manifest
         run: |
-          mkdir -p dist
-          cp keymap-parser/target/release/omarchy-moergo-keymap-parser dist/
-          cp keymap-parser/target/release/moergo-watcher dist/
-          cp keymap-parser/target/release/moergo-companion-settings dist/
-          cp keymap-parser/target/release/glove80-status dist/
-          cd dist
+          mkdir -p dist/bin
+          cp keymap-parser/target/release/omarchy-moergo-keymap-parser dist/bin/
+          cp keymap-parser/target/release/moergo-watcher dist/bin/
+          cp keymap-parser/target/release/moergo-companion-settings dist/bin/
+          cp keymap-parser/target/release/glove80-status dist/bin/
+          cd dist/bin
           sha256sum omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status > SHA256SUMS
           sha256sum -c SHA256SUMS
 
       - name: Attest release binaries
         uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
         with:
-          subject-path: dist/*
+          subject-path: dist/bin/*
           show-summary: true
 
       - name: Ensure CHANGELOG.md is present
@@ -54,14 +54,13 @@ jobs:
         run: |
           tarball="omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz"
           cd dist
-          tar -czvf "../$tarball" \
-            omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status SHA256SUMS
+          tar -czvf "../$tarball" bin
           cd ..
           sha256sum "$tarball" > SHA256SUMS
           sha256sum -c SHA256SUMS
           {
             echo 'body<<EOF'
-            cat dist/SHA256SUMS
+            cat dist/bin/SHA256SUMS
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
@@ -102,7 +101,7 @@ jobs:
             curl -fsSL -O "https://github.com/${{ github.repository }}/releases/download/${tag}/SHA256SUMS"
             sha256sum -c SHA256SUMS
             tar -xzf "omarchy-moergo-companion-binaries-${tag}.tar.gz"
-            sha256sum -c SHA256SUMS
+            sha256sum -c bin/SHA256SUMS
             ```
 
             To verify signed build provenance for the tarball:

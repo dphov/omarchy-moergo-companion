@@ -31,7 +31,7 @@ cd omarchy-moergo-companion
 omarchy-restart-shell
 ```
 
-`./install.sh --rebuild` is a self-contained script that compiles all native helpers from locked dependencies (`Cargo.lock`) and deploys to `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/`. Without `--rebuild`, it first tries to download the matching release binaries.
+`./install.sh --rebuild` is a self-contained script that compiles all native helpers from locked dependencies (`keymap-parser/Cargo.lock`) and deploys to `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/`. Without `--rebuild`, it first checks for Linux x86_64, then downloads the matching release tarball, verifies it against the top-level `SHA256SUMS`, extracts it, and verifies the binaries against the internal `bin/SHA256SUMS`.
 ## Usage
 
 Click the Glove80 bar item to open the panel. Inside the panel you can:
@@ -125,11 +125,15 @@ To prevent supply chain risks, symlink attacks, and untrusted local binaries:
 To verify binaries:
 
 ```bash
-# Verify checksums against the release manifest
+# Verify the tarball against the top-level release manifest
 sha256sum -c SHA256SUMS
 
-# Verify signed build provenance (requires GitHub CLI)
-gh attestation verify --owner dphov --predicate-type https://slsa.dev/provenance/v1 omarchy-moergo-keymap-parser
+# Extract and verify the binaries against the internal manifest
+tar -xzf omarchy-moergo-companion-binaries-v1.1.3.tar.gz
+sha256sum -c bin/SHA256SUMS
+
+# Verify signed build provenance for the tarball (requires GitHub CLI)
+gh attestation verify --owner dphov --predicate-type https://slsa.dev/provenance/v1 omarchy-moergo-companion-binaries-v1.1.3.tar.gz
 ```
 
 ## Development
