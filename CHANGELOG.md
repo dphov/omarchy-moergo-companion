@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [1.2.0] - 2026-09-21
+
+### Security
+
+- fix(service,watcher): remove `Service.qml` runtime directory computation and the watcher `output_json` argument
+- fix(service): no `/tmp` string remains in QML; the watcher emits layout JSON on stdout, so components never need to read a shared file
+
 ## [1.1.9] - 2026-09-21
 
 ### Security
