@@ -128,12 +128,13 @@ To verify binaries:
 # Verify the tarball against the top-level release manifest
 sha256sum -c SHA256SUMS
 
-# Extract and verify the binaries against the internal manifest
-tar -xzf omarchy-moergo-companion-binaries-v1.1.3.tar.gz
+# Extract into bin/ and verify the binaries against the internal manifest
+mkdir -p bin
+tar -xzf omarchy-moergo-companion-binaries-v1.1.5.tar.gz -C bin
 sha256sum -c bin/SHA256SUMS
 
 # Verify signed build provenance for the tarball (requires GitHub CLI)
-gh attestation verify --owner dphov --predicate-type https://slsa.dev/provenance/v1 omarchy-moergo-companion-binaries-v1.1.3.tar.gz
+gh attestation verify --owner dphov --predicate-type https://slsa.dev/provenance/v1 omarchy-moergo-companion-binaries-v1.1.5.tar.gz
 ```
 
 ## Development

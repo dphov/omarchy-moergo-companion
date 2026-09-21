@@ -53,9 +53,9 @@ jobs:
         id: checksum
         run: |
           tarball="omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz"
-          cd dist
-          tar -czvf "../$tarball" bin
-          cd ..
+          cd dist/bin
+          tar -czvf "../../$tarball" .
+          cd ../..
           sha256sum "$tarball" > SHA256SUMS
           sha256sum -c SHA256SUMS
           {
@@ -100,7 +100,8 @@ jobs:
             curl -fsSL -O "https://github.com/${{ github.repository }}/releases/download/${tag}/omarchy-moergo-companion-binaries-${tag}.tar.gz"
             curl -fsSL -O "https://github.com/${{ github.repository }}/releases/download/${tag}/SHA256SUMS"
             sha256sum -c SHA256SUMS
-            tar -xzf "omarchy-moergo-companion-binaries-${tag}.tar.gz"
+            mkdir -p bin
+            tar -xzf "omarchy-moergo-companion-binaries-${tag}.tar.gz" -C bin
             sha256sum -c bin/SHA256SUMS
             ```
 

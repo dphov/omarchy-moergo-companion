@@ -46,14 +46,16 @@ download_release_binaries() {
 
   (
     cd "$BIN_DIR"
+    set -e
     # Verify the tarball against the top-level release manifest
     sha256sum -c SHA256SUMS
-    # Extract and verify the internal binary checksums (tarball contains bin/SHA256SUMS)
+    # The tarball extracts the 4 binaries and internal SHA256SUMS flat into bin/
     tar -xzf "$tarball"
-    sha256sum -c bin/SHA256SUMS
-  )
+    # Verify the internal binary checksums
+    sha256sum -c SHA256SUMS
+  ) || return 1
 
-  # Clean up: keep only the extracted binaries, not the tarball or top-level checksum
+  # Clean up: keep only the extracted binaries and internal manifest
   rm -f "$BIN_DIR/${tarball}" "$BIN_DIR/SHA256SUMS"
 
   echo "Release binaries verified successfully."
