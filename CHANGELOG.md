@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [1.1.8] - 2026-09-21
+
+### Security
+
+- fix(runtime): never use `/tmp` for the secure runtime directory; rely only on `XDG_RUNTIME_DIR` or `~/.cache/omarchy/moergo-companion/runtime`
+- fix(service): require `XDG_RUNTIME_DIR` in `Service.qml` instead of falling back to a `/tmp` path
+
 ## [1.1.7] - 2026-09-21
 
 ### Fixed
