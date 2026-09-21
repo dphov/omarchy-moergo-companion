@@ -7,6 +7,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="dphov/omarchy-moergo-companion"
 BIN_DIR="$SCRIPT_DIR/bin"
 
+binaries_present() {
+  for binary in omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status; do
+    if [[ ! -x "$BIN_DIR/$binary" ]]; then
+      return 1
+    fi
+  done
+  return 0
+}
+
 get_manifest_version() {
   local manifest="$SCRIPT_DIR/manifest.json"
   if [ ! -f "$manifest" ]; then
@@ -87,22 +96,31 @@ build_from_source() {
   )
 }
 
-# Determine whether to (re)build or download
+# Parse arguments
 force_rebuild=false
-if [[ "${1:-}" == "--rebuild" ]]; then
-  force_rebuild=true
-fi
+ensure_only=false
+for arg in "$@"; do
+  case "$arg" in
+    --rebuild) force_rebuild=true ;;
+    --ensure) ensure_only=true ;;
+  esac
+done
 
-manifest_version=$(get_manifest_version)
-echo "Plugin version: $manifest_version"
-
-if [[ "$force_rebuild" == true ]]; then
-  build_from_source
+if [[ "$ensure_only" == true ]] && binaries_present; then
+  echo "Verified native helpers already present in bin/."
+  # Proceed to install/sync only
 else
-  if ! download_release_binaries "$manifest_version"; then
-    echo "Warning: failed to download release binaries for v${manifest_version}." >&2
-    echo "Falling back to building from source..." >&2
+  manifest_version=$(get_manifest_version)
+  echo "Plugin version: $manifest_version"
+
+  if [[ "$force_rebuild" == true ]]; then
     build_from_source
+  else
+    if ! download_release_binaries "$manifest_version"; then
+      echo "Warning: failed to download release binaries for v${manifest_version}." >&2
+      echo "Falling back to building from source..." >&2
+      build_from_source
+    fi
   fi
 fi
 

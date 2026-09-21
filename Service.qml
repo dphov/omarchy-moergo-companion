@@ -31,6 +31,7 @@ Item {
     // Bootstrap state
     property bool binariesReady: false
     property bool bootstrapFailed: false
+    property bool bootstrapInProgress: false
 
     // Keymap/layout state
     property var parsedLayout: null
@@ -50,23 +51,6 @@ Item {
 
     onParsedLayoutChanged: {
         root.currentLayerIndex = 0;
-    }
-
-    function fileExists(path) {
-        try {
-            var req = new XMLHttpRequest();
-            req.open("HEAD", "file://" + path, false);
-            req.send(null);
-            return req.status === 200;
-        } catch (e) {
-            return false;
-        }
-    }
-
-    function checkBinaries() {
-        return fileExists(root.helperScript) &&
-               fileExists(root.watcherScript) &&
-               fileExists(root.settingsScript);
     }
 
     function startServices() {
@@ -160,7 +144,7 @@ Item {
 
     Process {
         id: bootstrapProc
-        command: ["bash", root.installScript]
+        command: ["bash", root.installScript, "--ensure"]
         running: false
         stdout: SplitParser {
             onRead: function(line) {
@@ -173,7 +157,8 @@ Item {
             }
         }
         onExited: function(exitCode, exitStatus) {
-            if (exitCode === 0 && root.checkBinaries()) {
+            root.bootstrapInProgress = false;
+            if (exitCode === 0) {
                 root.startServices();
             } else {
                 root.bootstrapFailed = true;
@@ -279,13 +264,13 @@ Item {
     }
 
     Component.onCompleted: {
-        if (root.checkBinaries()) {
-            root.startServices();
-        } else {
-            root.statusText = "Installing…";
-            root.statusTooltip = "Downloading or building native helpers for the first time";
-            bootstrapProc.running = true;
+        if (root.binariesReady || root.bootstrapInProgress || root.bootstrapFailed) {
+            return;
         }
+        root.bootstrapInProgress = true;
+        root.statusText = "Installing…";
+        root.statusTooltip = "Downloading or building native helpers for the first time";
+        bootstrapProc.running = true;
     }
 
     Process {
