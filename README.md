@@ -117,9 +117,10 @@ To prevent supply chain risks, symlink attacks, and untrusted local binaries:
 2. **Sole verified builder (GitHub Actions)**: Native helpers are compiled exclusively by GitHub Actions in a clean, isolated container directly from reviewed source code and locked dependencies (`keymap-parser/Cargo.lock`).
 3. **Immutable supply chain**: Every third-party action, the Rust toolchain, and the `install.sh` source sync exclude list use reviewed immutable identifiers. All mutable action tags and branch refs have been replaced with full commit SHAs, and workflow permissions are set at the job level with least privilege.
 4. **Verifiable signed provenance**: Each release produces a GitHub artifact attestation (`actions/attest-build-provenance`) that cryptographically ties the exact released binary hashes to the reviewed locked source and the specific GitHub Actions run. Release notes include `gh attestation verify` instructions.
-5. **User-private runtime directory**: Runtime state (`glove80_layout.json`, `glove80_watcher.pid`, `glove80_battery_notified.json`) is stored in `$XDG_RUNTIME_DIR/omarchy-moergo-companion` with a mode-`0700` fallback (`/tmp/omarchy-moergo-$UID`).
-6. **Symlink defense & safe PID locking**: The watcher opens PID files using `libc::O_NOFOLLOW` without premature truncation, verifies ownership, and acquires an exclusive `flock` before writing.
-7. **Atomic file replacement**: State and layout files are written to mode-`0600` temporary files within the private runtime directory and atomically renamed to prevent partial reads or symlink injection.
+5. **User-private runtime directory**: Runtime state (`glove80_watcher.pid`, `glove80_battery_notified.json`) is stored in `$XDG_RUNTIME_DIR/omarchy-moergo-companion`, with a mode-`0700` fallback to `~/.cache/omarchy/moergo-companion/runtime`. No `/tmp` paths are used anywhere.
+6. **No shared layout file in QML**: `moergo-watcher` emits the parsed layout JSON directly on stdout, so the QML side never reads a shared file path and there is no chance of QML/Rust path disagreement.
+7. **Symlink defense & safe PID locking**: The watcher opens PID files using `libc::O_NOFOLLOW` without premature truncation, verifies ownership, and acquires an exclusive `flock` before writing.
+8. **Atomic file replacement**: State and layout files are written to mode-`0600` temporary files within the private runtime directory and atomically renamed to prevent partial reads or symlink injection.
 
 To verify binaries:
 
@@ -129,11 +130,12 @@ sha256sum -c SHA256SUMS
 
 # Extract into bin/ and verify the binaries against the internal manifest
 mkdir -p bin
-tar -xzf omarchy-moergo-companion-binaries-v1.1.5.tar.gz -C bin
+tar -xzf omarchy-moergo-companion-binaries-v1.2.0.tar.gz -C bin
 sha256sum -c bin/SHA256SUMS
 
 # Verify signed build provenance for the tarball (requires GitHub CLI)
-gh attestation verify --owner dphov --predicate-type https://slsa.dev/provenance/v1 omarchy-moergo-companion-binaries-v1.1.5.tar.gz
+gh attestation verify --repo dphov/omarchy-moergo-companion omarchy-moergo-companion-binaries-v1.2.0.tar.gz
+gh attestation verify --repo dphov/omarchy-moergo-companion SHA256SUMS
 ```
 
 ## Development
@@ -182,7 +184,7 @@ The file is validated before being saved. Both ZMK `.keymap` files and Glove80 l
 ## Troubleshooting
 
 - **No layers appear** — check that `keymapFile` points to a valid `.keymap` or `.json` file and that the path is saved in `~/.config/omarchy/glove80-plugin-settings.json`.
-- **Old watcher still running** — `moergo-watcher` uses a PID lock in `$XDG_RUNTIME_DIR/omarchy-moergo-companion/glove80_watcher.pid` (or `/tmp/omarchy-moergo-$UID/`); kill any stale process if shell reloads leave multiple watchers running.
+- **Old watcher still running** — `moergo-watcher` uses a PID lock in `$XDG_RUNTIME_DIR/omarchy-moergo-companion/glove80_watcher.pid` (or `~/.cache/omarchy/moergo-companion/runtime/glove80_watcher.pid`); kill any stale process if shell reloads leave multiple watchers running.
 - **Battery shows unknown** — ensure `upower` and BlueZ are running and the Glove80 halves are paired.
 - **Check shell logs** — `journalctl --user -u omarchy-shell -n 100` or `journalctl --user -n 100` for QML/Rust errors.
 
