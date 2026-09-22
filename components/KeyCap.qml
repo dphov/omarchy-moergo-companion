@@ -47,7 +47,6 @@ Rectangle {
     property string keyGlyph: ""
     property string keyColor: ""
     property string keyTextColor: ""
-    property bool isActive: false
     property bool isTrans: false
     readonly property string normalizedKeyText: keyText.replace(/\s+/g, " ").trim()
     readonly property bool isLayerKey: {
@@ -71,7 +70,6 @@ Rectangle {
     }
 
     readonly property color resolvedForegroundColor: {
-        if (root.isActive) return Color.background;
         if (root.keyTextColor !== "") return root.keyTextColor;
         if (root.keyColor !== "") return root.isLightKeyColor ? tealLabel : "#ffffff";
         return tealLabel;
@@ -83,13 +81,13 @@ Rectangle {
     height: defaultKeySize
     radius: keyRadius
 
-    color: isActive ? Color.accent : (isTrans ? "transparent" : (root.keyColor !== "" ? root.keyColor : Style.normalFill))
-    border.color: (mouse.containsMouse && isLayerKey) ? Color.accent : (isActive ? Color.accent : (root.keyColor !== "" ? Qt.darker(root.keyColor, 1.25) : Color.muted))
+    color: isTrans ? "transparent" : (root.keyColor !== "" ? root.keyColor : Style.normalFill)
+    border.color: (mouse.containsMouse && isLayerKey) ? Color.accent : (root.keyColor !== "" ? Qt.darker(root.keyColor, 1.25) : Color.muted)
     border.width: isTrans && !(mouse.containsMouse && isLayerKey) ? 0 : 1
 
     Shape {
         anchors.fill: parent
-        visible: root.isTrans && !root.isActive
+        visible: root.isTrans
         layer.enabled: true
 
         ShapePath {
@@ -115,7 +113,7 @@ Rectangle {
     // Diagonal transparency hatch
     Shape {
         anchors.fill: parent
-        visible: root.isTrans && !root.isActive
+        visible: root.isTrans
         layer.enabled: true
         opacity: root.transparentHatchOpacity
 
