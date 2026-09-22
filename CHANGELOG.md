@@ -8,7 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- ci(release): pin tarball digest inside the release workflow
+- ci(release): require tarball digest committed before the tag
+- ci(release): verify published tarball digest matches install.sh
+- ci(release): add SOURCE_DATE_EPOCH file for deterministic tarball mtime
 - ci(release): fix changelog output block syntax
 ## [1.2.1] - 2026-09-22
 
