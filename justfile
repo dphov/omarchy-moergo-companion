@@ -13,12 +13,14 @@ build:
     cp keymap-parser/target/release/moergo-watcher bin/
     cp keymap-parser/target/release/moergo-companion-settings bin/
     cp keymap-parser/target/release/glove80-status bin/
-    cd bin && sha256sum glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser > SHA256SUMS
+    cd bin && \
+      for bin in glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser; do printf '%s\0' "$bin"; done | sort -z | xargs -0 -r sha256sum > SHA256SUMS
 
 # Generate and display SHA-256 checksums for binaries in bin/
 sha:
     @mkdir -p bin
-    cd bin && sha256sum glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser > SHA256SUMS
+    cd bin && \
+      for bin in glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser; do printf '%s\0' "$bin"; done | sort -z | xargs -0 -r sha256sum > SHA256SUMS
     @cat bin/SHA256SUMS
 
 # Verify binary integrity against bin/SHA256SUMS
@@ -125,17 +127,27 @@ release-preview version:
     echo ""
     echo "### Verifying Binary Provenance"
     echo ""
-    echo "All release binaries are compiled directly from the reviewed, locked Rust source (\`keymap-parser/Cargo.lock\`) on GitHub Actions and distributed as release assets."
-    echo "To verify that your downloaded binaries match the attested build:"
+    echo "All release binaries are compiled directly from the reviewed, locked Rust source (\`keymap-parser/Cargo.lock\`) on GitHub Actions and packaged as a single tarball with an internal \`SHA256SUMS\` manifest."
+    echo "To download and verify the tarball:"
     echo ""
     echo '```bash'
-    echo "sha256sum -c SHA256SUMS"
-    echo "gh attestation verify --owner dphov --predicate-type https://slsa.dev/provenance/v1 omarchy-moergo-keymap-parser"
+    echo "tag={{version}}"
+    echo "curl -fsSL -O \"https://github.com/dphov/omarchy-moergo-companion/releases/download/${tag}/omarchy-moergo-companion-binaries-${tag}.tar.gz\""
+    echo "# Compare the tarball digest to the value committed in install.sh"
+    echo "sha256sum omarchy-moergo-companion-binaries-${tag}.tar.gz"
+    echo "mkdir -p bin && tar -xzf omarchy-moergo-companion-binaries-${tag}.tar.gz -C bin"
+    echo "cd bin && sha256sum -c SHA256SUMS"
+    echo '```'
+    echo ""
+    echo "To verify signed build provenance:"
+    echo ""
+    echo '```bash'
+    echo "gh attestation verify --owner dphov --predicate-type https://slsa.dev/provenance/v1 omarchy-moergo-companion-binaries-{{version}}.tar.gz"
     echo '```'
     echo ""
     echo "### Checksums"
     echo ""
-    echo "SHA-256 values will be inserted here by the release workflow."
+    echo "SHA-256 values for the binaries and the tarball will be inserted here by the release workflow."
 
 # Create a version tag and push to trigger GitHub Actions automated release
 release version: check
@@ -174,10 +186,19 @@ release-dry: build
     cp bin/moergo-watcher release-assets/
     cp bin/moergo-companion-settings release-assets/
     cp bin/glove80-status release-assets/
-    cd release-assets \
-        && tar -czvf "omarchy-moergo-companion-binaries-dryrun.tar.gz" \
-            omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status \
-        && sha256sum omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status omarchy-moergo-companion-binaries-dryrun.tar.gz > SHA256SUMS \
-        && sha256sum -c SHA256SUMS
+    cp bin/SHA256SUMS release-assets/
+    # Deterministic tarball: sorted entries, fixed mtime/owner, no gzip timestamp.
+    bash -c 'set -euo pipefail; \
+      export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log -1 --format=%ct 2>/dev/null || date +%s)}"; \
+      GZIP=-n tar \
+        --sort=name \
+        --mtime="@${SOURCE_DATE_EPOCH}" \
+        --owner=0 --group=0 --numeric-owner \
+        --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
+        -czf omarchy-moergo-companion-binaries-dryrun.tar.gz -C release-assets .; \
+      mv omarchy-moergo-companion-binaries-dryrun.tar.gz release-assets/; \
+      cd release-assets; \
+      sha256sum omarchy-moergo-companion-binaries-dryrun.tar.gz > SHA256SUMS; \
+      sha256sum -c SHA256SUMS'
     @echo "Dry-run release assets staged in release-assets/:"
     @cat release-assets/SHA256SUMS

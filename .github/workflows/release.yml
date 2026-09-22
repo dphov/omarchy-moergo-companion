@@ -37,19 +37,48 @@ jobs:
           cp keymap-parser/target/release/moergo-companion-settings dist/bin/
           cp keymap-parser/target/release/glove80-status dist/bin/
           cd dist/bin
-          sha256sum omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status > SHA256SUMS
+          # Deterministic, sorted manifest: one line per binary in lexicographic order.
+          for bin in glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser; do
+            printf '%s\0' "$bin"
+          done | sort -z | xargs -0 -r sha256sum > SHA256SUMS
           sha256sum -c SHA256SUMS
 
       - name: Ensure CHANGELOG.md is present
         run: test -f CHANGELOG.md
 
-      - name: Package release tarball
+      - name: Package release tarball and verify reproducibility
         id: checksum
         run: |
+          export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
           tarball="omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz"
           cd dist/bin
-          tar -czvf "../../$tarball" .
+
+          # Deterministic tarball: sorted entries, fixed mtime/owner, no gzip timestamp.
+          pack() {
+            local out="$1"
+            GZIP=-n tar \
+              --sort=name \
+              --mtime="@${SOURCE_DATE_EPOCH}" \
+              --owner=0 --group=0 --numeric-owner \
+              --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
+              -czf "$out" .
+          }
+
+          pack "../../$tarball"
+          # Reproducibility invariant: repacking the same directory must yield the same digest.
+          pack "../../reproducibility-check.tar.gz"
           cd ../..
+
+          expected="$(sha256sum "$tarball" | awk '{print $1}')"
+          actual="$(sha256sum reproducibility-check.tar.gz | awk '{print $1}')"
+          if [[ "$expected" != "$actual" ]]; then
+            echo "Error: release tarball is not reproducible." >&2
+            echo "  first:  $expected" >&2
+            echo "  second: $actual" >&2
+            exit 1
+          fi
+          echo "Reproducibility check passed: $expected"
+
           sha256sum "$tarball" > SHA256SUMS
           sha256sum -c SHA256SUMS
           {

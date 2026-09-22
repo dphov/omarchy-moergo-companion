@@ -48,7 +48,10 @@ jobs:
       - name: Generate and verify SHA-256 manifest
         run: |
           cd bin
-          sha256sum glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser > SHA256SUMS
+          # Deterministic, sorted manifest: one line per binary in lexicographic order.
+          for bin in glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser; do
+            printf '%s\0' "$bin"
+          done | sort -z | xargs -0 -r sha256sum > SHA256SUMS
           sha256sum -c SHA256SUMS
 
       - name: Attest build provenance
