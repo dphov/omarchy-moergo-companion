@@ -12,11 +12,9 @@ BIN_DIR="$SCRIPT_DIR/bin"
 # SECURITY: The expected tarball digest lives in this repo snapshot, not on the release page.
 # An attacker who replaces the GitHub release asset cannot change the value checked here.
 #
-# Procedure for adding a new digest (do not edit by hand):
-#   1. Check out the exact release tag.
-#   2. Run `just release-dry` to build and pack the tarball deterministically.
-#   3. Confirm the local tarball digest equals the one published on the GitHub release.
-#   4. Copy that digest here, commit it, and push.
+# This table is updated automatically by the pin-release-digest workflow when a release is
+# published. The workflow verifies the release tarball's GitHub build attestation, computes
+# its SHA-256 digest, and commits the result here. Do not edit by hand.
 declare -A RELEASE_TARBALL_DIGESTS=(
   ["v1.1.1"]="f85b9c542339da29c38baf1f5e3733eb5fa817e02cc73317e5696796c9a84073"
   ["v1.1.2"]="6ee3432399e872607d72649d78693cba644b077bcecfa39c0655aa2fadb6bd21"
@@ -28,6 +26,7 @@ declare -A RELEASE_TARBALL_DIGESTS=(
   ["v1.1.8"]="281b8ee212d1b7ca3bf0f4e108d1d588f1e619bfe6d33c20ac17e98b91756627"
   ["v1.1.9"]="55f0ab2ed00deac3a37c632b6d4fb028f6c6a3b97e6583b3be5642d3eb0debf7"
   ["v1.2.0"]="14854166afbfe9608247fbef5aa914fb5afd809d5e15f8bbb908b55632e9592c"
+  [""]=""
 )
 
 # Transfer safety limits when downloading release assets.
