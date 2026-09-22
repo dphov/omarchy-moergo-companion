@@ -7,6 +7,27 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="dphov/omarchy-moergo-companion"
 BIN_DIR="$SCRIPT_DIR/bin"
 
+# Committed SHA-256 digests for release tarballs.
+# Each digest was measured from the GitHub release asset and pinned at install.sh review.
+# DO NOT EDIT BY HAND. Update this file when a new release is reviewed and attested.
+declare -A RELEASE_TARBALL_DIGESTS=(
+  ["v1.1.1"]="f85b9c542339da29c38baf1f5e3733eb5fa817e02cc73317e5696796c9a84073"
+  ["v1.1.2"]="6ee3432399e872607d72649d78693cba644b077bcecfa39c0655aa2fadb6bd21"
+  ["v1.1.3"]="a205b9e30a06fad6bdce11bcaf2b8bec3944a32bfeb5398dea5f1b4a04065b5a"
+  ["v1.1.4"]="7cd0007e3dd92f917a7887af226ccab06bde4c252d3294caa41beaf584530fc8"
+  ["v1.1.5"]="113a277c7ffc4285ea17ebb3c2dc73fd23aa6c2dd83b1478babc7a3236c25894"
+  ["v1.1.6"]="a53426a2314306e608f8c6ee0ca1404b2d5a44ec5262aef5224449a268539aeb"
+  ["v1.1.7"]="8d4d573d844a3c96bee4db104db9fd4f85d5969844850bf45300505b68989fc6"
+  ["v1.1.8"]="281b8ee212d1b7ca3bf0f4e108d1d588f1e619bfe6d33c20ac17e98b91756627"
+  ["v1.1.9"]="55f0ab2ed00deac3a37c632b6d4fb028f6c6a3b97e6583b3be5642d3eb0debf7"
+  ["v1.2.0"]="14854166afbfe9608247fbef5aa914fb5afd809d5e15f8bbb908b55632e9592c"
+)
+
+# Transfer safety limits when downloading release assets.
+CURL_MAX_TIME=120
+CURL_CONNECT_TIMEOUT=15
+CURL_MAX_DOWNLOAD_SIZE="5M"
+
 binaries_present() {
   for binary in omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status; do
     if [[ ! -x "$BIN_DIR/$binary" ]]; then
@@ -41,8 +62,14 @@ download_release_binaries() {
   local tag="v${version}"
   local tarball="omarchy-moergo-companion-binaries-${tag}.tar.gz"
   local base_url="https://github.com/${REPO}/releases/download/${tag}"
+  local expected_digest="${RELEASE_TARBALL_DIGESTS[$tag]:-}"
 
   if ! supported_platform; then
+    return 1
+  fi
+
+  if [[ -z "$expected_digest" ]]; then
+    echo "Error: no committed digest for release ${tag}. The installer must be updated before this release can be used." >&2
     return 1
   fi
 
@@ -50,14 +77,26 @@ download_release_binaries() {
   rm -f "$BIN_DIR"/*
 
   echo "Downloading verified native helpers from release ${tag}..."
-  curl -fsSL -o "$BIN_DIR/${tarball}" "${base_url}/${tarball}" || return 1
-  curl -fsSL -o "$BIN_DIR/SHA256SUMS" "${base_url}/SHA256SUMS" || return 1
+  curl -fsSL \
+    --connect-timeout "$CURL_CONNECT_TIMEOUT" \
+    --max-time "$CURL_MAX_TIME" \
+    --max-filesize "$CURL_MAX_DOWNLOAD_SIZE" \
+    -o "$BIN_DIR/${tarball}" "${base_url}/${tarball}" || return 1
+
+  local actual_digest
+  actual_digest="$(sha256sum "$BIN_DIR/${tarball}" | awk '{print $1}')"
+  if [[ "$actual_digest" != "$expected_digest" ]]; then
+    echo "Error: tarball digest mismatch for ${tag}." >&2
+    echo "  expected: $expected_digest" >&2
+    echo "  actual:   $actual_digest" >&2
+    rm -f "$BIN_DIR/${tarball}"
+    return 1
+  fi
+  echo "Tarball digest matches committed value for ${tag}."
 
   (
     cd "$BIN_DIR"
     set -e
-    # Verify the tarball against the top-level release manifest
-    sha256sum -c SHA256SUMS
     # The tarball extracts the 4 binaries and internal SHA256SUMS flat into bin/
     tar -xzf "$tarball"
     # Verify the internal binary checksums
@@ -65,7 +104,7 @@ download_release_binaries() {
   ) || return 1
 
   # Clean up: keep only the extracted binaries and internal manifest
-  rm -f "$BIN_DIR/${tarball}" "$BIN_DIR/SHA256SUMS"
+  rm -f "$BIN_DIR/${tarball}"
 
   echo "Release binaries verified successfully."
 }
