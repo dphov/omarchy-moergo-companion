@@ -40,7 +40,7 @@ declare -A RELEASE_TARBALL_DIGESTS=(
   ["v1.1.9"]="55f0ab2ed00deac3a37c632b6d4fb028f6c6a3b97e6583b3be5642d3eb0debf7"
   ["v1.2.0"]="14854166afbfe9608247fbef5aa914fb5afd809d5e15f8bbb908b55632e9592c"
   ["v1.2.1"]="205aba1e0f8add6b7168371379e02f182f89a326793c8254cd6734d345c16ee2"
-  ["v1.2.2"]="5ca56f8b5b49b4c09328877e842168fe6aad449394876dc55ef780f598f30c68"
+  ["v1.2.2"]="cfca84f3d587e41bade21e8133b1492f00ae88440ad8bef895d49824a0932d57"
 )
 
 # Transfer safety limits when downloading release assets.
