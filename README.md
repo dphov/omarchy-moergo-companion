@@ -30,7 +30,7 @@ For users who want to run the install script manually (e.g., after `omarchy plug
 ./install.sh --rebuild
 ```
 
-`./install.sh --rebuild` is a self-contained script that compiles all native helpers from locked dependencies (`keymap-parser/Cargo.lock`) and deploys to `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/`. Without `--rebuild`, it first checks for Linux x86_64, then downloads the matching release tarball, verifies it against the top-level `SHA256SUMS`, extracts it, and verifies the binaries against the internal `bin/SHA256SUMS`.
+`./install.sh --rebuild` is a self-contained script that compiles all native helpers from locked dependencies (`keymap-parser/Cargo.lock`) and deploys to `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/`. Without `--rebuild`, it first checks for Linux x86_64, then downloads the matching release tarball, verifies its SHA-256 against the digest committed in `install.sh`, extracts it, and verifies the binaries against the internal `bin/SHA256SUMS`.
 ## Usage
 
 Click the Glove80 bar item to open the panel. Inside the panel you can:
@@ -114,28 +114,35 @@ The plugin is split into a **service** and a **bar widget**, so background work 
 To prevent supply chain risks, symlink attacks, and untrusted local binaries:
 
 1. **No committed binaries**: Native helpers are never committed to the source tree. They are built, attested, and distributed exclusively as GitHub release assets.
-2. **Sole verified builder (GitHub Actions)**: Native helpers are compiled exclusively by GitHub Actions in a clean, isolated container directly from reviewed source code and locked dependencies (`keymap-parser/Cargo.lock`).
-3. **Immutable supply chain**: Every third-party action, the Rust toolchain, and the `install.sh` source sync exclude list use reviewed immutable identifiers. All mutable action tags and branch refs have been replaced with full commit SHAs, and workflow permissions are set at the job level with least privilege.
-4. **Verifiable signed provenance**: Each release produces a GitHub artifact attestation (`actions/attest-build-provenance`) that cryptographically ties the exact released binary hashes to the reviewed locked source and the specific GitHub Actions run. Release notes include `gh attestation verify` instructions.
-5. **User-private runtime directory**: Runtime state (`glove80_watcher.pid`, `glove80_battery_notified.json`) is stored in `$XDG_RUNTIME_DIR/omarchy-moergo-companion`, with a mode-`0700` fallback to `~/.cache/omarchy/moergo-companion/runtime`. No `/tmp` paths are used anywhere.
-6. **No shared layout file in QML**: `moergo-watcher` emits the parsed layout JSON directly on stdout, so the QML side never reads a shared file path and there is no chance of QML/Rust path disagreement.
-7. **Symlink defense & safe PID locking**: The watcher opens PID files using `libc::O_NOFOLLOW` without premature truncation, verifies ownership, and acquires an exclusive `flock` before writing.
-8. **Atomic file replacement**: State and layout files are written to mode-`0600` temporary files within the private runtime directory and atomically renamed to prevent partial reads or symlink injection.
+2. **Tarball digest bound to the repo snapshot**: `install.sh` contains a hard-coded `RELEASE_TARBALL_DIGESTS` table. The expected tarball digest lives in the reviewed repository snapshot, not on the mutable release page. An attacker who replaces the GitHub release asset cannot change the digest that `install.sh` checks.
+3. **Bounded download**: `curl` is capped with `--connect-timeout 15 --max-time 120 --max-filesize 5M` so the download cannot hang or exhaust disk space.
+4. **Digest-before-extraction**: After download, the tarball SHA-256 is compared to the committed digest. Only on a match is the tarball extracted.
+5. **Internal binary manifest**: The tarball contains `bin/SHA256SUMS`; after extraction `sha256sum -c bin/SHA256SUMS` verifies every binary. This is a consistency check — the security boundary is the committed tarball digest.
+6. **Reproducible release builds**: The release workflow creates the tarball deterministically (`GZIP=-n`, sorted entries, fixed mtime/owner) and packs `dist/bin/` twice, failing the release if the two tarballs do not match byte-for-byte.
+7. **Automatic digest pinning**: When a release is published, the `pin-release-digest` workflow verifies the release tarball's GitHub build attestation, computes its SHA-256, and commits the digest into `install.sh`.
+8. **Verifiable signed provenance**: Each release produces a GitHub artifact attestation (`actions/attest-build-provenance`) that cryptographically ties the exact tarball to the reviewed locked source and the specific GitHub Actions run.
+9. **User-private runtime directory**: Runtime state (`glove80_watcher.pid`, `glove80_battery_notified.json`) is stored in `$XDG_RUNTIME_DIR/omarchy-moergo-companion`, with a mode-`0700` fallback to `~/.cache/omarchy/moergo-companion/runtime`. No `/tmp` paths are used anywhere.
+10. **No shared layout file in QML**: `moergo-watcher` emits the parsed layout JSON directly on stdout, so the QML side never reads a shared file path and there is no chance of QML/Rust path disagreement.
+11. **Symlink defense & safe PID locking**: The watcher opens PID files using `libc::O_NOFOLLOW` without premature truncation, verifies ownership, and acquires an exclusive `flock` before writing.
+12. **Atomic file replacement**: State and layout files are written to mode-`0600` temporary files within the private runtime directory and atomically renamed to prevent partial reads or symlink injection.
 
-To verify binaries:
+To verify a release tarball manually:
 
 ```bash
-# Verify the tarball against the top-level release manifest
-sha256sum -c SHA256SUMS
+tag=v1.2.0
+curl -fsSL -O "https://github.com/dphov/omarchy-moergo-companion/releases/download/${tag}/omarchy-moergo-companion-binaries-${tag}.tar.gz"
 
-# Extract into bin/ and verify the binaries against the internal manifest
+# Compare the digest to the value committed in install.sh
+sha256sum "omarchy-moergo-companion-binaries-${tag}.tar.gz"
+grep "\"${tag}\"" install.sh
+
+# Extract and verify internal binary checksums
 mkdir -p bin
-tar -xzf omarchy-moergo-companion-binaries-v1.2.0.tar.gz -C bin
+tar -xzf "omarchy-moergo-companion-binaries-${tag}.tar.gz" -C bin
 sha256sum -c bin/SHA256SUMS
 
 # Verify signed build provenance for the tarball (requires GitHub CLI)
-gh attestation verify --repo dphov/omarchy-moergo-companion omarchy-moergo-companion-binaries-v1.2.0.tar.gz
-gh attestation verify --repo dphov/omarchy-moergo-companion SHA256SUMS
+gh attestation verify --repo dphov/omarchy-moergo-companion "omarchy-moergo-companion-binaries-${tag}.tar.gz"
 ```
 
 ## Development
@@ -149,10 +156,11 @@ just build            # Compile release binaries locally into bin/ and generate 
 just sha              # Compute and display SHA-256 checksums of bin/
 just verify-sha       # Verify binary integrity against bin/SHA256SUMS
 just test             # Run all Rust unit, integration, and security tests
-just lint             # Validate QML syntax across all files with qmllint
+just lint             # Run qmllint with unqualified-identifier checks (best-effort in some envs)
 just dev              # Live-reload development mode using cargo-watch
 just clean            # Remove Rust build artifacts
-just release <tag>    # Verify clean git state, run test & lint, tag, and push release
+just release-dry      # Build and package a deterministic release tarball locally (no tag/push)
+just release <tag>    # Update manifest.json, tag, and push to trigger the release workflow
 ```
 ## Configuration
 
