@@ -20,13 +20,12 @@ BIN_DIR="$SCRIPT_DIR/bin"
 #        date +%s > SOURCE_DATE_EPOCH
 #      Commit SOURCE_DATE_EPOCH first.
 #   2. Check out the exact release source tree (no uncommitted changes).
-#   3. Optionally run `just release-dry` as a local sanity check. The tarball packaging is
-#      deterministic, but the Rust binaries may differ across distros, so the local digest
-#      might not match the CI-built release tarball.
-#   4. Push the tag (or trigger the CI release workflow) to obtain the canonical CI digest.
-#      Copy that CI-generated SHA-256 into this table for the release tag.
+#   3. Run the CI dry-run workflow (`.github/workflows/release-dry.yml`) to get the
+#      canonical tarball digest. Rust binaries may differ across distros, so the local
+#      `just release-dry` output is only a sanity check, not the canonical value.
+#   4. Copy the CI-generated SHA-256 into this table for the release tag.
 #   5. Commit the updated install.sh.
-#   6. Re-tag the new commit and push. CI will verify the published tarball digest matches.
+#   6. Tag that commit and push the tag. CI will verify the published tarball digest matches.
 #
 # The CI release job does NOT update this table; it only verifies the artifact matches the
 # value that was already committed before the tag.

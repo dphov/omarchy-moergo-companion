@@ -203,7 +203,10 @@ release version: check
     git push origin {{version}}
     echo "Tagged {{version}} and pushed. GitHub Actions release workflow is running."
 
-# Simulate the GitHub Actions release packaging step locally (no tag, no push)
+# Simulate the GitHub Actions release packaging step locally (no tag, no push).
+# Note: the packaging is deterministic, but the Rust binaries may differ from the
+# CI build because of distro/toolchain differences, so use the CI dry-run
+# workflow (release-dry.yml) for the canonical release digest.
 release-dry: build
     @mkdir -p release-assets
     cp bin/omarchy-moergo-keymap-parser release-assets/
@@ -230,3 +233,4 @@ release-dry: build
       sha256sum -c SHA256SUMS'
     @echo "Dry-run release assets staged in release-assets/:"
     @cat release-assets/SHA256SUMS
+

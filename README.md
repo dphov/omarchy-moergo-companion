@@ -119,7 +119,7 @@ To prevent supply chain risks, symlink attacks, and untrusted local binaries:
 4. **Digest-before-extraction**: After download, the tarball SHA-256 is compared to the committed digest. Only on a match is the tarball extracted.
 5. **Internal binary manifest**: The tarball contains `bin/SHA256SUMS`; after extraction `sha256sum -c bin/SHA256SUMS` verifies every binary. This is a consistency check — the security boundary is the committed tarball digest.
 6. **Reproducible release packaging**: The release workflow creates the tarball deterministically (`GZIP=-n`, sorted entries, fixed mtime/owner from `SOURCE_DATE_EPOCH`) and packs `dist/bin/` twice, failing the release if the two tarballs do not match byte-for-byte.
-7. **Digest committed before the tag**: Before cutting a release, the maintainer chooses a `SOURCE_DATE_EPOCH` timestamp and commits it. The CI release workflow then builds the release tarball with that fixed timestamp and verifies its digest against the value already committed in `install.sh`. If the CI build environment produces a different digest than the local dry-run, the maintainer updates `install.sh` with the CI digest and re-tags. The release tag therefore always points to a commit that already contains the expected digest.
+7. **Digest committed before the tag**: Before cutting a release, the maintainer chooses a `SOURCE_DATE_EPOCH` timestamp and commits it. The CI release workflow then builds the release tarball with that fixed timestamp and verifies its digest against the value already committed in `install.sh`. The canonical digest is obtained from the CI dry-run workflow (`.github/workflows/release-dry.yml`), not from a local build, because Rust binaries can differ subtly across distros even with identical source and flags.
 
    Release procedure:
    ```bash
@@ -127,10 +127,11 @@ To prevent supply chain risks, symlink attacks, and untrusted local binaries:
    date +%s > SOURCE_DATE_EPOCH
    git add SOURCE_DATE_EPOCH && git commit -m "chore(release): set SOURCE_DATE_EPOCH for vX.Y.Z"
 
-   # 2. Optional local sanity check (may differ from CI across distros).
-   just release-dry
+   # 2. Get the canonical CI dry-run digest.
+   #    Trigger the "Release Dry-Run" workflow manually in GitHub Actions,
+   #    or push a draft tag and read the digest from the failed/successful run log.
 
-   # 3. Pin the expected digest (use the CI-generated value once the workflow runs).
+   # 3. Pin the CI-generated digest in install.sh.
    # edit install.sh RELEASE_TARBALL_DIGESTS for vX.Y.Z
    git add install.sh && git commit -m "chore(release): pin tarball digest for vX.Y.Z"
 
