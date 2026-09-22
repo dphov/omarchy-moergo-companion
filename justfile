@@ -8,6 +8,10 @@ default: install restart
 # Rust target for release binaries: static musl for reproducibility across distros
 export TARGET := "x86_64-unknown-linux-musl"
 
+# Reproducibility flags used for release binaries (must match .github/workflows/release.yml)
+export CARGO_INCREMENTAL := "0"
+export RUSTFLAGS := "--remap-path-prefix=$PWD=/build --remap-path-prefix=$HOME=/home -C link-arg=-Wl,--build-id=none"
+
 # Build the Rust keymap parser and helpers in release mode from locked source
 build:
     cd keymap-parser && rustup target add {{TARGET}}
