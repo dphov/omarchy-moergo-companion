@@ -168,13 +168,18 @@ release version: check
         exit 1
     fi
 
-    # The tarball digest must already be committed at this SHA.
+    # The tarball digest and SOURCE_DATE_EPOCH must already be committed at this SHA.
     tag="{{version}}"
     if ! grep -qF "[\"$tag\"]=" install.sh; then
         echo "Error: no committed tarball digest in install.sh for $tag." >&2
         echo "Run 'just release-dry' to build the deterministic tarball, copy the" >&2
-        echo "printed SHA-256 into install.sh RELEASE_TARBALL_DIGESTS, commit, and" >&2
-        echo "then run 'just release $tag'." >&2
+        echo "printed SHA-256 into install.sh RELEASE_TARBALL_DIGESTS, create a" >&2
+        echo "SOURCE_DATE_EPOCH file, commit both, and then run 'just release $tag'." >&2
+        exit 1
+    fi
+    if [ ! -f SOURCE_DATE_EPOCH ]; then
+        echo "Error: SOURCE_DATE_EPOCH file is missing. Create it (e.g. date +%s > SOURCE_DATE_EPOCH)" >&2
+        echo "and commit it together with the release digest in install.sh." >&2
         exit 1
     fi
 
@@ -199,8 +204,12 @@ release-dry: build
     cp bin/glove80-status release-assets/
     cp bin/SHA256SUMS release-assets/
     # Deterministic tarball: sorted entries, fixed mtime/owner, no gzip timestamp.
+    @if [ ! -f SOURCE_DATE_EPOCH ]; then \
+      echo "Error: SOURCE_DATE_EPOCH file is missing. Create it and commit it with the release digest." >&2; \
+      exit 1; \
+    fi
     bash -c 'set -euo pipefail; \
-      export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log -1 --format=%ct 2>/dev/null || date +%s)}"; \
+      export SOURCE_DATE_EPOCH="$(cat SOURCE_DATE_EPOCH)"; \
       GZIP=-n tar \
         --sort=name \
         --mtime="@${SOURCE_DATE_EPOCH}" \

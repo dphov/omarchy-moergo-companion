@@ -119,7 +119,17 @@ To prevent supply chain risks, symlink attacks, and untrusted local binaries:
 4. **Digest-before-extraction**: After download, the tarball SHA-256 is compared to the committed digest. Only on a match is the tarball extracted.
 5. **Internal binary manifest**: The tarball contains `bin/SHA256SUMS`; after extraction `sha256sum -c bin/SHA256SUMS` verifies every binary. This is a consistency check — the security boundary is the committed tarball digest.
 6. **Reproducible release builds**: The release workflow creates the tarball deterministically (`GZIP=-n`, sorted entries, fixed mtime/owner) and packs `dist/bin/` twice, failing the release if the two tarballs do not match byte-for-byte.
-7. **Digest committed before the tag**: Every release tarball digest is computed locally with `just release-dry` (deterministic packaging) and committed into `install.sh` before the release tag is created. The release tag therefore points to a source commit that already knows its own expected digest. The CI release job only verifies that the published artifact matches the pre-committed value.
+7. **Digest committed before the tag**: Before cutting a release, the maintainer commits a `SOURCE_DATE_EPOCH` timestamp and then runs `just release-dry`. The deterministic tarball digest is copied into `install.sh` and committed at the same source SHA as the release tag. The release tag therefore points to a commit that already knows its own expected digest. The CI release job only verifies that the published artifact matches the pre-committed value.
+
+   Release procedure:
+   ```bash
+   date +%s > SOURCE_DATE_EPOCH
+   git add SOURCE_DATE_EPOCH && git commit -m "chore(release): set SOURCE_DATE_EPOCH for vX.Y.Z"
+   just release-dry                       # prints deterministic tarball digest
+   # paste digest into install.sh RELEASE_TARBALL_DIGESTS for vX.Y.Z
+   git add install.sh && git commit -m "chore(release): pin tarball digest for vX.Y.Z"
+   just release vX.Y.Z                    # tags and pushes
+   ```
 8. **Verifiable signed provenance**: Each release produces a GitHub artifact attestation (`actions/attest-build-provenance`) that cryptographically ties the exact tarball to the reviewed locked source and the specific GitHub Actions run.
 9. **User-private runtime directory**: Runtime state (`glove80_watcher.pid`, `glove80_battery_notified.json`) is stored in `$XDG_RUNTIME_DIR/omarchy-moergo-companion`, with a mode-`0700` fallback to `~/.cache/omarchy/moergo-companion/runtime`. No `/tmp` paths are used anywhere.
 10. **No shared layout file in QML**: `moergo-watcher` emits the parsed layout JSON directly on stdout, so the QML side never reads a shared file path and there is no chance of QML/Rust path disagreement.

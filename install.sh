@@ -16,11 +16,15 @@ BIN_DIR="$SCRIPT_DIR/bin"
 # the release tag points to a commit that already contains its own expected digest.
 #
 # Procedure for adding a new digest (do not edit by hand):
-#   1. Check out the exact release source tree (no uncommitted changes).
-#   2. Run `just release-dry` to build and pack the tarball deterministically.
-#   3. Copy the printed tarball SHA-256 into this table for the release tag.
-#   4. Commit the updated install.sh.
-#   5. Tag that commit and push the tag. CI will verify the published tarball digest matches.
+#   1. Choose a release timestamp and write it to SOURCE_DATE_EPOCH:
+#        date +%s > SOURCE_DATE_EPOCH
+#      Commit SOURCE_DATE_EPOCH first.
+#   2. Check out the exact release source tree (no uncommitted changes).
+#   3. Run `just release-dry` to build and pack the tarball deterministically.
+#      It reads SOURCE_DATE_EPOCH, so the digest is reproducible on CI.
+#   4. Copy the printed tarball SHA-256 into this table for the release tag.
+#   5. Commit the updated install.sh.
+#   6. Tag that commit and push the tag. CI will verify the published tarball digest matches.
 #
 # The CI release job does NOT update this table; it only verifies the artifact matches the
 # value that was already committed before the tag.

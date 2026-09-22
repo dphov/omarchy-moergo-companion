@@ -49,7 +49,12 @@ jobs:
       - name: Package release tarball and verify reproducibility
         id: checksum
         run: |
-          export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
+          if [ ! -f SOURCE_DATE_EPOCH ]; then
+            echo "Error: SOURCE_DATE_EPOCH file is missing. Commit it with the release digest." >&2
+            exit 1
+          fi
+          SOURCE_DATE_EPOCH="$(cat SOURCE_DATE_EPOCH)"
+          echo "SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}"
           tarball="omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz"
           cd dist/bin
 
