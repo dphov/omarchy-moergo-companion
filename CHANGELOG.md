@@ -5,8 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-09-22
 
+### Changed
 
+- ci(release): deterministic and reproducible release tarball packaging
+- ci(release): auto-pin release tarball digest on publish
+- refactor(qml): clean up unused imports and duplicate properties
+- refactor(qml): remove dead isActive property and simplify KeyCap styling
+- build(qml): use explicit .qmltypes files in strict qml lint script
+
+### Fixed
+
+- fix(install): bind release tarballs to committed digests and harden transfer bounds
+
+### Documentation
+
+- docs(readme): update security and install docs for committed digest model
 
 
 ## [1.2.0] - 2026-09-21
@@ -15,6 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - fix(service,watcher): remove `Service.qml` runtime directory computation and the watcher `output_json` argument
 - fix(service): no `/tmp` string remains in QML; the watcher emits layout JSON on stdout, so components never need to read a shared file
+
+### Documentation
+
+- docs(readme): sync security/provenance docs for v1.2.0
+- docs(install): document reproducible digest review procedure
 
 ## [1.1.9] - 2026-09-21
 
