@@ -16,6 +16,7 @@ keymap-parser/target/
 # Native binaries are built by GitHub Actions and distributed via release assets only;
 # they are never committed to the source tree.
 bin/
+release-assets/
 
 # Agent authorization rules are repository-local and must not be distributed
 AGENTS.md

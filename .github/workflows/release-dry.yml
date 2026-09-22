@@ -1,0 +1,83 @@
+name: Release Dry-Run
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/release.yml'
+      - '.github/workflows/release-dry.yml'
+      - 'keymap-parser/**'
+      - 'justfile'
+
+jobs:
+  dry-run:
+    name: Build and preview release tarball digest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # stable
+        with:
+          toolchain: 1.98.1
+
+      - name: Build release binaries from locked source
+        run: |
+          cd keymap-parser
+          rustup target add x86_64-unknown-linux-musl
+          RUSTFLAGS="--remap-path-prefix=$GITHUB_WORKSPACE=/build --remap-path-prefix=$HOME=/home -C link-arg=-Wl,--build-id=none" \
+            cargo build --release --locked --target x86_64-unknown-linux-musl
+
+      - name: Stage binaries and generate internal SHA-256 manifest
+        run: |
+          mkdir -p dist/bin
+          cp keymap-parser/target/x86_64-unknown-linux-musl/release/omarchy-moergo-keymap-parser dist/bin/
+          cp keymap-parser/target/x86_64-unknown-linux-musl/release/moergo-watcher dist/bin/
+          cp keymap-parser/target/x86_64-unknown-linux-musl/release/moergo-companion-settings dist/bin/
+          cp keymap-parser/target/x86_64-unknown-linux-musl/release/glove80-status dist/bin/
+          cd dist/bin
+          # Deterministic, sorted manifest: one line per binary in lexicographic order.
+          for bin in glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser; do
+            printf '%s\0' "$bin"
+          done | sort -z | xargs -0 -r sha256sum > SHA256SUMS
+          sha256sum -c SHA256SUMS
+
+      - name: Package release tarball and print digest
+        id: checksum
+        run: |
+          if [ ! -f SOURCE_DATE_EPOCH ]; then
+            echo "Error: SOURCE_DATE_EPOCH file is missing." >&2
+            exit 1
+          fi
+          export SOURCE_DATE_EPOCH="$(cat SOURCE_DATE_EPOCH)"
+          tarball="omarchy-moergo-companion-binaries-dryrun.tar.gz"
+          cd dist/bin
+          # Deterministic tarball: sorted entries, fixed mtime/owner, no gzip timestamp.
+          GZIP=-n tar \
+            --sort=name \
+            --mtime="@${SOURCE_DATE_EPOCH}" \
+            --owner=0 --group=0 --numeric-owner \
+            --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
+            -czf "../../$tarball" .
+          cd ../..
+          digest="$(sha256sum "$tarball" | awk '{print $1}')"
+          echo "tarball_digest=$digest" >> "$GITHUB_OUTPUT"
+          echo ""
+          echo "=== CI dry-run tarball digest ==="
+          echo "$digest  $tarball"
+          echo ""
+          echo "=== internal SHA256SUMS ==="
+          cat dist/bin/SHA256SUMS
+
+      - name: Upload dry-run tarball as artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: omarchy-moergo-companion-binaries-dryrun
+          path: omarchy-moergo-companion-binaries-dryrun.tar.gz
+          if-no-files-found: error
+          retention-days: 5

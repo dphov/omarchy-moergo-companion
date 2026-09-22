@@ -118,17 +118,24 @@ To prevent supply chain risks, symlink attacks, and untrusted local binaries:
 3. **Bounded download**: `curl` is capped with `--connect-timeout 15 --max-time 120 --max-filesize 5M` so the download cannot hang or exhaust disk space.
 4. **Digest-before-extraction**: After download, the tarball SHA-256 is compared to the committed digest. Only on a match is the tarball extracted.
 5. **Internal binary manifest**: The tarball contains `bin/SHA256SUMS`; after extraction `sha256sum -c bin/SHA256SUMS` verifies every binary. This is a consistency check — the security boundary is the committed tarball digest.
-6. **Reproducible release builds**: The release workflow creates the tarball deterministically (`GZIP=-n`, sorted entries, fixed mtime/owner) and packs `dist/bin/` twice, failing the release if the two tarballs do not match byte-for-byte.
-7. **Digest committed before the tag**: Before cutting a release, the maintainer commits a `SOURCE_DATE_EPOCH` timestamp and then runs `just release-dry`. The deterministic tarball digest is copied into `install.sh` and committed at the same source SHA as the release tag. The release tag therefore points to a commit that already knows its own expected digest. The CI release job only verifies that the published artifact matches the pre-committed value.
+6. **Reproducible release packaging**: The release workflow creates the tarball deterministically (`GZIP=-n`, sorted entries, fixed mtime/owner from `SOURCE_DATE_EPOCH`) and packs `dist/bin/` twice, failing the release if the two tarballs do not match byte-for-byte.
+7. **Digest committed before the tag**: Before cutting a release, the maintainer chooses a `SOURCE_DATE_EPOCH` timestamp and commits it. The CI release workflow then builds the release tarball with that fixed timestamp and verifies its digest against the value already committed in `install.sh`. If the CI build environment produces a different digest than the local dry-run, the maintainer updates `install.sh` with the CI digest and re-tags. The release tag therefore always points to a commit that already contains the expected digest.
 
    Release procedure:
    ```bash
+   # 1. Choose a release timestamp and commit it.
    date +%s > SOURCE_DATE_EPOCH
    git add SOURCE_DATE_EPOCH && git commit -m "chore(release): set SOURCE_DATE_EPOCH for vX.Y.Z"
-   just release-dry                       # prints deterministic tarball digest
-   # paste digest into install.sh RELEASE_TARBALL_DIGESTS for vX.Y.Z
+
+   # 2. Optional local sanity check (may differ from CI across distros).
+   just release-dry
+
+   # 3. Pin the expected digest (use the CI-generated value once the workflow runs).
+   # edit install.sh RELEASE_TARBALL_DIGESTS for vX.Y.Z
    git add install.sh && git commit -m "chore(release): pin tarball digest for vX.Y.Z"
-   just release vX.Y.Z                    # tags and pushes
+
+   # 4. Tag and push; CI builds, verifies the digest, and publishes the release.
+   just release vX.Y.Z
    ```
 8. **Verifiable signed provenance**: Each release produces a GitHub artifact attestation (`actions/attest-build-provenance`) that cryptographically ties the exact tarball to the reviewed locked source and the specific GitHub Actions run.
 9. **User-private runtime directory**: Runtime state (`glove80_watcher.pid`, `glove80_battery_notified.json`) is stored in `$XDG_RUNTIME_DIR/omarchy-moergo-companion`, with a mode-`0700` fallback to `~/.cache/omarchy/moergo-companion/runtime`. No `/tmp` paths are used anywhere.
