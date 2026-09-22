@@ -31,9 +31,9 @@ verify-sha:
 test:
     cd keymap-parser && cargo test --locked
 
-# Lint all QML files
+# Lint all QML files with unqualified-identifier checks and project import paths
 lint:
-    qmllint *.qml components/*.qml
+    ./scripts/qmllint-strict.sh
 
 # Run all code-quality checks (format, clippy, tests, qmllint)
 check:

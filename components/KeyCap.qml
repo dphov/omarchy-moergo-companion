@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
 import QtQuick.Layouts
 import QtQuick.Shapes
@@ -71,14 +70,7 @@ Rectangle {
         return (c.r * lumaRed + c.g * lumaGreen + c.b * lumaBlue) > lightColorThreshold;
     }
 
-    readonly property color resolvedTextColor: {
-        if (root.isActive) return Color.background;
-        if (root.keyTextColor !== "") return root.keyTextColor;
-        if (root.keyColor !== "") return root.isLightKeyColor ? tealLabel : "#ffffff";
-        return tealLabel;
-    }
-
-    readonly property color resolvedIconColor: {
+    readonly property color resolvedForegroundColor: {
         if (root.isActive) return Color.background;
         if (root.keyTextColor !== "") return root.keyTextColor;
         if (root.keyColor !== "") return root.isLightKeyColor ? tealLabel : "#ffffff";
@@ -193,7 +185,7 @@ Rectangle {
             anchors.fill: cornerGlyphImg
             source: cornerGlyphImg
             visible: root.keyGlyph !== "di-linux"
-            color: root.resolvedIconColor
+            color: root.resolvedForegroundColor
         }
     }
 
@@ -207,7 +199,7 @@ Rectangle {
         fontSizeMode: Text.Fit
         minimumPixelSize: 6
         font.bold: true
-        color: root.resolvedTextColor
+        color: root.resolvedForegroundColor
         wrapMode: root.keyText.indexOf("\n") !== -1 ? Text.Wrap : Text.NoWrap
         maximumLineCount: root.keyText.indexOf("\n") !== -1 ? 2 : 1
         horizontalAlignment: Text.AlignHCenter
@@ -238,7 +230,7 @@ Rectangle {
             anchors.fill: standaloneGlyphImg
             source: standaloneGlyphImg
             visible: root.keyGlyph !== "di-linux"
-            color: root.resolvedIconColor
+            color: root.resolvedForegroundColor
         }
     }
 
