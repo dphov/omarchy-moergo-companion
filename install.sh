@@ -8,8 +8,15 @@ REPO="dphov/omarchy-moergo-companion"
 BIN_DIR="$SCRIPT_DIR/bin"
 
 # Committed SHA-256 digests for release tarballs.
-# Each digest was measured from the GitHub release asset and pinned at install.sh review.
-# DO NOT EDIT BY HAND. Update this file when a new release is reviewed and attested.
+#
+# SECURITY: The expected tarball digest lives in this repo snapshot, not on the release page.
+# An attacker who replaces the GitHub release asset cannot change the value checked here.
+#
+# Procedure for adding a new digest (do not edit by hand):
+#   1. Check out the exact release tag.
+#   2. Run `just release-dry` to build and pack the tarball deterministically.
+#   3. Confirm the local tarball digest equals the one published on the GitHub release.
+#   4. Copy that digest here, commit it, and push.
 declare -A RELEASE_TARBALL_DIGESTS=(
   ["v1.1.1"]="f85b9c542339da29c38baf1f5e3733eb5fa817e02cc73317e5696796c9a84073"
   ["v1.1.2"]="6ee3432399e872607d72649d78693cba644b077bcecfa39c0655aa2fadb6bd21"
