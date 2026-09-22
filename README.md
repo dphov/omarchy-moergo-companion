@@ -119,7 +119,7 @@ To prevent supply chain risks, symlink attacks, and untrusted local binaries:
 4. **Digest-before-extraction**: After download, the tarball SHA-256 is compared to the committed digest. Only on a match is the tarball extracted.
 5. **Internal binary manifest**: The tarball contains `bin/SHA256SUMS`; after extraction `sha256sum -c bin/SHA256SUMS` verifies every binary. This is a consistency check — the security boundary is the committed tarball digest.
 6. **Reproducible release builds**: The release workflow creates the tarball deterministically (`GZIP=-n`, sorted entries, fixed mtime/owner) and packs `dist/bin/` twice, failing the release if the two tarballs do not match byte-for-byte.
-7. **Automatic digest pinning**: When a release is published, the `pin-release-digest` workflow verifies the release tarball's GitHub build attestation, computes its SHA-256, and commits the digest into `install.sh`.
+7. **Digest committed before the tag**: Every release tarball digest is computed locally with `just release-dry` (deterministic packaging) and committed into `install.sh` before the release tag is created. The release tag therefore points to a source commit that already knows its own expected digest. The CI release job only verifies that the published artifact matches the pre-committed value.
 8. **Verifiable signed provenance**: Each release produces a GitHub artifact attestation (`actions/attest-build-provenance`) that cryptographically ties the exact tarball to the reviewed locked source and the specific GitHub Actions run.
 9. **User-private runtime directory**: Runtime state (`glove80_watcher.pid`, `glove80_battery_notified.json`) is stored in `$XDG_RUNTIME_DIR/omarchy-moergo-companion`, with a mode-`0700` fallback to `~/.cache/omarchy/moergo-companion/runtime`. No `/tmp` paths are used anywhere.
 10. **No shared layout file in QML**: `moergo-watcher` emits the parsed layout JSON directly on stdout, so the QML side never reads a shared file path and there is no chance of QML/Rust path disagreement.
@@ -160,7 +160,7 @@ just lint             # Run qmllint with strict unqualified-identifier checks an
 just dev              # Live-reload development mode using cargo-watch
 just clean            # Remove Rust build artifacts
 just release-dry      # Build and package a deterministic release tarball locally (no tag/push)
-just release <tag>    # Update manifest.json, tag, and push to trigger the release workflow
+just release <tag>    # Verify digest is committed, update manifest.json, tag, and push
 ```
 ## Configuration
 

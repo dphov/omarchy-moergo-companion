@@ -167,6 +167,17 @@ release version: check
         echo "Error: No CHANGELOG.md section found for {{version}}."
         exit 1
     fi
+
+    # The tarball digest must already be committed at this SHA.
+    tag="{{version}}"
+    if ! grep -qF "[\"$tag\"]=" install.sh; then
+        echo "Error: no committed tarball digest in install.sh for $tag." >&2
+        echo "Run 'just release-dry' to build the deterministic tarball, copy the" >&2
+        echo "printed SHA-256 into install.sh RELEASE_TARBALL_DIGESTS, commit, and" >&2
+        echo "then run 'just release $tag'." >&2
+        exit 1
+    fi
+
     # Sync manifest.json version with the release tag
     sed -i -E 's/("version"[[:space:]]*:[[:space:]]*")[^"]+(".*)/\1'"$bare"'\2/' manifest.json
     if [ -n "$(git status --porcelain manifest.json)" ]; then

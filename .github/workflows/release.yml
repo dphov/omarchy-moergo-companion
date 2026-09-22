@@ -153,46 +153,28 @@ jobs:
 
             ${{ steps.checksum.outputs.body }}
 
-      - name: Pin release tarball digest to install.sh
+      - name: Verify committed tarball digest matches release artifact
         env:
           TARBALL_DIGEST: ${{ steps.checksum.outputs.tarball_digest }}
           RELEASE_TAG: ${{ github.ref_name }}
-          GITHUB_TOKEN: ${{ github.token }}
         run: |
           if [ -z "$TARBALL_DIGEST" ]; then
-            echo "Error: tarball digest is missing; cannot pin to install.sh." >&2
+            echo "Error: tarball digest is missing." >&2
             exit 1
           fi
 
-          python3 - "$RELEASE_TAG" "$TARBALL_DIGEST" <<'PY'
-          import re, sys
-          tag = sys.argv[1]
-          digest = sys.argv[2]
-          path = "install.sh"
-          content = open(path).read()
-
-          # Remove any existing entry for this tag.
-          content = re.sub(rf'\n\s*\["{re.escape(tag)}"\]="[^"]+"', '', content)
-
-          # Insert the new entry before the closing ).
-          def insert_before_close(match):
-              return f'\n  ["{tag}"]="{digest}"\n)'
-          content, count = re.subn(r'\n\)', insert_before_close, content, count=1)
-          if count != 1:
-              print("Error: could not find closing ) of RELEASE_TARBALL_DIGESTS", file=sys.stderr)
-              sys.exit(1)
-
-          open(path, "w").write(content)
-          PY
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          if git diff --quiet install.sh; then
-            echo "install.sh already contains digest for $RELEASE_TAG. Nothing to commit."
-            exit 0
+          expected_digest="$(grep -F "\"$RELEASE_TAG\"" install.sh | head -n1 | sed -E 's/.*\"([^\"]+)\".*/\1/')"
+          if [ -z "$expected_digest" ]; then
+            echo "Error: no committed digest in install.sh for $RELEASE_TAG." >&2
+            echo "Run 'just release-dry' locally, commit the digest, then tag." >&2
+            exit 1
           fi
 
-          git add install.sh
-          git commit -m "chore(release): pin tarball digest for ${RELEASE_TAG} [ci skip]"
-          git push origin main
+          if [ "$TARBALL_DIGEST" != "$expected_digest" ]; then
+            echo "Error: release tarball digest does not match the value committed in install.sh." >&2
+            echo "  expected (from install.sh): $expected_digest" >&2
+            echo "  actual (release artifact):  $TARBALL_DIGEST" >&2
+            exit 1
+          fi
+
+          echo "Release artifact digest matches install.sh: $TARBALL_DIGEST"

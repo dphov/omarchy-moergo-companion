@@ -12,9 +12,18 @@ BIN_DIR="$SCRIPT_DIR/bin"
 # SECURITY: The expected tarball digest lives in this repo snapshot, not on the release page.
 # An attacker who replaces the GitHub release asset cannot change the value checked here.
 #
-# This table is updated automatically by the pin-release-digest workflow when a release is
-# published. The workflow verifies the release tarball's GitHub build attestation, computes
-# its SHA-256 digest, and commits the result here. Do not edit by hand.
+# Each digest must be committed at the exact source SHA that the release is built from, so
+# the release tag points to a commit that already contains its own expected digest.
+#
+# Procedure for adding a new digest (do not edit by hand):
+#   1. Check out the exact release source tree (no uncommitted changes).
+#   2. Run `just release-dry` to build and pack the tarball deterministically.
+#   3. Copy the printed tarball SHA-256 into this table for the release tag.
+#   4. Commit the updated install.sh.
+#   5. Tag that commit and push the tag. CI will verify the published tarball digest matches.
+#
+# The CI release job does NOT update this table; it only verifies the artifact matches the
+# value that was already committed before the tag.
 declare -A RELEASE_TARBALL_DIGESTS=(
   ["v1.1.1"]="f85b9c542339da29c38baf1f5e3733eb5fa817e02cc73317e5696796c9a84073"
   ["v1.1.2"]="6ee3432399e872607d72649d78693cba644b077bcecfa39c0655aa2fadb6bd21"
@@ -137,7 +146,7 @@ build_from_source() {
 
   (
     cd "$BIN_DIR"
-    sha256sum omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status > SHA256SUMS
+    sha256sum omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status >SHA256SUMS
   )
 }
 
@@ -146,8 +155,8 @@ force_rebuild=false
 ensure_only=false
 for arg in "$@"; do
   case "$arg" in
-    --rebuild) force_rebuild=true ;;
-    --ensure) ensure_only=true ;;
+  --rebuild) force_rebuild=true ;;
+  --ensure) ensure_only=true ;;
   esac
 done
 
