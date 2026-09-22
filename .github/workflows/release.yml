@@ -85,6 +85,7 @@ jobs:
             echo 'body<<EOF'
             cat dist/bin/SHA256SUMS
             echo 'EOF'
+            echo "tarball_digest=${expected}"
           } >> "$GITHUB_OUTPUT"
 
       - name: Attest release assets
@@ -108,9 +109,10 @@ jobs:
             echo 'body<<EOF'
             echo "$section"
             echo 'EOF'
-          } >> "$GITHUB_OUTPUT"
+            ${{ steps.checksum.outputs.body }}
 
       - name: Create GitHub Release
+        id: release
         uses: softprops/action-gh-release@e7a8f85e1c67a31e6ed99a94b41bd0b71bbee6b8 # v2.0.9
         with:
           files: |
@@ -129,8 +131,11 @@ jobs:
             ```bash
             tag=${{ github.ref_name }}
             curl -fsSL -O "https://github.com/${{ github.repository }}/releases/download/${tag}/omarchy-moergo-companion-binaries-${tag}.tar.gz"
-            curl -fsSL -O "https://github.com/${{ github.repository }}/releases/download/${tag}/SHA256SUMS"
-            sha256sum -c SHA256SUMS
+
+            # Compare the digest to the value pinned in install.sh
+            sha256sum "omarchy-moergo-companion-binaries-${tag}.tar.gz"
+            grep "\"${tag}\"" install.sh
+
             mkdir -p bin
             tar -xzf "omarchy-moergo-companion-binaries-${tag}.tar.gz" -C bin
             sha256sum -c bin/SHA256SUMS
@@ -147,3 +152,47 @@ jobs:
             SHA-256 values for the binaries inside the tarball are listed below and also bundled in the tarball's `SHA256SUMS` file.
 
             ${{ steps.checksum.outputs.body }}
+
+      - name: Pin release tarball digest to install.sh
+        env:
+          TARBALL_DIGEST: ${{ steps.checksum.outputs.tarball_digest }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$TARBALL_DIGEST" ]; then
+            echo "Error: tarball digest is missing; cannot pin to install.sh." >&2
+            exit 1
+          fi
+
+          python3 - "$RELEASE_TAG" "$TARBALL_DIGEST" <<'PY'
+          import re, sys
+          tag = sys.argv[1]
+          digest = sys.argv[2]
+          path = "install.sh"
+          content = open(path).read()
+
+          # Remove any existing entry for this tag.
+          content = re.sub(rf'\n\s*\["{re.escape(tag)}"\]="[^"]+"', '', content)
+
+          # Insert the new entry before the closing ).
+          def insert_before_close(match):
+              return f'\n  ["{tag}"]="{digest}"\n)'
+          content, count = re.subn(r'\n\)', insert_before_close, content, count=1)
+          if count != 1:
+              print("Error: could not find closing ) of RELEASE_TARBALL_DIGESTS", file=sys.stderr)
+              sys.exit(1)
+
+          open(path, "w").write(content)
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet install.sh; then
+            echo "install.sh already contains digest for $RELEASE_TAG. Nothing to commit."
+            exit 0
+          fi
+
+          git add install.sh
+          git commit -m "chore(release): pin tarball digest for ${RELEASE_TAG} [ci skip]"
+          git push origin main

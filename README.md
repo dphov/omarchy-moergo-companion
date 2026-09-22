@@ -30,7 +30,7 @@ For users who want to run the install script manually (e.g., after `omarchy plug
 ./install.sh --rebuild
 ```
 
-`./install.sh --rebuild` is a self-contained script that compiles all native helpers from locked dependencies (`keymap-parser/Cargo.lock`) and deploys to `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/`. Without `--rebuild`, it first checks for Linux x86_64, then downloads the matching release tarball, verifies its SHA-256 against the digest committed in `install.sh`, extracts it, and verifies the binaries against the internal `bin/SHA256SUMS`.
+`./install.sh --rebuild` is a self-contained script that compiles all native helpers from locked dependencies (`keymap-parser/Cargo.lock`) and deploys to `~/.config/omarchy/plugins/dphov.omarchy-moergo-companion/`. Without `--rebuild`, it first checks for Linux x86_64, then downloads the matching release tarball, verifies its SHA-256 against the digest pinned in `install.sh`'s `RELEASE_TARBALL_DIGESTS`, extracts it, and verifies the binaries against the internal `bin/SHA256SUMS`.
 ## Usage
 
 Click the Glove80 bar item to open the panel. Inside the panel you can:
@@ -156,7 +156,7 @@ just build            # Compile release binaries locally into bin/ and generate 
 just sha              # Compute and display SHA-256 checksums of bin/
 just verify-sha       # Verify binary integrity against bin/SHA256SUMS
 just test             # Run all Rust unit, integration, and security tests
-just lint             # Run qmllint with unqualified-identifier checks (best-effort in some envs)
+just lint             # Run qmllint with strict unqualified-identifier checks and project import paths
 just dev              # Live-reload development mode using cargo-watch
 just clean            # Remove Rust build artifacts
 just release-dry      # Build and package a deterministic release tarball locally (no tag/push)
