@@ -34,16 +34,17 @@ jobs:
       - name: Build release binaries from locked source
         run: |
           cd keymap-parser
+          rustup target add x86_64-unknown-linux-musl
           RUSTFLAGS="--remap-path-prefix=$GITHUB_WORKSPACE=/build --remap-path-prefix=$HOME=/home" \
-            cargo build --release --locked
+            cargo build --release --locked --target x86_64-unknown-linux-musl
 
       - name: Stage binaries into bin/
         run: |
           mkdir -p bin
-          cp keymap-parser/target/release/omarchy-moergo-keymap-parser bin/
-          cp keymap-parser/target/release/moergo-watcher bin/
-          cp keymap-parser/target/release/moergo-companion-settings bin/
-          cp keymap-parser/target/release/glove80-status bin/
+          cp keymap-parser/target/x86_64-unknown-linux-musl/release/omarchy-moergo-keymap-parser bin/
+          cp keymap-parser/target/x86_64-unknown-linux-musl/release/moergo-watcher bin/
+          cp keymap-parser/target/x86_64-unknown-linux-musl/release/moergo-companion-settings bin/
+          cp keymap-parser/target/x86_64-unknown-linux-musl/release/glove80-status bin/
 
       - name: Generate and verify SHA-256 manifest
         run: |

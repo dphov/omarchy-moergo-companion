@@ -26,16 +26,17 @@ jobs:
       - name: Build release binaries from locked source
         run: |
           cd keymap-parser
+          rustup target add x86_64-unknown-linux-musl
           RUSTFLAGS="--remap-path-prefix=$GITHUB_WORKSPACE=/build --remap-path-prefix=$HOME=/home" \
-            cargo build --release --locked
+            cargo build --release --locked --target x86_64-unknown-linux-musl
 
       - name: Stage binaries and generate internal SHA-256 manifest
         run: |
           mkdir -p dist/bin
-          cp keymap-parser/target/release/omarchy-moergo-keymap-parser dist/bin/
-          cp keymap-parser/target/release/moergo-watcher dist/bin/
-          cp keymap-parser/target/release/moergo-companion-settings dist/bin/
-          cp keymap-parser/target/release/glove80-status dist/bin/
+          cp keymap-parser/target/x86_64-unknown-linux-musl/release/omarchy-moergo-keymap-parser dist/bin/
+          cp keymap-parser/target/x86_64-unknown-linux-musl/release/moergo-watcher dist/bin/
+          cp keymap-parser/target/x86_64-unknown-linux-musl/release/moergo-companion-settings dist/bin/
+          cp keymap-parser/target/x86_64-unknown-linux-musl/release/glove80-status dist/bin/
           cd dist/bin
           # Deterministic, sorted manifest: one line per binary in lexicographic order.
           for bin in glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser; do

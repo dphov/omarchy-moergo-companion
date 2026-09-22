@@ -5,14 +5,18 @@ set shell := ["bash", "-c"]
 # Default recipe: build, install, and restart the Omarchy shell
 default: install restart
 
+# Rust target for release binaries: static musl for reproducibility across distros
+export TARGET := "x86_64-unknown-linux-musl"
+
 # Build the Rust keymap parser and helpers in release mode from locked source
 build:
-    cd keymap-parser && cargo build --release --locked
+    cd keymap-parser && rustup target add {{TARGET}}
+    cd keymap-parser && cargo build --release --locked --target {{TARGET}}
     mkdir -p bin
-    cp keymap-parser/target/release/omarchy-moergo-keymap-parser bin/
-    cp keymap-parser/target/release/moergo-watcher bin/
-    cp keymap-parser/target/release/moergo-companion-settings bin/
-    cp keymap-parser/target/release/glove80-status bin/
+    cp keymap-parser/target/{{TARGET}}/release/omarchy-moergo-keymap-parser bin/
+    cp keymap-parser/target/{{TARGET}}/release/moergo-watcher bin/
+    cp keymap-parser/target/{{TARGET}}/release/moergo-companion-settings bin/
+    cp keymap-parser/target/{{TARGET}}/release/glove80-status bin/
     cd bin && \
       for bin in glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser; do printf '%s\0' "$bin"; done | sort -z | xargs -0 -r sha256sum > SHA256SUMS
 
