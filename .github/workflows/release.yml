@@ -99,7 +99,11 @@ jobs:
             To verify signed build provenance for the tarball:
 
             ```bash
-            gh attestation verify --owner ${{ github.repository_owner }} --predicate-type https://slsa.dev/provenance/v1 omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz
+            gh attestation verify \
+              --repo ${{ github.repository }} \
+              --signer-workflow ${{ github.repository }}/.github/workflows/release.yml \
+              --predicate-type https://slsa.dev/provenance/v1 \
+              omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz
             ```
 
             ### Checksums

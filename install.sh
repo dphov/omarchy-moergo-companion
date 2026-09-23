@@ -13,7 +13,15 @@ BIN_DIR="$SCRIPT_DIR/bin"
 # An attacker who replaces the GitHub release asset cannot change the value checked here.
 #
 # Each digest must be committed at the exact source SHA that the release is built from, so
-# the release tag points to a commit that already contains its own expected digest.
+# the release tag points to a commit that already contains its own expected digest. This binds
+# the downloaded tarball to the reviewed repository snapshot; the installer fails closed
+# before extraction on any mismatch.
+#
+# GitHub build provenance may be verified independently with:
+#   gh attestation verify --repo dphov/omarchy-moergo-companion \
+#     --signer-workflow dphov/omarchy-moergo-companion/.github/workflows/release.yml \
+#     --predicate-type https://slsa.dev/provenance/v1 \
+#     omarchy-moergo-companion-binaries-<tag>.tar.gz
 #
 # Procedure for adding a new digest (do not edit by hand):
 #   1. Make sure CHANGELOG.md has a section for the new version.

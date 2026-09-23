@@ -153,7 +153,7 @@ release-preview version:
     echo "To verify signed build provenance:"
     echo ""
     echo '```bash'
-    echo "gh attestation verify --owner dphov --predicate-type https://slsa.dev/provenance/v1 omarchy-moergo-companion-binaries-{{version}}.tar.gz"
+    echo "gh attestation verify --repo dphov/omarchy-moergo-companion --signer-workflow dphov/omarchy-moergo-companion/.github/workflows/release.yml --predicate-type https://slsa.dev/provenance/v1 omarchy-moergo-companion-binaries-{{version}}.tar.gz"
     echo '```'
     echo ""
     echo "### Checksums"
