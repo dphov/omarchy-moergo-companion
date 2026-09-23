@@ -7,6 +7,49 @@
 Use this when the failure is caused by something fixable in the repository — for
 example, a missing `CHANGELOG.md` entry, a workflow bug, or a transient CI issue.
 
+#### Example: stale `release/v1.2.3` branch after a previous failed prepare
+
+You trigger `just prepare-release v1.2.3` and the job fails at *Prepare release branch*
+with:
+
+```text
+Error: branch release/v1.2.3 already exists on origin.
+```
+
+This happens when the same version was prepared earlier and the branch was left on
+the remote (for example, when a release was put on hold after security feedback).
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant CI as GitHub Actions
+    participant Origin as origin/release/v1.2.3
+
+    Note over Dev,Origin: Previous attempt left remote branch
+    Dev->>CI: just prepare-release v1.2.3
+    CI->>Origin: ls-remote release/v1.2.3
+    Origin-->>CI: branch exists
+    CI-->>Dev: Fails: branch already exists
+    Dev->>Origin: git push --delete origin release/v1.2.3
+    Dev->>CI: just prepare-release v1.2.3
+    CI->>Origin: creates fresh release/v1.2.3
+    CI-->>Dev: PR opened with digest + source SHA
+```
+
+Recovery steps:
+
+1. Fix the underlying problem and commit it (e.g., re-add CHANGELOG entry, apply security fixes).
+2. Delete the stale remote branch:
+   ```bash
+   git push origin --delete release/v1.2.3
+   ```
+3. Re-run the preparation workflow:
+   ```bash
+   just prepare-release v1.2.3
+   ```
+
+#### Generic steps
+
 1. Fix the problem and commit it.
 2. Delete the stale `release/vX.Y.Z` branch if it was created:
    ```bash
