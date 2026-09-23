@@ -47,6 +47,7 @@ declare -A RELEASE_TARBALL_DIGESTS=(
   ["v1.2.0"]="14854166afbfe9608247fbef5aa914fb5afd809d5e15f8bbb908b55632e9592c"
   ["v1.2.1"]="205aba1e0f8add6b7168371379e02f182f89a326793c8254cd6734d345c16ee2"
   ["v1.2.2"]="cc25ee649aafa2f54a13abb72b6958f75e4094592ae45da27705839a773b5c09"
+  ["v1.2.3"]="92162fa9301b00621157cace2493554f3e0488dc1c25de4da84700c45f309658"
 )
 
 # Full source commit SHA each release is expected to have been built from.
@@ -64,6 +65,7 @@ declare -A RELEASE_SOURCE_SHAS=(
   ["v1.2.0"]="eeabd127be47becf1571b8c44d700880a3c5da78"
   ["v1.2.1"]="fb4308c71f8c47d60507963cdc23879666b3168c"
   ["v1.2.2"]="a8051ea89b95fb240b6fd683911a9e8950e2371e"
+  ["v1.2.3"]="d78b8489b6ce9fce8da4866ff4e0302e559dd8e4"
 )
 
 # Trusted release workflow that signs the build provenance attestation.
