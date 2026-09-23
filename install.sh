@@ -59,7 +59,11 @@ CURL_CONNECT_TIMEOUT=15
 CURL_MAX_DOWNLOAD_SIZE="5M"
 
 # Prevent concurrent bootstrap runs from multiple Quickshell service instances.
-LOCK_FILE="$SCRIPT_DIR/.install.lock"
+# The lock lives outside the Omarchy plugin directory so it does not trigger an
+# inotify-based shell reload loop.
+LOCK_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/omarchy/moergo-companion"
+mkdir -p "$LOCK_DIR"
+LOCK_FILE="$LOCK_DIR/.install.lock"
 exec 200>"$LOCK_FILE"
 if ! flock -n 200; then
   echo "Another install is already running; waiting..."
