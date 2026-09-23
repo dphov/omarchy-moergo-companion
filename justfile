@@ -110,9 +110,12 @@ changelog-draft bump='patch':
     [ -n "$docs" ] && section+=$(printf '\n\n### Documentation\n\n%s' "$docs")
     [ -n "$other" ] && section+=$(printf '\n\n### Other\n\n%s' "$other")
 
-    echo "$section"
+    echo "# Paste the following into CHANGELOG.md, then run: just release ${version}"
     echo ""
-    echo "Paste the section above into CHANGELOG.md, then run: just release ${version}"
+    echo "Copy the section starting at '## [${version#v}]' into CHANGELOG.md."
+    echo "You can add a short personal release note below the '## [version]' line and above the first '###' heading if you want."
+    echo ""
+    echo "$section"
 
 # Preview the GitHub release body for an explicit version without side effects
 release-preview version:
