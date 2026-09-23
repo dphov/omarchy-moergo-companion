@@ -162,7 +162,9 @@ release-preview version:
 
 # Open an automated release preparation PR for the given version.
 # The PR contains SOURCE_DATE_EPOCH and the tarball digest for the release.
-prepare-release version:
+# By default it triggers from the current branch; pass an explicit branch name
+# to run from a different branch (e.g., a feature branch you are about to merge).
+prepare-release version branch='':
     #!/usr/bin/env bash
     set -euo pipefail
     tag="{{version}}"
@@ -170,8 +172,11 @@ prepare-release version:
         echo "Error: version must match vX.Y.Z (e.g., v1.2.3)." >&2
         exit 1
     fi
-    echo "Triggering prepare-release workflow for $tag..."
-    gh workflow run prepare-release.yml -f version="$tag"
+    current_branch="$(git branch --show-current)"
+    target_branch="{{branch}}"
+    target_branch="${target_branch:-$current_branch}"
+    echo "Triggering prepare-release workflow for $tag from branch $target_branch..."
+    gh workflow run prepare-release.yml -f version="$tag" --ref "$target_branch"
 
 # Create a version tag and push to trigger GitHub Actions automated release
 release version: check

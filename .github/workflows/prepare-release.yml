@@ -111,6 +111,8 @@ jobs:
 
           git add SOURCE_DATE_EPOCH install.sh
           {
+            echo "chore(release): prepare ${VERSION}"
+            echo ""
             echo "- SOURCE_DATE_EPOCH: ${EPOCH}"
             echo "- Expected tarball digest: ${DIGEST}"
             echo "- Built from: ${{ github.sha }}"
@@ -118,7 +120,7 @@ jobs:
             echo "Internal binary checksums:"
             echo "${SHA256SUMS}"
           } > commit_body.txt
-          git commit -m "chore(release): prepare ${VERSION}" -F commit_body.txt
+          git commit -F commit_body.txt
           rm commit_body.txt
 
           git push origin "$branch"
