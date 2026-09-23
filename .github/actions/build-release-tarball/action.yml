@@ -1,0 +1,103 @@
+name: Build release tarball
+
+description: |
+  Build the release binaries deterministically and package them into a
+  reproducible tarball. Outputs the tarball digest and the internal
+  SHA256SUMS contents.
+
+inputs:
+  source-date-epoch:
+    description: SOURCE_DATE_EPOCH value used for deterministic tar mtime
+    required: true
+  tarball-name:
+    description: Name of the produced tarball file
+    required: true
+  reproducibility-check:
+    description: Also build a second tarball and verify the digest matches
+    required: false
+    default: "false"
+
+outputs:
+  tarball-digest:
+    description: SHA-256 digest of the produced tarball
+    value: ${{ steps.package.outputs.tarball-digest }}
+  sha256sums:
+    description: Contents of the internal SHA256SUMS manifest
+    value: ${{ steps.package.outputs.sha256sums }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # stable
+      with:
+        toolchain: 1.98.1
+
+    - name: Build release binaries from locked source
+      shell: bash
+      run: |
+        cd keymap-parser
+        rustup target add x86_64-unknown-linux-musl
+        RUSTFLAGS="--remap-path-prefix=$GITHUB_WORKSPACE=/build --remap-path-prefix=$HOME=/home -C link-arg=-Wl,--build-id=none" \
+          cargo build --release --locked --target x86_64-unknown-linux-musl
+
+    - name: Stage binaries and generate internal SHA-256 manifest
+      shell: bash
+      run: |
+        mkdir -p dist/bin
+        cp keymap-parser/target/x86_64-unknown-linux-musl/release/omarchy-moergo-keymap-parser dist/bin/
+        cp keymap-parser/target/x86_64-unknown-linux-musl/release/moergo-watcher dist/bin/
+        cp keymap-parser/target/x86_64-unknown-linux-musl/release/moergo-companion-settings dist/bin/
+        cp keymap-parser/target/x86_64-unknown-linux-musl/release/glove80-status dist/bin/
+        cd dist/bin
+        # Deterministic, sorted manifest: one line per binary in lexicographic order.
+        for bin in glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser; do
+          printf '%s\0' "$bin"
+        done | sort -z | xargs -0 -r sha256sum > SHA256SUMS
+        sha256sum -c SHA256SUMS
+
+    - name: Package release tarball
+      id: package
+      shell: bash
+      env:
+        SOURCE_DATE_EPOCH: ${{ inputs.source-date-epoch }}
+        TARBALL_NAME: ${{ inputs.tarball-name }}
+        REPRODUCIBILITY_CHECK: ${{ inputs.reproducibility-check }}
+      run: |
+        cd dist/bin
+
+        pack() {
+          local out="$1"
+          GZIP=-n tar \
+            --sort=name \
+            --mtime="@${SOURCE_DATE_EPOCH}" \
+            --owner=0 --group=0 --numeric-owner \
+            --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
+            -czf "$out" .
+        }
+
+        pack "../../${TARBALL_NAME}"
+
+        if [[ "${REPRODUCIBILITY_CHECK}" == "true" ]]; then
+          pack "../../reproducibility-check.tar.gz"
+          cd ../..
+          expected="$(sha256sum "${TARBALL_NAME}" | awk '{print $1}')"
+          actual="$(sha256sum reproducibility-check.tar.gz | awk '{print $1}')"
+          if [[ "$expected" != "$actual" ]]; then
+            echo "Error: release tarball is not reproducible." >&2
+            echo "  first:  $expected" >&2
+            echo "  second: $actual" >&2
+            exit 1
+          fi
+          echo "Reproducibility check passed: $expected"
+          cd dist/bin
+        fi
+
+        cd ../..
+        digest="$(sha256sum "${TARBALL_NAME}" | awk '{print $1}')"
+        echo "tarball-digest=${digest}" >> "$GITHUB_OUTPUT"
+        {
+          echo 'sha256sums<<EOF'
+          cat dist/bin/SHA256SUMS
+          echo 'EOF'
+        } >> "$GITHUB_OUTPUT"

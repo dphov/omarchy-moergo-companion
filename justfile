@@ -157,6 +157,19 @@ release-preview version:
     echo ""
     echo "SHA-256 values for the binaries and the tarball will be inserted here by the release workflow."
 
+# Open an automated release preparation PR for the given version.
+# The PR contains SOURCE_DATE_EPOCH and the tarball digest for the release.
+prepare-release version:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    tag="{{version}}"
+    if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "Error: version must match vX.Y.Z (e.g., v1.2.3)." >&2
+        exit 1
+    fi
+    echo "Triggering prepare-release workflow for $tag..."
+    gh workflow run prepare-release.yml -f version="$tag"
+
 # Create a version tag and push to trigger GitHub Actions automated release
 release version: check
     #!/usr/bin/env bash
@@ -180,9 +193,8 @@ release version: check
     tag="{{version}}"
     if ! grep -qF "[\"$tag\"]=" install.sh; then
         echo "Error: no committed tarball digest in install.sh for $tag." >&2
-        echo "Run 'just release-dry' to build the deterministic tarball, copy the" >&2
-        echo "printed SHA-256 into install.sh RELEASE_TARBALL_DIGESTS, create a" >&2
-        echo "SOURCE_DATE_EPOCH file, commit both, and then run 'just release $tag'." >&2
+        echo "Run 'just prepare-release $tag' to open a PR with the digest," >&2
+        echo "merge the PR, then run 'just release $tag' to push the tag." >&2
         exit 1
     fi
     if [ ! -f SOURCE_DATE_EPOCH ]; then

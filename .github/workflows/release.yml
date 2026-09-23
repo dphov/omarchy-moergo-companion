@@ -18,81 +18,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # stable
-        with:
-          toolchain: 1.98.1
-
-      - name: Build release binaries from locked source
-        run: |
-          cd keymap-parser
-          rustup target add x86_64-unknown-linux-musl
-          RUSTFLAGS="--remap-path-prefix=$GITHUB_WORKSPACE=/build --remap-path-prefix=$HOME=/home" \
-            cargo build --release --locked --target x86_64-unknown-linux-musl
-
-      - name: Stage binaries and generate internal SHA-256 manifest
-        run: |
-          mkdir -p dist/bin
-          cp keymap-parser/target/x86_64-unknown-linux-musl/release/omarchy-moergo-keymap-parser dist/bin/
-          cp keymap-parser/target/x86_64-unknown-linux-musl/release/moergo-watcher dist/bin/
-          cp keymap-parser/target/x86_64-unknown-linux-musl/release/moergo-companion-settings dist/bin/
-          cp keymap-parser/target/x86_64-unknown-linux-musl/release/glove80-status dist/bin/
-          cd dist/bin
-          # Deterministic, sorted manifest: one line per binary in lexicographic order.
-          for bin in glove80-status moergo-companion-settings moergo-watcher omarchy-moergo-keymap-parser; do
-            printf '%s\0' "$bin"
-          done | sort -z | xargs -0 -r sha256sum > SHA256SUMS
-          sha256sum -c SHA256SUMS
-
-      - name: Ensure CHANGELOG.md is present
-        run: test -f CHANGELOG.md
-
-      - name: Package release tarball and verify reproducibility
-        id: checksum
+      - name: Ensure SOURCE_DATE_EPOCH is present
         run: |
           if [ ! -f SOURCE_DATE_EPOCH ]; then
             echo "Error: SOURCE_DATE_EPOCH file is missing. Commit it with the release digest." >&2
             exit 1
           fi
-          SOURCE_DATE_EPOCH="$(cat SOURCE_DATE_EPOCH)"
-          echo "SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}"
-          tarball="omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz"
-          cd dist/bin
+          echo "SOURCE_DATE_EPOCH=$(cat SOURCE_DATE_EPOCH)" >> "$GITHUB_ENV"
 
-          # Deterministic tarball: sorted entries, fixed mtime/owner, no gzip timestamp.
-          pack() {
-            local out="$1"
-            GZIP=-n tar \
-              --sort=name \
-              --mtime="@${SOURCE_DATE_EPOCH}" \
-              --owner=0 --group=0 --numeric-owner \
-              --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
-              -czf "$out" .
-          }
+      - name: Build release tarball
+        id: build
+        uses: ./.github/actions/build-release-tarball
+        with:
+          source-date-epoch: ${{ env.SOURCE_DATE_EPOCH }}
+          tarball-name: omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz
+          reproducibility-check: "true"
 
-          pack "../../$tarball"
-          # Reproducibility invariant: repacking the same directory must yield the same digest.
-          pack "../../reproducibility-check.tar.gz"
-          cd ../..
+      - name: Write root SHA256SUMS for release assets
+        env:
+          TARBALL_DIGEST: ${{ steps.build.outputs.tarball-digest }}
+        run: |
+          echo "${TARBALL_DIGEST}  omarchy-moergo-companion-binaries-${{ github.ref_name }}.tar.gz" > SHA256SUMS
 
-          expected="$(sha256sum "$tarball" | awk '{print $1}')"
-          actual="$(sha256sum reproducibility-check.tar.gz | awk '{print $1}')"
-          if [[ "$expected" != "$actual" ]]; then
-            echo "Error: release tarball is not reproducible." >&2
-            echo "  first:  $expected" >&2
-            echo "  second: $actual" >&2
-            exit 1
-          fi
-          echo "Reproducibility check passed: $expected"
-
-          sha256sum "$tarball" > SHA256SUMS
-          sha256sum -c SHA256SUMS
-          {
-            echo 'body<<EOF'
-            cat dist/bin/SHA256SUMS
-            echo 'EOF'
-            echo "tarball_digest=${expected}"
-          } >> "$GITHUB_OUTPUT"
+      - name: Ensure CHANGELOG.md is present
+        run: test -f CHANGELOG.md
 
       - name: Attest release assets
         uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
@@ -157,11 +106,11 @@ jobs:
 
             SHA-256 values for the binaries inside the tarball are listed below and also bundled in the tarball's `SHA256SUMS` file.
 
-            ${{ steps.checksum.outputs.body }}
+            ${{ steps.build.outputs.sha256sums }}
 
       - name: Verify committed tarball digest matches release artifact
         env:
-          TARBALL_DIGEST: ${{ steps.checksum.outputs.tarball_digest }}
+          TARBALL_DIGEST: ${{ steps.build.outputs.tarball-digest }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           if [ -z "$TARBALL_DIGEST" ]; then
@@ -172,7 +121,7 @@ jobs:
           expected_digest="$(grep -F "\"$RELEASE_TAG\"" install.sh | head -n1 | sed -E 's/.*\"([^\"]+)\".*/\1/')"
           if [ -z "$expected_digest" ]; then
             echo "Error: no committed digest in install.sh for $RELEASE_TAG." >&2
-            echo "Run 'just release-dry' locally, commit the digest, then tag." >&2
+            echo "Run 'just prepare-release $RELEASE_TAG' to open a PR with the digest, merge it, then push the tag." >&2
             exit 1
           fi
 

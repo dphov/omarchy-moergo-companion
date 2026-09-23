@@ -1,0 +1,154 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.2.3)'
+        required: true
+        type: string
+
+jobs:
+  prepare-release:
+    name: Prepare release digest PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+
+      - name: Validate version input
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ -z "$VERSION" ]]; then
+            echo "Error: version input is required." >&2
+            exit 1
+          fi
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: version must match vX.Y.Z (e.g., v1.2.3)." >&2
+            exit 1
+          fi
+
+      - name: Ensure version is not already prepared
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if grep -qF "[\"$VERSION\"]=" install.sh; then
+            echo "Error: install.sh already contains a digest for $VERSION." >&2
+            exit 1
+          fi
+
+      - name: Ensure CHANGELOG.md has an entry for this version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          plain_version="${VERSION#v}"
+          if ! grep -qE "^## \[${plain_version}\]" CHANGELOG.md; then
+            echo "Error: CHANGELOG.md has no entry for version ${plain_version}." >&2
+            exit 1
+          fi
+
+      - name: Create SOURCE_DATE_EPOCH if missing
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [ ! -f SOURCE_DATE_EPOCH ]; then
+            date +%s > SOURCE_DATE_EPOCH
+            echo "Created SOURCE_DATE_EPOCH: $(cat SOURCE_DATE_EPOCH)"
+          else
+            echo "Using existing SOURCE_DATE_EPOCH: $(cat SOURCE_DATE_EPOCH)"
+          fi
+
+      - name: Read SOURCE_DATE_EPOCH
+        id: epoch
+        run: |
+          echo "value=$(cat SOURCE_DATE_EPOCH)" >> "$GITHUB_OUTPUT"
+
+      - name: Build release tarball
+        id: build
+        uses: ./.github/actions/build-release-tarball
+        with:
+          source-date-epoch: ${{ steps.epoch.outputs.value }}
+          tarball-name: omarchy-moergo-companion-binaries-${{ inputs.version }}.tar.gz
+
+      - name: Prepare release branch
+        id: branch
+        env:
+          VERSION: ${{ inputs.version }}
+          DIGEST: ${{ steps.build.outputs.tarball-digest }}
+          SHA256SUMS: ${{ steps.build.outputs.sha256sums }}
+          EPOCH: ${{ steps.epoch.outputs.value }}
+        run: |
+          branch="release/${VERSION}"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            echo "Error: branch ${branch} already exists on origin." >&2
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "$branch"
+
+          # Append the new digest entry to the RELEASE_TARBALL_DIGESTS table.
+          # The table looks like:
+          #   declare -A RELEASE_TARBALL_DIGESTS=(
+          #     ["v1.2.2"]="..."
+          #   )
+          # We insert the new entry before the closing parenthesis of that specific array.
+          awk -v ver="$VERSION" -v dig="$DIGEST" '
+            /^declare -A RELEASE_TARBALL_DIGESTS=\(\s*$/ { in_table=1 }
+            in_table && /^\)$/ {
+              printf "  [\"%s\"]=\"%s\"\n", ver, dig
+              in_table=0
+            }
+            { print }
+          ' install.sh > install.sh.tmp && mv install.sh.tmp install.sh
+
+          git add SOURCE_DATE_EPOCH install.sh
+          {
+            echo "- SOURCE_DATE_EPOCH: ${EPOCH}"
+            echo "- Expected tarball digest: ${DIGEST}"
+            echo "- Built from: ${{ github.sha }}"
+            echo ""
+            echo "Internal binary checksums:"
+            echo "${SHA256SUMS}"
+          } > commit_body.txt
+          git commit -m "chore(release): prepare ${VERSION}" -F commit_body.txt
+          rm commit_body.txt
+
+          git push origin "$branch"
+          echo "branch=${branch}" >> "$GITHUB_OUTPUT"
+
+      - name: Open pull request
+        env:
+          VERSION: ${{ inputs.version }}
+          DIGEST: ${{ steps.build.outputs.tarball-digest }}
+          EPOCH: ${{ steps.epoch.outputs.value }}
+          BRANCH: ${{ steps.branch.outputs.branch }}
+          GH_TOKEN: ${{ github.token }}
+          SHA256SUMS: ${{ steps.build.outputs.sha256sums }}
+        run: |
+          printf '%s\n' "Automated release preparation for **${VERSION}**." \
+            "" \
+            "- Source commit: \`${{ github.sha }}\`" \
+            "- \`SOURCE_DATE_EPOCH\`: ${EPOCH}" \
+            "- Expected tarball digest: \`${DIGEST}\`" \
+            "" \
+            "After merging this PR, push tag \`${VERSION}\` to trigger the release workflow, which will verify the published tarball digest matches the value committed here." \
+            "" \
+            "Internal binary checksums:" \
+            "\`\`\`" \
+            "${SHA256SUMS}" \
+            "\`\`\`" > pr-body.txt
+
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "chore(release): prepare ${VERSION}" \
+            --body-file pr-body.txt
+          rm pr-body.txt

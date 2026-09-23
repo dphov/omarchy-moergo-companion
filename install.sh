@@ -16,16 +16,13 @@ BIN_DIR="$SCRIPT_DIR/bin"
 # the release tag points to a commit that already contains its own expected digest.
 #
 # Procedure for adding a new digest (do not edit by hand):
-#   1. Choose a release timestamp and write it to SOURCE_DATE_EPOCH:
-#        date +%s > SOURCE_DATE_EPOCH
-#      Commit SOURCE_DATE_EPOCH first.
-#   2. Check out the exact release source tree (no uncommitted changes).
-#   3. Run the CI dry-run workflow (`.github/workflows/release-dry.yml`) to get the
-#      canonical tarball digest. Rust binaries may differ across distros, so the local
-#      `just release-dry` output is only a sanity check, not the canonical value.
-#   4. Copy the CI-generated SHA-256 into this table for the release tag.
-#   5. Commit the updated install.sh.
-#   6. Tag that commit and push the tag. CI will verify the published tarball digest matches.
+#   1. Make sure CHANGELOG.md has a section for the new version.
+#   2. Run `just prepare-release vX.Y.Z` (or trigger `.github/workflows/prepare-release.yml`
+#      with the version). This opens a pull request containing the canonical tarball digest
+#      computed by CI and a SOURCE_DATE_EPOCH timestamp.
+#   3. Review and merge the pull request. The digest is now bound to the repository snapshot.
+#   4. Run `just release vX.Y.Z` to push the tag. CI will verify the published tarball digest
+#      matches the value committed in the merged PR.
 #
 # The CI release job does NOT update this table; it only verifies the artifact matches the
 # value that was already committed before the tag.
