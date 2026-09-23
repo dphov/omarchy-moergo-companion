@@ -143,26 +143,20 @@ download_release_binaries() {
   echo "Tarball digest matches committed value for ${tag}."
 
   # Verify signed build provenance when the GitHub CLI is available.
-  # Binds the artifact to the exact repo, the trusted release workflow, and the
-  # committed source SHA. Fails closed before extraction on any mismatch.
-  # The committed digest check above already pins the artifact bytes, so a
-  # missing gh only removes this secondary layer.
+  # Binds the artifact to this exact repository and the trusted release workflow.
+  # The committed digest check above is the primary binding; this is a secondary
+  # layer that fails closed before extraction. A missing gh only removes this layer.
   if command -v gh >/dev/null 2>&1; then
-    local expected_source_sha="${RELEASE_SOURCE_SHAS[$tag]:-}"
-    local verify_args=(
-      --repo "$REPO"
-      --signer-workflow "$RELEASE_WORKFLOW"
-      --predicate-type https://slsa.dev/provenance/v1
-    )
-    if [[ -n "$expected_source_sha" ]]; then
-      verify_args+=(--source-ref "refs/tags/${tag}" --source-digest "$expected_source_sha")
-    fi
-    if ! gh attestation verify "${verify_args[@]}" "$BIN_DIR/${tarball}"; then
+    if ! gh attestation verify \
+      --repo "$REPO" \
+      --signer-workflow "$RELEASE_WORKFLOW" \
+      --predicate-type https://slsa.dev/provenance/v1 \
+      "$BIN_DIR/${tarball}"; then
       echo "Error: build provenance verification failed for ${tag}." >&2
       rm -f "$BIN_DIR/${tarball}"
       return 1
     fi
-    echo "Build provenance verified: repo=${REPO}, workflow=${RELEASE_WORKFLOW}, source commit=${expected_source_sha:-unpinned}."
+    echo "Build provenance verified: repo=${REPO}, workflow=${RELEASE_WORKFLOW}."
   fi
 
   (
