@@ -134,7 +134,11 @@ To prevent supply chain risks, symlink attacks, and untrusted local binaries:
    just release vX.Y.Z
    ```
 
-   If `prepare-release` fails because the `release/vX.Y.Z` branch already exists from a previous attempt, delete the stale branch and re-run. See `AUTODIDACT.md`.
+   If `prepare-release` fails because the `release/vX.Y.Z` branch already exists from a previous attempt, delete the stale branch and re-run:
+   ```bash
+   git push origin --delete release/vX.Y.Z
+   just prepare-release vX.Y.Z
+   ```
 8. **Verifiable signed provenance**: Each release produces a GitHub artifact attestation (`actions/attest-build-provenance`) that cryptographically ties the exact tarball to the reviewed locked source and the specific GitHub Actions run. Verification is pinned to this repository (`--repo dphov/omarchy-moergo-companion`) and the exact release workflow (`--signer-workflow .../.github/workflows/release.yml`), not merely to the GitHub owner. The committed SHA-256 digest is the primary binding; the attestation is a secondary layer.
 9. **User-private runtime directory**: Runtime state (`glove80_watcher.pid`, `glove80_battery_notified.json`) is stored in `$XDG_RUNTIME_DIR/omarchy-moergo-companion`, with a mode-`0700` fallback to `~/.cache/omarchy/moergo-companion/runtime`. No `/tmp` paths are used anywhere.
 10. **No shared layout file in QML**: `moergo-watcher` emits the parsed layout JSON directly on stdout, so the QML side never reads a shared file path and there is no chance of QML/Rust path disagreement.
