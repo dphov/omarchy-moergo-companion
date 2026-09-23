@@ -119,25 +119,22 @@ To prevent supply chain risks, symlink attacks, and untrusted local binaries:
 4. **Digest-before-extraction**: After download, the tarball SHA-256 is compared to the committed digest. Only on a match is the tarball extracted.
 5. **Internal binary manifest**: The tarball contains `bin/SHA256SUMS`; after extraction `sha256sum -c bin/SHA256SUMS` verifies every binary. This is a consistency check — the security boundary is the committed tarball digest.
 6. **Reproducible release packaging**: The release workflow creates the tarball deterministically (`GZIP=-n`, sorted entries, fixed mtime/owner from `SOURCE_DATE_EPOCH`) and packs `dist/bin/` twice, failing the release if the two tarballs do not match byte-for-byte.
-7. **Digest committed before the tag**: Before cutting a release, the maintainer chooses a `SOURCE_DATE_EPOCH` timestamp and commits it. The CI release workflow then builds the release tarball with that fixed timestamp and verifies its digest against the value already committed in `install.sh`. The canonical digest is obtained from the CI dry-run workflow (`.github/workflows/release-dry.yml`), not from a local build, because Rust binaries can differ subtly across distros even with identical source and flags.
+7. **Digest committed before the tag**: The expected tarball digest is committed in the reviewed repository snapshot before the tag is pushed. CI builds the release tarball from that snapshot and fails closed if the published artifact does not match the committed digest. The canonical digest is produced by CI, not by a local build, because Rust binaries can differ subtly across distros even with identical source and flags.
 
-   Release procedure:
+   Automated release procedure:
    ```bash
-   # 1. Choose a release timestamp and commit it.
-   date +%s > SOURCE_DATE_EPOCH
-   git add SOURCE_DATE_EPOCH && git commit -m "chore(release): set SOURCE_DATE_EPOCH for vX.Y.Z"
+   # 1. Ensure CHANGELOG.md has a section for the new version.
 
-   # 2. Get the canonical CI dry-run digest.
-   #    Trigger the "Release Dry-Run" workflow manually in GitHub Actions,
-   #    or push a draft tag and read the digest from the failed/successful run log.
+   # 2. Let CI compute the canonical tarball digest and open a prepare PR.
+   just prepare-release vX.Y.Z
 
-   # 3. Pin the CI-generated digest in install.sh.
-   # edit install.sh RELEASE_TARBALL_DIGESTS for vX.Y.Z
-   git add install.sh && git commit -m "chore(release): pin tarball digest for vX.Y.Z"
+   # 3. Review and merge the PR. The PR commits SOURCE_DATE_EPOCH and the digest.
 
-   # 4. Tag and push; CI builds, verifies the digest, and publishes the release.
+   # 4. Push the tag; CI verifies the digest and publishes the release.
    just release vX.Y.Z
    ```
+
+   If `prepare-release` fails because the `release/vX.Y.Z` branch already exists from a previous attempt, delete the stale branch and re-run. See `AUTODIDACT.md`.
 8. **Verifiable signed provenance**: Each release produces a GitHub artifact attestation (`actions/attest-build-provenance`) that cryptographically ties the exact tarball to the reviewed locked source and the specific GitHub Actions run. Verification is pinned to this repository (`--repo dphov/omarchy-moergo-companion`) and the exact release workflow (`--signer-workflow .../.github/workflows/release.yml`), not merely to the GitHub owner. The committed SHA-256 digest is the primary binding; the attestation is a secondary layer.
 9. **User-private runtime directory**: Runtime state (`glove80_watcher.pid`, `glove80_battery_notified.json`) is stored in `$XDG_RUNTIME_DIR/omarchy-moergo-companion`, with a mode-`0700` fallback to `~/.cache/omarchy/moergo-companion/runtime`. No `/tmp` paths are used anywhere.
 10. **No shared layout file in QML**: `moergo-watcher` emits the parsed layout JSON directly on stdout, so the QML side never reads a shared file path and there is no chance of QML/Rust path disagreement.
