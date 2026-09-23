@@ -58,6 +58,14 @@ CURL_MAX_TIME=120
 CURL_CONNECT_TIMEOUT=15
 CURL_MAX_DOWNLOAD_SIZE="5M"
 
+# Prevent concurrent bootstrap runs from multiple Quickshell service instances.
+LOCK_FILE="$SCRIPT_DIR/.install.lock"
+exec 200>"$LOCK_FILE"
+if ! flock -n 200; then
+  echo "Another install is already running; waiting..."
+  flock 200
+fi
+
 binaries_present() {
   for binary in omarchy-moergo-keymap-parser moergo-watcher moergo-companion-settings glove80-status; do
     if [[ ! -x "$BIN_DIR/$binary" ]]; then
@@ -124,11 +132,10 @@ download_release_binaries() {
   fi
   echo "Tarball digest matches committed value for ${tag}."
 
-  # Verify signed build provenance when the GitHub CLI is available.
-  # Binds the artifact to this exact repository and the trusted release workflow.
-  # The committed digest check above is the primary binding; this is a secondary
-  # layer that fails closed before extraction. A missing gh only removes this layer.
-  if command -v gh >/dev/null 2>&1; then
+  # Verify signed build provenance when the GitHub CLI is available and this is
+  # not an automatic startup-only run. The committed digest is the primary binding;
+  # attestation is a useful secondary layer for explicit installs.
+  if [[ "$ensure_only" != true ]] && command -v gh >/dev/null 2>&1; then
     if ! gh attestation verify \
       --repo "$REPO" \
       --signer-workflow "$RELEASE_WORKFLOW" \
