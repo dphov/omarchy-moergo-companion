@@ -254,13 +254,24 @@ Item {
         onTriggered: root.refreshStatus()
     }
 
+    Timer {
+        id: installDelayTimer
+        interval: 500
+        repeat: false
+        onTriggered: {
+            if (root.bootstrapInProgress && !root.binariesReady) {
+                root.statusText = "Installing…";
+                root.statusTooltip = "Downloading or building native helpers for the first time";
+            }
+        }
+    }
+
     Component.onCompleted: {
         if (root.binariesReady || root.bootstrapInProgress || root.bootstrapFailed) {
             return;
         }
         root.bootstrapInProgress = true;
-        root.statusText = "Installing…";
-        root.statusTooltip = "Downloading or building native helpers for the first time";
+        installDelayTimer.start();
         bootstrapProc.running = true;
     }
 
