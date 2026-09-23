@@ -19,7 +19,8 @@ Panel {
     readonly property string keymapFile: moergoService ? moergoService.keymapFile : ""
     readonly property string lastKeymapError: moergoService ? moergoService.lastKeymapError : ""
 
-    readonly property string statusText: moergoService ? moergoService.statusText : "Loading…"
+    readonly property string statusText: moergoService ? moergoService.statusText : "Loading"
+    readonly property bool installInProgress: moergoService ? moergoService.installInProgress : false
     readonly property string statusTooltip: moergoService ? moergoService.statusTooltip : "MoErgo Glove80"
     readonly property bool isConnected: moergoService ? moergoService.isConnected : false
     readonly property bool charging: moergoService ? moergoService.charging : false
@@ -53,11 +54,21 @@ Panel {
     property bool showDashboard: false
     property bool showLayoutInfo: false
 
+    property int installDotCount: 0
+
+    Timer {
+        interval: 500
+        running: root.installInProgress
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: root.installDotCount = (root.installDotCount + 1) % 4
+    }
+
     WidgetButton {
         id: button
         anchors.fill: parent
         bar: root.bar
-        text: root.statusText
+        text: root.installInProgress ? root.statusText + ".".repeat(root.installDotCount) : root.statusText
         fontSize: Style.font.caption
         horizontalMargin: root.buttonHorizontalMargin
         tooltipText: root.statusTooltip + " — Click to view layout"

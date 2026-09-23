@@ -23,6 +23,7 @@ Item {
     property bool binariesReady: false
     property bool bootstrapFailed: false
     property bool bootstrapInProgress: false
+    property bool installInProgress: false
 
     // Keymap/layout state
     property var parsedLayout: null
@@ -154,6 +155,7 @@ Item {
         }
         onExited: function(exitCode, exitStatus) {
             root.bootstrapInProgress = false;
+            root.installInProgress = false;
             if (exitCode === 0) {
                 root.startServices();
             } else {
@@ -259,24 +261,14 @@ Item {
         onTriggered: root.refreshStatus()
     }
 
-    Timer {
-        id: installDelayTimer
-        interval: 500
-        repeat: false
-        onTriggered: {
-            if (root.bootstrapInProgress && !root.binariesReady) {
-                root.statusText = "Installing…";
-                root.statusTooltip = "Downloading or building native helpers for the first time";
-            }
-        }
-    }
-
     Component.onCompleted: {
         if (root.binariesReady || root.bootstrapInProgress || root.bootstrapFailed) {
             return;
         }
         root.bootstrapInProgress = true;
-        installDelayTimer.start();
+        root.installInProgress = true;
+        root.statusText = "Installing";
+        root.statusTooltip = "Downloading or building native helpers for the first time";
         bootstrapProc.running = true;
     }
 
