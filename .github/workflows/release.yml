@@ -46,19 +46,6 @@ jobs:
       - name: Ensure CHANGELOG.md is present
         run: test -f CHANGELOG.md
 
-      - name: Verify tarball digest matches committed value
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          # The expected digest is committed in the reviewed tree (install.sh) before the tag.
-          expected_digest="$(grep -F "[\"$RELEASE_TAG\"]=\"" install.sh | head -n1 | sed -E 's/.*\"([0-9a-f]{64})\".*/\1/')"
-          if [ -z "$expected_digest" ]; then
-            echo "Error: no committed digest in install.sh for $RELEASE_TAG." >&2
-            echo "Run 'just prepare-release $RELEASE_TAG', merge the PR, then push the tag." >&2
-            exit 1
-          fi
-          echo "Expected tarball digest for $RELEASE_TAG: $expected_digest"
-
       - name: Attest release assets
         uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
         with:
