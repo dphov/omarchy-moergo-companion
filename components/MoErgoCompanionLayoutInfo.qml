@@ -100,7 +100,7 @@ Rectangle {
             contentHeight: bodyRow.implicitHeight
             clip: true
 
-            ScrollBar.vertical: ScrollBar {}
+            ScrollBar.vertical: Controls.ScrollBar {}
 
             Row {
                 id: bodyRow
