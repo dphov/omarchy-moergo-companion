@@ -100,8 +100,6 @@ Rectangle {
             contentHeight: bodyRow.implicitHeight
             clip: true
 
-            ScrollBar.vertical: Controls.ScrollBar {}
-
             Row {
                 id: bodyRow
                 spacing: root.bodySpacing
