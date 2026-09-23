@@ -17,6 +17,7 @@ keymap-parser/target/
 # they are never committed to the source tree.
 bin/
 release-assets/
+omarchy-moergo-companion-binaries-*.tar.gz
 
 # Agent authorization rules are repository-local and must not be distributed
 AGENTS.md
