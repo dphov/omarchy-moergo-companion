@@ -3,7 +3,7 @@
   "id": "dphov.omarchy-moergo-companion",
   "name": "Omarchy Moergo Companion",
   "description": "MoErgo Glove80 layer visualizer, live USB/Bluetooth hardware monitor, and device dashboard",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "author": "Dmitry Petukhov",
   "license": "MIT",
   "icon": "keyboard-outline",
