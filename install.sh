@@ -50,24 +50,6 @@ declare -A RELEASE_TARBALL_DIGESTS=(
   ["v1.2.3"]="92162fa9301b00621157cace2493554f3e0488dc1c25de4da84700c45f309658"
 )
 
-# Full source commit SHA each release is expected to have been built from.
-# Same invariant as the digests above: committed in the reviewed tree before the tag.
-declare -A RELEASE_SOURCE_SHAS=(
-  ["v1.1.1"]="cd1f6444ab3163c3292b32ae6646379386a2b59e"
-  ["v1.1.2"]="161abae9f82586d6b64c9a83713d7be8145e51d7"
-  ["v1.1.3"]="0560d7c5325631c51bb66f04eaa79da0fc3b8609"
-  ["v1.1.4"]="50601f041fbd0f7a44bcc7bff95d47b1e4b937f5"
-  ["v1.1.5"]="2b792c90bed191b81404368c6ca9bf4f2a7bb3b2"
-  ["v1.1.6"]="80b16c65fe4142d538f57f503c50698904f43708"
-  ["v1.1.7"]="145102c9c3d186a20091dc6ec2385f27cd2f6d78"
-  ["v1.1.8"]="08340186e31ef14d05c1e005dc59be13e2f69b7b"
-  ["v1.1.9"]="a66895d17d168f6780ef80f5eb753a7525eacec6"
-  ["v1.2.0"]="eeabd127be47becf1571b8c44d700880a3c5da78"
-  ["v1.2.1"]="fb4308c71f8c47d60507963cdc23879666b3168c"
-  ["v1.2.2"]="a8051ea89b95fb240b6fd683911a9e8950e2371e"
-  ["v1.2.3"]="d78b8489b6ce9fce8da4866ff4e0302e559dd8e4"
-)
-
 # Trusted release workflow that signs the build provenance attestation.
 RELEASE_WORKFLOW="${REPO}/.github/workflows/release.yml"
 

@@ -80,7 +80,6 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
           DIGEST: ${{ steps.build.outputs.tarball-digest }}
-          SOURCE_SHA: ${{ github.sha }}
           SHA256SUMS: ${{ steps.build.outputs.sha256sums }}
           EPOCH: ${{ steps.epoch.outputs.value }}
         run: |
@@ -101,16 +100,11 @@ jobs:
           #     ["v1.2.2"]="..."
           #   )
           # We insert the new entry before the closing parenthesis of that specific array.
-          awk -v ver="$VERSION" -v dig="$DIGEST" -v sha="$SOURCE_SHA" '
+          awk -v ver="$VERSION" -v dig="$DIGEST" '
             /^declare -A RELEASE_TARBALL_DIGESTS=\(\s*$/ { in_table=1 }
-            /^declare -A RELEASE_SOURCE_SHAS=\(\s*$/   { in_shas=1 }
             in_table && /^\)$/ {
               printf "  [\"%s\"]=\"%s\"\n", ver, dig
               in_table=0
-            }
-            in_shas && /^\)$/ {
-              printf "  [\"%s\"]=\"%s\"\n", ver, sha
-              in_shas=0
             }
             { print }
           ' install.sh > install.sh.tmp && mv install.sh.tmp install.sh
@@ -121,7 +115,7 @@ jobs:
             echo ""
             echo "- SOURCE_DATE_EPOCH: ${EPOCH}"
             echo "- Expected tarball digest: ${DIGEST}"
-            echo "- Built from: ${{ github.sha }}"
+            echo "- Built from source SHA: ${{ github.sha }}"
             echo ""
             echo "Internal binary checksums:"
             echo "${SHA256SUMS}"

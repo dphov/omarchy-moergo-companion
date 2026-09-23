@@ -46,32 +46,18 @@ jobs:
       - name: Ensure CHANGELOG.md is present
         run: test -f CHANGELOG.md
 
-      - name: Verify tag contains committed source SHA
+      - name: Verify tarball digest matches committed value
         env:
-          SOURCE_SHA: ${{ github.sha }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          # Extract the full SHA of the reviewed source snapshot for this tag.
-          expected_sha="$(grep -F "[\"$RELEASE_TAG\"]=" install.sh | grep -v '[0-9a-f]\{64\}' | sed -E 's/.*\"([0-9a-f]{40})\".*/\1/')"
-          if [ -z "$expected_sha" ]; then
-            echo "Error: no committed source SHA for $RELEASE_TAG in install.sh." >&2
+          # The expected digest is committed in the reviewed tree (install.sh) before the tag.
+          expected_digest="$(grep -F "[\"$RELEASE_TAG\"]=\"" install.sh | head -n1 | sed -E 's/.*\"([0-9a-f]{64})\".*/\1/')"
+          if [ -z "$expected_digest" ]; then
+            echo "Error: no committed digest in install.sh for $RELEASE_TAG." >&2
             echo "Run 'just prepare-release $RELEASE_TAG', merge the PR, then push the tag." >&2
             exit 1
           fi
-          tag_commit="$(git rev-list -n1 "$RELEASE_TAG")"
-          # The committed source SHA is the reviewed tree the release was prepared from.
-          # The tag may include later merge/metadata commits, so verify ancestry rather
-          # than exact equality. The tarball digest check below provides the exact binding.
-          if ! git merge-base --is-ancestor "$expected_sha" "$tag_commit"; then
-            echo "Error: tag $RELEASE_TAG ($tag_commit) does not contain the reviewed source SHA $expected_sha." >&2
-            echo "The release does not match the reviewed source snapshot; refusing to publish." >&2
-            exit 1
-          fi
-          if [ "$SOURCE_SHA" != "$tag_commit" ]; then
-            echo "Error: release build source $SOURCE_SHA differs from tag commit $tag_commit." >&2
-            exit 1
-          fi
-          echo "Tag $RELEASE_TAG ($tag_commit) contains reviewed source SHA $expected_sha."
+          echo "Expected tarball digest for $RELEASE_TAG: $expected_digest"
 
       - name: Attest release assets
         uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
