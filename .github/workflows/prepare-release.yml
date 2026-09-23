@@ -108,6 +108,7 @@ jobs:
             }
             { print }
           ' install.sh > install.sh.tmp && mv install.sh.tmp install.sh
+          chmod +x install.sh
 
           git add SOURCE_DATE_EPOCH install.sh
           {
