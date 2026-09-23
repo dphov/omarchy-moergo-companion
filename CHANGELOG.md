@@ -5,27 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.3] - 2026-09-23
+## [1.2.4] - 2026-09-23
 
 ### Added
 
-- feat(security): commit source SHA per release and verify provenance
+- build(dev): add `dev.sh` for installing locally-built binaries without remote downloads
+- build(just): run `dev` (local install) by default instead of `install` (release download)
 
 ### Changed
 
-- build(justfile): align local release build flags with CI for reproducibility
-- build(release): remove container dry-run; document CI-canonical digest
-- build(release): automate release digest preparation via prepare-release workflow
-- build(release): automate release digest preparation via prepare-release workflow
-- chore: changelog v1.2.3
+- build(just): rename `just dev` file watcher recipe to `just watch`
+
+## [1.2.3] - 2026-09-23
 
 ### Fixed
 
-- fix(security): bind artifact verification to repo and release workflow
-
-### Documentation
-
-- docs(release): document CI-canonical digest and add dry-run workflow
+- build(install): restore executable bit on `install.sh`
 
 ## [1.2.2] - 2026-09-22
 

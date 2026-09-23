@@ -71,6 +71,21 @@ fn main() {
 
     match cmd {
         "--load" => {
+            if let Some(path) = settings.get("keymapFile").and_then(|v| v.as_str()) {
+                if !path.is_empty() {
+                    if let Err(error) = validate_keymap(path) {
+                        println!(
+                            "{}",
+                            serde_json::json!({
+                                "success": false,
+                                "error": error,
+                                "keymapFile": path,
+                            })
+                        );
+                        process::exit(0);
+                    }
+                }
+            }
             println!("{}", serde_json::to_string(&settings).unwrap_or_default());
         }
         "--get" => {

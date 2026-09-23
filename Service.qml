@@ -27,7 +27,7 @@ Item {
     // Keymap/layout state
     property var parsedLayout: null
     property int currentLayerIndex: 0
-    property string keymapFile: Quickshell.env("HOME") + "/.dotfiles/zmk/config/glove80.keymap"
+    property string keymapFile: ""
     property string lastKeymapError: ""
 
     // Hardware battery & connection state
@@ -48,8 +48,6 @@ Item {
         root.binariesReady = true;
         settingsProc.command = [root.settingsScript, "--load"];
         settingsProc.running = true;
-        watcherProcess.command = [root.watcherScript, root.keymapFile];
-        watcherProcess.running = true;
         statusPollTimer.running = true;
     }
 
@@ -102,12 +100,19 @@ Item {
         if (!settings) return;
         if (settings.success === false) {
             root.lastKeymapError = settings.error || "Invalid keymap file";
+            root.parsedLayout = null;
+            watcherProcess.running = false;
             return;
         }
         root.lastKeymapError = "";
         if (settings.keymapFile && settings.keymapFile !== "") {
             root.keymapFile = settings.keymapFile;
             root.restartWatcher();
+        } else {
+            root.keymapFile = "";
+            root.parsedLayout = null;
+            watcherProcess.running = false;
+            root.lastKeymapError = "No keymap file configured. Open the dashboard to set one.";
         }
     }
 

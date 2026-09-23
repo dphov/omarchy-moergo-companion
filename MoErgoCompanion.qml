@@ -359,13 +359,31 @@ Panel {
                         }
                     }
 
-                    Text {
+                    ColumnLayout {
                         anchors.centerIn: parent
                         visible: !root.showDashboard && (!root.parsedLayout || !root.parsedLayout.layers || root.parsedLayout.layers.length === 0)
-                        text: "No valid keymap layers found."
-                        color: Color.foreground
-                        font.family: Style.font.family
-                        font.pixelSize: Style.font.body
+                        spacing: root.panelSpacing
+
+                        Text {
+                            text: root.lastKeymapError !== "" ? root.lastKeymapError : "No valid keymap layers found."
+                            color: Color.foreground
+                            font.family: Style.font.family
+                            font.pixelSize: Style.font.body
+                            wrapMode: Text.Wrap
+                            Layout.maximumWidth: root.panelContentWidth - root.panelMargin * 4
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+
+                        Button {
+                            text: "Open Dashboard"
+                            tooltipText: "Set or change the keymap file"
+                            bordered: true
+                            Layout.alignment: Qt.AlignHCenter
+                            onClicked: {
+                                root.showLayoutInfo = false;
+                                root.showDashboard = true;
+                            }
+                        }
                     }
                 }
             }

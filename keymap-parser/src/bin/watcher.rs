@@ -91,6 +91,7 @@ fn emit_file<P: AsRef<Path>>(path: P) {
     if let Ok(bytes) = fs::read(path) {
         let _ = io::stdout().write_all(&bytes);
         let _ = io::stdout().write_all(b"\n");
+        let _ = io::stdout().flush();
     }
 }
 

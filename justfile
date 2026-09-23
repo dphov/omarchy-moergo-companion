@@ -2,8 +2,8 @@
 
 set shell := ["bash", "-c"]
 
-# Default recipe: build, install, and restart the Omarchy shell
-default: install restart
+# Default recipe: build local binaries, install them locally, and restart the Omarchy shell
+default: build dev restart
 
 # Rust target for release binaries: static musl for reproducibility across distros
 export TARGET := "x86_64-unknown-linux-musl"
@@ -55,7 +55,11 @@ commit message: check
     git add -A
     git commit -m "{{message}}"
 
-# Install the plugin to ~/.config/omarchy/plugins/ (uses prebuilt bin/ if present)
+# Install the plugin from local build to ~/.config/omarchy/plugins/ (no remote downloads)
+dev:
+    ./dev.sh
+
+# Install the plugin using production release binaries from GitHub
 install:
     ./install.sh
 
@@ -63,15 +67,15 @@ install:
 restart:
     omarchy-restart-shell
 
-# Build, install, and restart (full reload)
-reload: build install restart
+# Build, install from local build, and restart (full reload)
+reload: build dev restart
 
 # Clean Rust build artifacts
 clean:
     cd keymap-parser && cargo clean
 
 # Watch for changes and reload (requires cargo-watch and just)
-dev:
+watch:
     cargo watch --watch-when-idle -w keymap-parser/src -w components -s 'just reload'
 
 # Draft a CHANGELOG.md section from commits since the last tag (no side effects)
