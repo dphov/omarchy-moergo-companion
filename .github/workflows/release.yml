@@ -43,6 +43,31 @@ jobs:
       - name: Ensure CHANGELOG.md is present
         run: test -f CHANGELOG.md
 
+      - name: Verify tag commit matches committed source SHA
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          # Extract the full SHA committed for this tag in install.sh.
+          expected_sha="$(grep -F "[\"$RELEASE_TAG\"]=" install.sh | grep -v '[0-9a-f]\{64\}' | sed -E 's/.*\"([0-9a-f]{40})\".*/\1/')"
+          if [ -z "$expected_sha" ]; then
+            echo "Error: no committed source SHA for $RELEASE_TAG in install.sh." >&2
+            echo "Run 'just prepare-release $RELEASE_TAG', merge the PR, then push the tag." >&2
+            exit 1
+          fi
+          tag_commit="$(git rev-list -n1 "$RELEASE_TAG")"
+          if [ "$tag_commit" != "$expected_sha" ]; then
+            echo "Error: tag $RELEASE_TAG points to $tag_commit but install.sh commits expected source SHA $expected_sha." >&2
+            echo "The release does not match the reviewed source snapshot; refusing to publish." >&2
+            exit 1
+          fi
+          # The built tarball must also be produced from that exact commit.
+          if [ "$SOURCE_SHA" != "$expected_sha" ]; then
+            echo "Error: release build source $SOURCE_SHA differs from committed review SHA $expected_sha." >&2
+            exit 1
+          fi
+          echo "Tag commit matches committed source SHA: $tag_commit"
+
       - name: Attest release assets
         uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
         with:

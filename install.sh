@@ -49,6 +49,26 @@ declare -A RELEASE_TARBALL_DIGESTS=(
   ["v1.2.2"]="cc25ee649aafa2f54a13abb72b6958f75e4094592ae45da27705839a773b5c09"
 )
 
+# Full source commit SHA each release is expected to have been built from.
+# Same invariant as the digests above: committed in the reviewed tree before the tag.
+declare -A RELEASE_SOURCE_SHAS=(
+  ["v1.1.1"]="cd1f6444ab3163c3292b32ae6646379386a2b59e"
+  ["v1.1.2"]="161abae9f82586d6b64c9a83713d7be8145e51d7"
+  ["v1.1.3"]="0560d7c5325631c51bb66f04eaa79da0fc3b8609"
+  ["v1.1.4"]="50601f041fbd0f7a44bcc7bff95d47b1e4b937f5"
+  ["v1.1.5"]="2b792c90bed191b81404368c6ca9bf4f2a7bb3b2"
+  ["v1.1.6"]="80b16c65fe4142d538f57f503c50698904f43708"
+  ["v1.1.7"]="145102c9c3d186a20091dc6ec2385f27cd2f6d78"
+  ["v1.1.8"]="08340186e31ef14d05c1e005dc59be13e2f69b7b"
+  ["v1.1.9"]="a66895d17d168f6780ef80f5eb753a7525eacec6"
+  ["v1.2.0"]="eeabd127be47becf1571b8c44d700880a3c5da78"
+  ["v1.2.1"]="fb4308c71f8c47d60507963cdc23879666b3168c"
+  ["v1.2.2"]="a8051ea89b95fb240b6fd683911a9e8950e2371e"
+)
+
+# Trusted release workflow that signs the build provenance attestation.
+RELEASE_WORKFLOW="${REPO}/.github/workflows/release.yml"
+
 # Transfer safety limits when downloading release assets.
 CURL_MAX_TIME=120
 CURL_CONNECT_TIMEOUT=15
@@ -119,6 +139,29 @@ download_release_binaries() {
     return 1
   fi
   echo "Tarball digest matches committed value for ${tag}."
+
+  # Verify signed build provenance when the GitHub CLI is available.
+  # Binds the artifact to the exact repo, the trusted release workflow, and the
+  # committed source SHA. Fails closed before extraction on any mismatch.
+  # The committed digest check above already pins the artifact bytes, so a
+  # missing gh only removes this secondary layer.
+  if command -v gh >/dev/null 2>&1; then
+    local expected_source_sha="${RELEASE_SOURCE_SHAS[$tag]:-}"
+    local verify_args=(
+      --repo "$REPO"
+      --signer-workflow "$RELEASE_WORKFLOW"
+      --predicate-type https://slsa.dev/provenance/v1
+    )
+    if [[ -n "$expected_source_sha" ]]; then
+      verify_args+=(--source-ref "refs/tags/${tag}" --source-digest "$expected_source_sha")
+    fi
+    if ! gh attestation verify "${verify_args[@]}" "$BIN_DIR/${tarball}"; then
+      echo "Error: build provenance verification failed for ${tag}." >&2
+      rm -f "$BIN_DIR/${tarball}"
+      return 1
+    fi
+    echo "Build provenance verified: repo=${REPO}, workflow=${RELEASE_WORKFLOW}, source commit=${expected_source_sha:-unpinned}."
+  fi
 
   (
     cd "$BIN_DIR"
