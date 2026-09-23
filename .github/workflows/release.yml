@@ -58,7 +58,7 @@ jobs:
             echo "Run 'just prepare-release $RELEASE_TAG', merge the PR, then push the tag." >&2
             exit 1
           fi
-          tag_commit="$(git rev-list -n1 \"$RELEASE_TAG\")"
+          tag_commit="$(git rev-list -n1 "$RELEASE_TAG")"
           # The committed source SHA is the reviewed tree the release was prepared from.
           # The tag may include later merge/metadata commits, so verify ancestry rather
           # than exact equality. The tarball digest check below provides the exact binding.
