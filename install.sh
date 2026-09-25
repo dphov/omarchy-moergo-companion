@@ -111,6 +111,7 @@ declare -A RELEASE_TARBALL_DIGESTS=(
   ["v1.2.3"]="92162fa9301b00621157cace2493554f3e0488dc1c25de4da84700c45f309658"
   ["v1.2.4"]="adc11348a802bf4a30d03a46bf072570bc1ac8b689b7ab00af94f4326b0819cd"
   ["v1.2.5"]="adc11348a802bf4a30d03a46bf072570bc1ac8b689b7ab00af94f4326b0819cd"
+  ["v1.2.6"]="adc11348a802bf4a30d03a46bf072570bc1ac8b689b7ab00af94f4326b0819cd"
 )
 
 # Trusted release workflow that signs the build provenance attestation.
