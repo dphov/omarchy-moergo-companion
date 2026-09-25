@@ -43,8 +43,18 @@ test:
 lint:
     ./scripts/qmllint-strict.sh
 
-# Run all code-quality checks (format, clippy, tests, qmllint)
-check:
+# Lint shell installer scripts (shellcheck if available, syntax check always)
+lint-sh:
+    bash -n install.sh
+    bash -n dev.sh
+    if command -v shellcheck >/dev/null 2>&1; then \
+      shellcheck install.sh dev.sh; \
+    else \
+      echo "shellcheck not installed; skipping shell script lint" >&2; \
+    fi
+
+# Run all code-quality checks (format, clippy, tests, qmllint, shell scripts)
+check: lint-sh
     cd keymap-parser && cargo fmt --check
     cd keymap-parser && cargo clippy --locked --all-targets -- -D warnings
     cd keymap-parser && cargo test --locked
